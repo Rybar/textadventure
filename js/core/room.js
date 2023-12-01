@@ -14,6 +14,10 @@ export class Room {
       return this.exits[direction];
   }
 
+  listExits() {
+    return "Available exits: " + Object.keys(this.exits).join(', ');
+  }
+
   addItem(item) {
       this.items.push(item);
   }

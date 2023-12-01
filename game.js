@@ -1,3 +1,4 @@
+import { scrambleText, animateText } from './js/core/util.js';
 import { GameState } from './js/core/gameState.js';
 
 // Initialize Rooms. room modules include items
@@ -56,29 +57,6 @@ function handleCommand(command) {
 
 function scrollToBottom() {
     outputElement.scrollTop = outputElement.scrollHeight;
-}
-
-function animateText(text, element) {
-  let scrambled = scrambleText(text);
-  element.innerText += '\n' + scrambled;
-
-  let interval = setInterval(function() {
-      scrambled = scrambleText(scrambled, text);
-      element.innerText = element.innerText.slice(0, -scrambled.length) + scrambled;
-
-      if (scrambled === text) {
-          clearInterval(interval);
-      }
-  }, 1000/60);
-}
-
-function scrambleText(scrambled, target = '') {
-  return scrambled.split('').map((c, i) => (Math.random() < 0.1 || target[i] === c) ? target[i] || c : randomChar()).join('');
-}
-
-function randomChar() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  return chars.charAt(Math.floor(Math.random() * chars.length));
 }
 
 window.onload = function() {

@@ -28,7 +28,11 @@ export class GameState {
     // Handling 'eat' command as a specific use case
     if (action === 'eat') {
       return this.useItem(target, action);
-  }
+    }
+
+    if (action === 'exits') {
+      return this.currentRoom.listExits();
+    }
 
     // Handling inventory-related commands
     switch (action) {
@@ -147,17 +151,19 @@ export class GameState {
       .join(" ");
 
       if (stateDescriptions) {
-          description += " " + stateDescriptions + "\n";
+          description += "\n" + stateDescriptions + "\n";
       }
 
     if (this.currentRoom.items.length > 0) {
       description +=
-        ' You can see the following items: ' +
+        '\nYou can see the following items: ' +
         this.currentRoom.items.map (item => item.name).join (', ') +
-        '.';
+        '.\n';
     } else {
-      description += ' There are no items to see here.';
+      description += ' There are no items to see here.\n';
     }
+
+    description += " " + this.currentRoom.listExits();
 
     return description;
   }
