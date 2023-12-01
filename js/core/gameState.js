@@ -25,6 +25,11 @@ export class GameState {
       return this.handleMovement (target);
     }
 
+    // Handling 'eat' command as a specific use case
+    if (action === 'eat') {
+      return this.useItem(target, action);
+  }
+
     // Handling inventory-related commands
     switch (action) {
       case 'take':
@@ -72,14 +77,40 @@ export class GameState {
     }
   }
 
-  useItem (itemName) {
-    const item = this.inventory.find (item => item.name === itemName);
+  useItem(itemName, action = 'use') {
+    // Find the item in the inventory or current room
+    let item = this.inventory.find(item => item.name === itemName) || this.currentRoom.findItem(itemName);
+
     if (item) {
-      // Implement item-specific logic here, possibly affecting the room or game state
-      return `You use the ${itemName}.`; // Placeholder response
+        // Check if the specified action is available for the item
+        if (item.actions && item.actions[action]) {
+            const result = item.actions[action].call(item);
+
+            // Check if the item's life is depleted
+            if (item.life === 0) {
+                this.removeItemFromItsLocation(itemName); // Custom method to remove the item
+                return `${result} The ${itemName} is now used up.`;
+            }
+
+            return result;
+        } else {
+            return `You can't ${action} the ${itemName}.`;
+        }
     } else {
-      return `You don't have a ${itemName}.`;
+        return `You don't have a ${itemName} to ${action}.`;
     }
+  }
+
+  removeItemFromItsLocation(itemName) {
+    // Remove from inventory if there
+    let itemIndex = this.inventory.findIndex(item => item.name === itemName);
+    if (itemIndex !== -1) {
+        this.inventory.splice(itemIndex, 1);
+        return;
+    }
+
+    // Remove from the current room if there
+    this.currentRoom.removeItem(itemName);
   }
 
   showInventory () {

@@ -1,6 +1,7 @@
 // js/rooms/Kitchen.js
 import { Room } from '../core/room.js';
 import { Item } from '../core/item.js';
+import GameState from '../core/gameState.js';
 
 const description = `
 You are in a cozy, well-lit kitchen. The aroma of baked bread fills the air. 
@@ -42,10 +43,20 @@ const bread = new Item(
     "bread",
     "A freshly baked loaf of bread, still warm from the oven.",
     {
-        eat: () => "You eat a piece of the bread. It's delicious!"
-    },
+      eat: function() {
+          if (this.decreaseLife()) {
+              // Bread life depleted
+              return "You eat the last piece of the bread. It's all gone now.";
+          } else {
+              // Bread still has some life
+              return "You eat a piece of the bread. It's delicious!";
+          }
+      }
+  },
     true, // Portable
 );
+bread.life = 3;
+
 
 // Create and export the kitchen room with items
 export const kitchen = new Room(description, { /* exits */ }, [bread, window, table]);

@@ -17,6 +17,17 @@ export class Item {
       }
       return `Cannot perform ${actionName} on ${this.name}`;
   }
+
+  decreaseLife() {
+    if (this.life !== null) {
+        this.life -= 1;
+        if (this.life <= 0) {
+            this.life = 0;
+            return true; // Indicate that the item's life is depleted
+        }
+    }
+    return false; // Life is not depleted or not applicable
+}
 }
 
 export default Item;
