@@ -1,0 +1,64 @@
+body, html {
+  margin: 10px;
+  padding: 0;
+  height: 100%;
+  background-color: black;
+  color: rgb(7, 255, 7);
+  font-family: 'Courier New', monospace;
+  font-size: 1.2em;
+}
+
+#terminal {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow-y: auto;
+}
+
+#output {
+  white-space: pre-wrap; 
+  overflow-wrap: break-word;
+}
+
+#input {
+  flex-grow: 1;
+  margin-left: 5px;
+  width: 100%;
+  border: none;
+  background-color: black;
+  color: rgb(0, 255, 0);
+  font-family: 'Courier New', monospace;
+  padding: 5px;
+  font-size: 1em;
+}
+
+#input:focus {
+  outline: none;
+}
+
+#input-line {
+  display: flex;
+  align-items: center;
+}
+
+.prompt {
+  color: green;
+  font-family: 'Courier New', monospace;
+  animation: blink 1s step-start 0s infinite;
+}
+
+@keyframes blink {
+  50% {
+      opacity: 0;
+  }
+}
+
+.animated-char {
+  transition: color 0.1s ease;
+  color: green; /* Default color */
+}
+
+.animated-char.changed {
+  color: red; /* Color for changed characters */
+}
