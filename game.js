@@ -7,6 +7,14 @@ import { GameState } from './js/core/gameState.js';
 import { kitchen } from './js/rooms/kitchen.js';
 import { livingRoom } from './js/rooms/livingRoom.js';
 
+//connect rooms by adding exits
+kitchen.exits = {
+    "south": "livingRoom"
+};
+livingRoom.exits = {
+    "north": "kitchen"
+};
+
 // Define game state with rooms
 let gameState = new GameState({ "kitchen": kitchen, "livingRoom": livingRoom }, 'kitchen');
 window.game = gameState; // For debugging

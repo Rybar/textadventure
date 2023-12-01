@@ -11,6 +11,10 @@ export class Item {
     this.stateDescription = newDescription;
   }
 
+  updateDescription(newDescription) {
+    this.description = newDescription;
+  }
+
   performAction(actionName) {
       if(this.actions[actionName]) {
           return this.actions[actionName](this);

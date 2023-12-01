@@ -16,15 +16,17 @@ const window = new Item(
     "window",
     "A large window that looks out to the garden. It's currently closed.",
     {
-        open: function() {
-            this.updateStateDescription("Sunlight fills the room through the open window.");
-            return "You open the window, letting in a breath of fresh air.";
-        },
-        close: function() {
-            this.updateStateDescription("");
-            return "You close the window.";
-        }
-    },
+      open: function() {
+          this.updateDescription("A large window that looks out to the garden. It's currently open.");
+          this.updateStateDescription("Sunlight fills the room through the open window.");
+          return "You open the window, letting in a breath of fresh air.";
+      },
+      close: function() {
+          this.updateDescription("A large window that looks out to the garden. It's currently closed.");
+          this.updateStateDescription("");
+          return "You close the window.";
+      }
+  },
     false // Non-portable
 );
 
@@ -46,7 +48,7 @@ const bread = new Item(
       eat: function() {
           if (this.decreaseLife()) {
               // Bread life depleted
-              return "You eat the last piece of the bread. It's all gone now.";
+              return "You eat the last piece of the bread.";
           } else {
               // Bread still has some life
               return "You eat a piece of the bread. It's delicious!";
