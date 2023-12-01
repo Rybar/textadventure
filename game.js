@@ -1,6 +1,3 @@
-// js/game.js
-import { Room } from './js/core/room.js';
-import { Item } from './js/core/item.js';
 import { GameState } from './js/core/gameState.js';
 
 // Initialize Rooms. room modules include items
