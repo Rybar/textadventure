@@ -1,4 +1,5 @@
 import { scrambleText, animateText } from './js/core/util.js';
+import TextGrid  from './js/core/textGrid.js';
 import { GameState } from './js/core/gameState.js';
 
 // Initialize Rooms. room modules include items
@@ -13,13 +14,15 @@ livingRoom.exits = {
     "north": "kitchen"
 };
 
+// Initialize TextGrid
+let textGrid = new TextGrid();
+
 // Define game state with rooms
 let gameState = new GameState({ "kitchen": kitchen, "livingRoom": livingRoom }, 'kitchen');
 window.game = gameState; // For debugging
 let commandHistory = [];
 let historyIndex = -1;
-const outputElement = document.getElementById('output');
-const inputElement = document.getElementById('input');
+const inputElement = document.getElementById('cli-input');
 
 inputElement.addEventListener('keydown', function(event) {
     switch(event.key) {
@@ -50,17 +53,16 @@ inputElement.addEventListener('keydown', function(event) {
 });
 
 function handleCommand(command) {
-    outputElement.innerText += '\n> ' + command;
-    animateText(gameState.handleCommand(command), outputElement);
-    scrollToBottom();
-}
-
-function scrollToBottom() {
-    outputElement.scrollTop = outputElement.scrollHeight;
+    textGrid.fillRectangle(0, 1, 120, 24, ' ');
+    textGrid.print(gameState.handleCommand(command), 1, 2, 120);
 }
 
 window.onload = function() {
-    animateText(gameState.handleCommand('look around'), outputElement);
-    scrollToBottom();
-    inputElement.focus();
+    textGrid.createOrUpdateGrid();
+
+    textGrid.updateRandomCharacters();
+    textGrid.fillRectangle(0, 1, 100, 24, ' ');
+    textGrid.print(gameState.handleCommand('look around'), 1, 2, 120);
+    // scrollToBottom();
+    // inputElement.focus();
 }
