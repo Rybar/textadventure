@@ -3,7 +3,9 @@ export class TextGrid {
     this.gridContainer = document.getElementById ('text-grid');
     this.gridWidth = 0;
     this.gridHeight = 0;
+    this.gridCenter = {x: 0, y: 0};
     this.grid = [];
+    this.cursorPosition = {x: 0, y: 0};
   }
 
   measureCharacterSize () {
@@ -29,6 +31,7 @@ export class TextGrid {
 
     this.gridWidth = Math.floor (viewportWidth / charSize.width * 1.02);
     this.gridHeight = Math.floor (viewportHeight / charSize.height * 0.95);
+    this.gridCenter = {x: Math.floor (this.gridWidth / 2), y: Math.floor (this.gridHeight / 2)};
 
     return {gridWidth: this.gridWidth, gridHeight: this.gridHeight};
   }
@@ -44,29 +47,37 @@ export class TextGrid {
     this.gridContainer.textContent = this.grid.join ('\n');
   }
 
-  // Function to set a character at a specific position
-  setCharacter (x, y, character) {
-    if (x < this.gridWidth && y < this.gridHeight) {
-      const row = this.grid[y].split ('');
-      row[x] = character;
-      this.grid[y] = row.join ('');
-      this.updateGridDisplay ();
-    }
+  getCharacter(x, y) {
+      if (y < 0 || y >= this.grid.length || x < 0 || x >= this.grid[y].length) {
+          return ' '; // Return a space for out-of-bounds coordinates
+      }
+      return this.grid[y][x];
+  }
+
+  setCharacter(x, y, character) {
+      if (y >= 0 && y < this.grid.length && x >= 0 && x < this.grid[y].length) {
+          const row = this.grid[y].split('');
+          row[x] = character;
+          this.grid[y] = row.join('');
+      }
+      // Ignore if coordinates are outside the grid bounds
   }
 
   // Function to update random characters
-  updateRandomCharacters () {
+  updateRandomCharacters (char) {
     for (let i = 0; i < 1000; i++) {
+      
       const x = Math.floor (Math.random () * this.gridWidth);
       const y = Math.floor (Math.random () * this.gridHeight);
       const randomChar = String.fromCharCode (
         33 + Math.floor (Math.random () * (126 - 33))
       );
-      this.setCharacter (x, y, randomChar);
+      this.setCharacter (x, y, char);
     }
   }
 
   print(text, x, y, lineLength) {
+    y = y || this.cursorPosition.y;
     const lines = text.split('\n'); // Split text into lines first
 
     let currentLine = y;
@@ -93,11 +104,111 @@ export class TextGrid {
             currentLine++;
         }
     });
-
+    this.cursorPosition.y = y + text.split('\n').length;
     this.updateGridDisplay();
 }
 
+  printAnimated(text, x, y, lineLength, duration) {
+    y = y || this.cursorPosition.y;
+    const frames = Math.floor(duration/60); // Total number of frames in the animation
+    const frameDuration = 1000/60; // Duration of each frame in milliseconds
+    let lines = text.split('\n').map(line => line.padEnd(lineLength, ' ')); // Pad each line to lineLength
 
+    // Initialize grid with whitespaces
+    for (let i = 0; i < lines.length; i++) {
+        this.setLineSegment(y + i, x, ' '.repeat(lineLength));
+    }
+    this.updateGridDisplay();
+
+    // Create animation frames
+    for (let frame = 0; frame <= frames; frame++) {
+        setTimeout(() => {
+            for (let i = 0; i < lines.length; i++) {
+                let animatedLine = '';
+                for (let j = 0; j < lineLength; j++) {
+                    if (frame < frames / 2) {
+                        // Fade-in effect: Start with whitespace and gradually introduce random characters
+                        const fadeChance = frame / (frames / 2);
+                        animatedLine += (lines[i][j] !== ' ' && Math.random() < fadeChance) ? 
+                            this.getRandomCharacter() : 
+                            ' ';
+                    } else {
+                        // Second half of the animation: Transition to actual text
+                        const settleChance = (frame - frames / 2) / (frames / 2);
+                        animatedLine += (lines[i][j] !== ' ' && Math.random() < settleChance) ? 
+                            lines[i][j] : 
+                            (lines[i][j] !== ' ' ? this.getRandomCharacter() : ' ');
+                    }
+                }
+                this.setLineSegment(y + i, x, animatedLine);
+            }
+            this.cursorPosition.y = y + lines.length;
+            this.updateGridDisplay();
+        }, frame * frameDuration);
+    }
+  }
+
+  fillRectangleAnimated(x, y, width, height, characters, duration) {
+      const fps = 60;
+      const frames = duration / 1000 * fps; // Convert duration to seconds and calculate total frames
+      let currentFrame = 0;
+
+      // Function to fill a portion of the rectangle
+      const fillPortion = () => {
+          const portion = (currentFrame / frames) * (width * height);
+          let charIndex = 0;
+
+          for (let i = 0; i < height; i++) {
+              for (let j = 0; j < width; j++) {
+                  if (i * width + j < portion) {
+                      const char = characters[charIndex % characters.length];
+                      this.setCharacter(x + j, y + i, char);
+                      charIndex++;
+                  }
+              }
+          }
+          this.updateGridDisplay();
+      };
+
+      // Animation loop
+      const animate = () => {
+          fillPortion();
+          currentFrame++;
+          if (currentFrame <= frames) {
+              requestAnimationFrame(animate);
+          }
+      };
+
+      animate();
+  }
+
+  scrollUpAnimated(x, y, width, height, linesToScroll, duration) {
+    const fps = 60; // Frames per second
+    const totalFrames = duration / 1000 * fps; // Total number of frames
+    const shiftPerFrame = linesToScroll / totalFrames; // Lines to scroll per frame
+    let currentShift = 0; // Current shift amount
+
+    const animateScroll = (frame) => {
+        if (frame > totalFrames) return;
+
+        currentShift += shiftPerFrame;
+        const integerShift = Math.floor(currentShift);
+
+        for (let row = y; row < y + height; row++) {
+            for (let col = x; col < x + width; col++) {
+                // Determine the source row for the current frame
+                const srcRow = row + integerShift;
+                const char = (srcRow < y + height) ? this.getCharacter(col, srcRow) : ' ';
+                this.setCharacter(col, row - integerShift, char);
+            }
+        }
+
+        this.updateGridDisplay();
+        setTimeout(() => animateScroll(frame + 1), 1000 / fps);
+    };
+
+    animateScroll(0);
+}
 
 
   setLineSegment (lineNumber, startColumn, segment) {
@@ -125,6 +236,12 @@ export class TextGrid {
       }
     }
     this.updateGridDisplay ();
+  }
+
+
+  getRandomCharacter() {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    return characters.charAt(Math.floor(Math.random() * characters.length));
   }
 }
 

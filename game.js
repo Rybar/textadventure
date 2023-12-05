@@ -53,16 +53,21 @@ inputElement.addEventListener('keydown', function(event) {
 });
 
 function handleCommand(command) {
-    textGrid.fillRectangle(0, 1, 120, 24, ' ');
-    textGrid.print(gameState.handleCommand(command), 1, 2, 120);
+    let x = textGrid.gridCenter.x - 60;
+    //textGrid.fillRectangle(x, y, 120, 24, ' ');
+    if(textGrid.cursorPosition.y > textGrid.gridHeight - 2) {
+        textGrid.scrollUpAnimated(x, 0, 120, textGrid.gridHeight, 10, 1000);
+        textGrid.cursorPosition.y -= 10; 
+    }
+    textGrid.printAnimated(gameState.handleCommand(command), x+2, textGrid.cursorPosition.y, 120, 2000)
 }
 
 window.onload = function() {
     textGrid.createOrUpdateGrid();
-
-    textGrid.updateRandomCharacters();
-    textGrid.fillRectangle(0, 1, 100, 24, ' ');
-    textGrid.print(gameState.handleCommand('look around'), 1, 2, 120);
-    // scrollToBottom();
-    // inputElement.focus();
+    let x = textGrid.gridCenter.x - 60;
+    let y = 0;
+    textGrid.updateRandomCharacters(".");
+    textGrid.fillRectangle(x, y, 120, textGrid.gridHeight, ' ');
+    textGrid.printAnimated(gameState.handleCommand('look around'), x+2, y+2, 120, 10000);
+    inputElement.focus();
 }
