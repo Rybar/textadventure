@@ -20,9 +20,10 @@ html, body {
 }
 
 #text-grid {
-  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-family: 'Perfect-DOS-VGA-437-Win';
   white-space: pre;
-  color: white;
+  color: #FFBF00;
   margin: 0; /* Remove default margin */
   padding: 0; /* Remove default padding */
 }
@@ -39,4 +40,18 @@ html, body {
   padding: 0.5em;
   
   /* Additional styling for the input */
+}
+
+#cli-input:focus {
+  outline: none;
+}
+
+@font-face {
+  font-family: 'Perfect-DOS-VGA-437-Win';
+  src:url('assets/fnt/Perfect-DOS-VGA-437-Win.ttf.woff') format('woff'),
+      url('assets/fnt/Perfect-DOS-VGA-437-Win.ttf.svg#Perfect-DOS-VGA-437-Win') format('svg'),
+      url('assets/fnt/Perfect-DOS-VGA-437-Win.ttf.eot'),
+      url('assets/fnt/Perfect-DOS-VGA-437-Win.ttf.eot?#iefix') format('embedded-opentype'); 
+  font-weight: normal;
+  font-style: normal;
 }

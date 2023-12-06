@@ -181,35 +181,48 @@ export class TextGrid {
 
       animate();
   }
-
-  scrollUpAnimated(x, y, width, height, linesToScroll, duration) {
+  scrollUpAnimated(x, y, width, height, linesToScroll, duration, callback) {
     const fps = 60; // Frames per second
-    const totalFrames = duration / 1000 * fps; // Total number of frames
-    const shiftPerFrame = linesToScroll / totalFrames; // Lines to scroll per frame
+    const totalFrames = Math.floor(duration / fps); // Total number of frames in the animation
+    const shiftPerFrame = Math.ceil(linesToScroll / totalFrames); // Lines to scroll per frame
     let currentShift = 0; // Current shift amount
+    let frameCount = 0;
 
-    const animateScroll = (frame) => {
-        if (frame > totalFrames) return;
-
+    const intervalId = setInterval(() => {
+        frameCount++;
         currentShift += shiftPerFrame;
-        const integerShift = Math.floor(currentShift);
 
-        for (let row = y; row < y + height; row++) {
-            for (let col = x; col < x + width; col++) {
-                // Determine the source row for the current frame
-                const srcRow = row + integerShift;
-                const char = (srcRow < y + height) ? this.getCharacter(col, srcRow) : ' ';
-                this.setCharacter(col, row - integerShift, char);
+        if (frameCount >= totalFrames) {
+            clearInterval(intervalId); // Stop the animation
+            this.fillBottomSpace(x, y, width, height, linesToScroll);
+            this.updateGridDisplay();
+            if (callback) callback(); // Execute callback function
+            return;
+        }
+
+        // Shift content in the specified grid section up
+        if (Math.floor(currentShift) > 0) {
+            for (let row = y; row < y + height; row++) {
+                for (let col = x; col < x + width; col++) {
+                    const srcRow = row + Math.floor(currentShift);
+                    const char = srcRow < y + height ? this.getCharacter(col, srcRow) : ' ';
+                    this.setCharacter(col, row, char);
+                }
             }
+            currentShift -= Math.floor(currentShift);
         }
 
         this.updateGridDisplay();
-        setTimeout(() => animateScroll(frame + 1), 1000 / fps);
-    };
-
-    animateScroll(0);
-}
-
+    }, 1000 / fps);
+  }
+  fillBottomSpace(x, y, width, height, lines) {
+      for (let i = 0; i < lines; i++) {
+          const fillRow = y + height - i - 1;
+          for (let col = x; col < x + width; col++) {
+              this.setCharacter(col, fillRow, ' ');
+          }
+      }
+  }                                                          
 
   setLineSegment (lineNumber, startColumn, segment) {
     if (lineNumber < this.grid.length) {

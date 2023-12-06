@@ -132,7 +132,7 @@ export class GameState {
       const nextRoomName = this.currentRoom.exits[direction];
       if (this.rooms[nextRoomName]) {
         this.currentRoom = this.rooms[nextRoomName];
-        return `Moving to ${nextRoomName}. ${this.currentRoom.describe ()}`;
+        return `\n${this.describeCurrentRoom ()}`;
       } else {
         return `You can't go that way.`;
       }

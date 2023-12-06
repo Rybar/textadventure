@@ -54,12 +54,15 @@ inputElement.addEventListener('keydown', function(event) {
 
 function handleCommand(command) {
     let x = textGrid.gridCenter.x - 60;
-    //textGrid.fillRectangle(x, y, 120, 24, ' ');
-    if(textGrid.cursorPosition.y > textGrid.gridHeight - 2) {
-        textGrid.scrollUpAnimated(x, 0, 120, textGrid.gridHeight, 10, 1000);
-        textGrid.cursorPosition.y -= 10; 
+    if(textGrid.cursorPosition.y + 10 > textGrid.gridHeight - 2) {
+        textGrid.scrollUpAnimated(x, 0, 120, textGrid.gridHeight, 10, 700, () => {
+            textGrid.cursorPosition.y -= 10; 
+            textGrid.printAnimated(gameState.handleCommand(command), x+2, textGrid.cursorPosition.y, 120, 1000)
+        });
+    } else {
+        textGrid.printAnimated(gameState.handleCommand(command), x+2, textGrid.cursorPosition.y, 120, 1000)
     }
-    textGrid.printAnimated(gameState.handleCommand(command), x+2, textGrid.cursorPosition.y, 120, 2000)
+    
 }
 
 window.onload = function() {
