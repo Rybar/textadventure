@@ -108,10 +108,10 @@ export class TextGrid {
     this.updateGridDisplay();
 }
 
-  printAnimated(text, x, y, lineLength, duration) {
+  printAnimated(text, x, y, lineLength, duration, callback) {
     y = y || this.cursorPosition.y;
-    const frames = Math.floor(duration/60); // Total number of frames in the animation
-    const frameDuration = 1000/60; // Duration of each frame in milliseconds
+    const frames = Math.floor(duration / 60); // Total number of frames in the animation
+    const frameDuration = 1000 / 60; // Duration of each frame in milliseconds
     let lines = text.split('\n').map(line => line.padEnd(lineLength, ' ')); // Pad each line to lineLength
 
     // Initialize grid with whitespaces
@@ -144,6 +144,11 @@ export class TextGrid {
             }
             this.cursorPosition.y = y + lines.length;
             this.updateGridDisplay();
+
+            // Execute callback after the last frame
+            if (frame === frames && callback) {
+                callback();
+            }
         }, frame * frameDuration);
     }
   }
@@ -250,6 +255,57 @@ export class TextGrid {
     }
     this.updateGridDisplay ();
   }
+
+  displayEphemeralMessage(message, x, y, lineLength, displayDuration, fadeDuration) {
+    // Preserve the current cursor position
+    const originalCursorPosition = { ...this.cursorPosition };
+
+    // Display the message with animation
+    this.printAnimated(message, x, y, lineLength, fadeDuration, () => {
+        // Wait for the display duration
+        setTimeout(() => {
+            // Fade back to whitespace
+            this.fadeToWhitespace(x, y, lineLength, message.split('\n').length, fadeDuration, () => {
+                // Restore the original cursor position
+                this.cursorPosition = originalCursorPosition;
+            });
+        }, displayDuration);
+    });
+}
+
+fadeToWhitespace(x, y, lineLength, lines, duration, callback) {
+  const fps = 60;
+  const frames = duration / 1000 * fps;
+  let currentFrame = 0;
+
+  const intervalId = setInterval(() => {
+      currentFrame++;
+      if (currentFrame > frames) {
+          clearInterval(intervalId);
+          this.fillAreaWithWhitespace(x, y, lineLength, lines);
+          if (callback) callback();
+          return;
+      }
+
+      const fadeRatio = currentFrame / frames;
+      for (let row = y; row < y + lines; row++) {
+          let lineContent = '';
+          for (let col = x; col < x + lineLength; col++) {
+              lineContent += Math.random() < fadeRatio ? ' ' : this.getCharacter(col, row);
+          }
+          this.setLineSegment(row, x, lineContent);
+      }
+      this.updateGridDisplay();
+  }, 1000 / fps);
+}
+
+fillAreaWithWhitespace(x, y, lineLength, lines) {
+  for (let row = y; row < y + lines; row++) {
+      this.setLineSegment(row, x, ' '.repeat(lineLength));
+  }
+}
+
+
 
 
   getRandomCharacter() {
