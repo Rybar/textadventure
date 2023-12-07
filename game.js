@@ -71,7 +71,7 @@ window.onload = function() {
     let y = 0;
     textGrid.updateRandomCharacters(".");
     //textGrid.fillRectangle(x, y, 120, textGrid.gridHeight, ' ');
-    textGrid.printAnimated(gameState.handleCommand('look around'), x+2, y+2, 120, 10000, () => {});
+    textGrid.printAnimated(gameState.handleCommand('look around'), x+2, y+2, 120, 10000, () => {textGrid.cursorPosition.y += 10});
     
     textGrid.displayEphemeralMessage('someone is watching', 10, 10, 100, 1000, 4000);
     
