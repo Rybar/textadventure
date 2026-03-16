@@ -1,46 +1,85 @@
-html, body {
+:root {
+  --cga-amber: #ffbf00;
+  --cga-background: #000000;
+}
+
+html,
+body {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  background-color: var(--cga-background);
+}
+
+body {
+  display: grid;
+  place-items: center;
+}
+
+#screen-shell {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  background-color: black;
-  justify-content: center;
   align-items: center;
-  overflow-x: hidden;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+#ephemeral-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+#ephemeral-message {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--cga-amber);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: 14px;
+  line-height: 1;
+  white-space: pre;
+  opacity: 0.9;
+  text-shadow: 0 0 8px rgba(255, 191, 0, 0.25);
 }
 
 #text-grid-container {
-  flex-grow: 1; /* Fill available space */
-  overflow: hidden; /* Hide overflow */
-  display: flex; /* Use flexbox */
-  justify-content: center;
+  position: relative;
+  z-index: 1;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cga-amber);
+  padding: 14px;
+  background-color: var(--cga-background);
+  box-shadow: 0 0 24px rgba(255, 191, 0, 0.15);
 }
 
 #text-grid {
-  font-size: 16px;
-  font-family: 'Perfect-DOS-VGA-437-Win';
+  margin: 0;
+  color: var(--cga-amber);
+  background-color: var(--cga-background);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: 14px;
+  line-height: 1;
   white-space: pre;
-  color: #FFBF00;
-  margin: 0; /* Remove default margin */
-  padding: 0; /* Remove default padding */
+  letter-spacing: 0;
+  user-select: none;
 }
 
 #cli-input {
-  flex-shrink: 0; /* Prevent input from shrinking */
-  background-color: rgb(26, 26, 26);
-  border: none;
-  color:#FFBF00;
-  font-family: 'Perfect-DOS-VGA-437-Win';
-  font-size: 16px;
-  width: 100%;
-  align-self: start;
-  padding: 0.5em;
-  margin-bottom: 4em;
-  
-  /* Additional styling for the input */
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 #cli-input:focus {

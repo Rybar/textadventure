@@ -1,85 +1,160 @@
-import { scrambleText, animateText } from './js/core/util.js';
-import TextGrid  from './js/core/textGrid.js';
-import { GameState } from './js/core/gameState.js';
+import TextGrid from './js/engine/render/textGrid.js';
+import { animateScrambledText } from './js/engine/render/textEffects.js';
+import { GameSession } from './js/engine/world/gameSession.js';
+import { createGameManifest } from './js/game/manifest.js';
 
-// Initialize Rooms. room modules include items
-import { kitchen } from './js/rooms/kitchen.js';
-import { livingRoom } from './js/rooms/livingRoom.js';
+const textGrid = new TextGrid();
+const gameSession = new GameSession(createGameManifest());
+globalThis.game = gameSession;
 
-//connect rooms by adding exits
-kitchen.exits = {
-    "south": "livingRoom"
-};
-livingRoom.exits = {
-    "north": "kitchen"
-};
-
-// Initialize TextGrid
-let textGrid = new TextGrid();
-
-// Define game state with rooms
-let gameState = new GameState({ "kitchen": kitchen, "livingRoom": livingRoom }, 'kitchen');
-window.game = gameState; // For debugging
-let commandHistory = [];
+const transcriptLines = [];
+const commandHistory = [];
 let historyIndex = -1;
+let cursorVisible = true;
+let stopEphemeralAnimation = null;
 const inputElement = document.getElementById('cli-input');
+const ephemeralMessageElement = document.getElementById('ephemeral-message');
+const textGridContainerElement = document.getElementById('text-grid-container');
+
+function positionEphemeralMessage() {
+    if (!ephemeralMessageElement || !textGridContainerElement) {
+        return;
+    }
+
+    const gap = 16;
+    const viewportPadding = 12;
+    const displayRect = textGridContainerElement.getBoundingClientRect();
+    const messageRect = ephemeralMessageElement.getBoundingClientRect();
+
+    let left = displayRect.right + gap;
+    if (left + messageRect.width > globalThis.innerWidth - viewportPadding) {
+        left = displayRect.left - messageRect.width - gap;
+    }
+
+    left = Math.max(viewportPadding, left);
+
+    let top = displayRect.top + gap;
+    if (top + messageRect.height > globalThis.innerHeight - viewportPadding) {
+        top = Math.max(viewportPadding, displayRect.bottom - messageRect.height);
+    }
+
+    ephemeralMessageElement.style.left = `${Math.round(left)}px`;
+    ephemeralMessageElement.style.top = `${Math.round(top)}px`;
+}
+
+function updateEphemeralMessage(message, options = {}) {
+    if (!ephemeralMessageElement) {
+        return;
+    }
+
+    if (stopEphemeralAnimation) {
+        stopEphemeralAnimation();
+        stopEphemeralAnimation = null;
+    }
+
+    if (options.scramble === false) {
+        ephemeralMessageElement.textContent = message;
+        positionEphemeralMessage();
+        return;
+    }
+
+    stopEphemeralAnimation = animateScrambledText(ephemeralMessageElement, message, {
+        frameRate: options.frameRate ?? 60,
+        holdDuration: options.holdDuration,
+        clearFrameLength: options.clearFrameLength,
+        revealChance: options.revealChance,
+        clearFraction: options.clearFraction,
+    });
+
+    globalThis.requestAnimationFrame(positionEphemeralMessage);
+}
+
+function renderScreen() {
+    textGrid.renderFrame({
+        transcriptLines,
+        promptText: inputElement.value,
+        cursorVisible: document.activeElement === inputElement && cursorVisible,
+    });
+}
+
+function appendTranscriptEntry(text) {
+    transcriptLines.push(...textGrid.wrapText(text));
+}
+
+inputElement.addEventListener('input', () => {
+    renderScreen();
+});
 
 inputElement.addEventListener('keydown', function(event) {
-    switch(event.key) {
-        case 'Enter':
-            commandHistory.push(this.value);
-            historyIndex = commandHistory.length;
-            handleCommand(this.value);
-            this.value = '';
-            break;
-        case 'ArrowUp':
-            if (historyIndex > 0) {
-                historyIndex--;
-                this.value = commandHistory[historyIndex];
+    switch (event.key) {
+        case 'Enter': {
+            event.preventDefault();
+            const command = this.value.trim();
+
+            if (command) {
+                commandHistory.push(command);
             }
-            event.preventDefault(); // Prevents cursor from going to the start of the line
+
+            historyIndex = commandHistory.length;
+            handleCommand(command);
+            this.value = '';
+            renderScreen();
+            break;
+        }
+        case 'ArrowUp':
+            event.preventDefault();
+            if (historyIndex > 0) {
+                historyIndex -= 1;
+                this.value = commandHistory[historyIndex];
+                renderScreen();
+            }
             break;
         case 'ArrowDown':
+            event.preventDefault();
             if (historyIndex < commandHistory.length - 1) {
-                historyIndex++;
+                historyIndex += 1;
                 this.value = commandHistory[historyIndex];
-            } else if (historyIndex === commandHistory.length - 1) {
-                historyIndex++;
+            } else {
+                historyIndex = commandHistory.length;
                 this.value = '';
             }
-            event.preventDefault(); // Prevents cursor from going to the end of the line
+            renderScreen();
+            break;
+        default:
             break;
     }
 });
 
 function handleCommand(command) {
-    let x = textGrid.gridCenter.x - 60;
-    if(textGrid.cursorPosition.y + 10 > textGrid.gridHeight - 2) {
-        textGrid.scrollUpAnimated(x, 0, 120, textGrid.gridHeight, 10, 700, () => {
-            textGrid.cursorPosition.y -= 10; 
-            textGrid.printAnimated(gameState.handleCommand(command), x+2, textGrid.cursorPosition.y, 120, 1000)
-        });
-    } else {
-        textGrid.printAnimated(gameState.handleCommand(command), x+2, textGrid.cursorPosition.y, 120, 1000)
-    }
-    
+    const transcriptEntry = gameSession.submitCommand(command);
+    appendTranscriptEntry(transcriptEntry);
+    renderScreen();
 }
 
-window.onload = function() {
+globalThis.onload = function() {
     textGrid.createOrUpdateGrid();
-    let x = textGrid.gridCenter.x - 60;
-    let y = 0;
-    textGrid.updateRandomCharacters(".");
-    //textGrid.fillRectangle(x, y, 120, textGrid.gridHeight, ' ');
-    textGrid.printAnimated(gameState.handleCommand('look around'), x+2, y+2, 120, 10000, () => {textGrid.cursorPosition.y += 10});
-    
-    textGrid.displayEphemeralMessage('someone is watching', 10, 10, 100, 1000, 4000);
-    
-    
-        
-   
-    
+    const startupMetaMessage = gameSession.getStartupMetaMessage();
+    if (startupMetaMessage?.text) {
+        updateEphemeralMessage(startupMetaMessage.text, startupMetaMessage.options ?? {});
+    }
+
+    appendTranscriptEntry(gameSession.start());
+    renderScreen();
     inputElement.focus();
-}
+};
+
+globalThis.setInterval(() => {
+    cursorVisible = !cursorVisible;
+    renderScreen();
+}, 530);
+
+globalThis.addEventListener('pointerdown', () => {
+    inputElement.focus();
+    renderScreen();
+});
+
+globalThis.addEventListener('resize', positionEphemeralMessage);
+globalThis.addEventListener('focus', renderScreen);
+globalThis.addEventListener('blur', renderScreen);
 
 
