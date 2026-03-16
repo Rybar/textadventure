@@ -16,6 +16,16 @@ const inputElement = document.getElementById('cli-input');
 const ephemeralMessageElement = document.getElementById('ephemeral-message');
 const textGridContainerElement = document.getElementById('text-grid-container');
 
+function focusCommandInput() {
+    if (document.activeElement !== inputElement) {
+        inputElement.focus({ preventScroll: true });
+    }
+}
+
+function isPrintableKey(event) {
+    return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+}
+
 function positionEphemeralMessage() {
     if (!ephemeralMessageElement || !textGridContainerElement) {
         return;
@@ -85,11 +95,11 @@ inputElement.addEventListener('input', () => {
     renderScreen();
 });
 
-inputElement.addEventListener('keydown', function(event) {
+function handleInputKeyDown(event, input = inputElement) {
     switch (event.key) {
         case 'Enter': {
             event.preventDefault();
-            const command = this.value.trim();
+            const command = input.value.trim();
 
             if (command) {
                 commandHistory.push(command);
@@ -97,7 +107,7 @@ inputElement.addEventListener('keydown', function(event) {
 
             historyIndex = commandHistory.length;
             handleCommand(command);
-            this.value = '';
+            input.value = '';
             renderScreen();
             break;
         }
@@ -105,7 +115,7 @@ inputElement.addEventListener('keydown', function(event) {
             event.preventDefault();
             if (historyIndex > 0) {
                 historyIndex -= 1;
-                this.value = commandHistory[historyIndex];
+                input.value = commandHistory[historyIndex];
                 renderScreen();
             }
             break;
@@ -113,15 +123,46 @@ inputElement.addEventListener('keydown', function(event) {
             event.preventDefault();
             if (historyIndex < commandHistory.length - 1) {
                 historyIndex += 1;
-                this.value = commandHistory[historyIndex];
+                input.value = commandHistory[historyIndex];
             } else {
                 historyIndex = commandHistory.length;
-                this.value = '';
+                input.value = '';
             }
             renderScreen();
             break;
         default:
             break;
+    }
+}
+
+inputElement.addEventListener('keydown', function(event) {
+    handleInputKeyDown(event, this);
+});
+
+document.addEventListener('keydown', event => {
+    if (document.activeElement === inputElement) {
+        return;
+    }
+
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
+        focusCommandInput();
+        handleInputKeyDown(event, inputElement);
+        return;
+    }
+
+    if (event.key === 'Backspace') {
+        event.preventDefault();
+        focusCommandInput();
+        inputElement.value = inputElement.value.slice(0, -1);
+        renderScreen();
+        return;
+    }
+
+    if (isPrintableKey(event)) {
+        event.preventDefault();
+        focusCommandInput();
+        inputElement.value += event.key;
+        renderScreen();
     }
 });
 
@@ -140,7 +181,7 @@ globalThis.onload = function() {
 
     appendTranscriptEntry(gameSession.start());
     renderScreen();
-    inputElement.focus();
+    focusCommandInput();
 };
 
 globalThis.setInterval(() => {
@@ -149,7 +190,7 @@ globalThis.setInterval(() => {
 }, 530);
 
 globalThis.addEventListener('pointerdown', () => {
-    inputElement.focus();
+    focusCommandInput();
     renderScreen();
 });
 

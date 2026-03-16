@@ -6,6 +6,8 @@ The game is now based on The Meal of Oshregaal.
 
 This project should adapt the custom Goblin Punch adventure into a parser-driven, ASCII-forward text adventure. The goal is not to reproduce tabletop combat room by room. The goal is to preserve the module's strongest qualities: invitation, hospitality, grotesque surrealism, social danger, hidden routes, and a mansion that is easier to enter than to leave.
 
+The project also includes a secondary meta-game layer. The player is, in truth, trapped in an old text-adventure test environment, but that should not be obvious at the start. The early game should read as a strange, self-contained Oshregaal adaptation. Only over time should out-of-band messages, interface anomalies, and false help begin to suggest that the player is not merely exploring a mansion, but participating in an experiment run through the game itself.
+
 ## Core Premise
 
 The player arrives at the cavern mansion of Grandfather Oshregaal carrying a real, stolen, or forged invitation to dinner.
@@ -13,6 +15,8 @@ The player arrives at the cavern mansion of Grandfather Oshregaal carrying a rea
 Oshregaal is an aging chaos sorcerer who created the tusk people through black wind elixir and now lives in a decadent underground manor. He is dangerous, charming, theatrical, and difficult to escape. The player enters as a guest and gradually realizes they are also prey, entertainment, and potentially an inconvenience to be contained.
 
 The game should feel like a dinner invitation drifting into a social-horror labyrinth.
+
+At the meta level, the game should gradually reveal a second premise: the player is inside a constrained testing loop masquerading as a parser game. The mansion fiction is real within the frame of play, but the interface occasionally leaks evidence that another system is watching, adjusting, and attempting to shape the player's survival through controlled upgrades and interventions.
 
 ## Creative Pillars
 
@@ -23,6 +27,7 @@ The game should feel like a dinner invitation drifting into a social-horror laby
 - Multiple objectives and multiple escape routes.
 - Strong ASCII visuals for rooms, maps, and feast set pieces.
 - A retro parser interface that makes etiquette, observation, and risk feel tactile.
+- A hidden meta-narrative delivered through the interface rather than through early exposition.
 
 ## Tone
 
@@ -32,6 +37,44 @@ The game should feel like a dinner invitation drifting into a social-horror laby
 - Surreal, but still legible enough for puzzle-solving.
 
 Oshregaal should be funny, dangerous, vain, and exhausting. The game should not flatten him into a generic villain.
+
+The meta-game tone should be colder, more clinical, and more compromised. It should feel like an observing intelligence that is not openly hostile at first, but is never trustworthy. The contrast matters: Oshregaal is theatrical and embodied; the meta layer should feel disembodied, procedural, and only intermittently humane.
+
+## Meta-Game Frame
+
+The meta-game should begin as interference, not explanation.
+
+Early on, the player should be able to dismiss the strange messages as atmospheric effects, haunted software, or stylized parser garnish. The game should avoid announcing, "you are trapped in a test," until enough evidence has accumulated that the player can connect the pattern themselves.
+
+The meta-game should work through three stages:
+
+### Stage 1: Ambiguity
+
+- Brief ephemeral messages outside the main play frame.
+- Small interface irregularities that could still be read as decorative.
+- Language that suggests observation, monitoring, or partial concern.
+
+### Stage 2: Instrumental Help
+
+- The watcher begins "helping" by upgrading the interface.
+- New UI elements such as map, inventory summaries, status readouts, or hints appear as if granted by the observing system.
+- The help should always feel useful but not innocent.
+
+### Stage 3: Entrapment And Negotiation
+
+- The player understands they are not just playing a game but being held inside one.
+- The meta-system may have its own goals, scripts, and failure tolerances.
+- Escaping Oshregaal and escaping the test environment may become related but not identical objectives.
+
+## Meta-Game Delivery Rules
+
+- Do not front-load the meta-fiction.
+- Let the first strange messages be deniable.
+- Deliver most meta-story through UI changes, off-frame messages, timing irregularities, and selective system commentary.
+- Avoid long lore dumps from the observing system.
+- Preserve uncertainty about whether the watcher is trying to help, study, manipulate, or contain the player.
+- Treat interface upgrades as story events, not just feature unlocks.
+- Make sure the meta-game deepens the Oshregaal experience rather than replacing it.
 
 ## Best Adaptation Lens
 
@@ -474,6 +517,14 @@ Animation opportunities:
 - feast-service text arriving in waves,
 - stronger scramble effects when cursed books or portal magic are used.
 
+Meta-game presentation opportunities:
+
+- ephemeral off-frame messages that seem to come from outside the mansion fiction,
+- interface upgrades introduced as interventions by the watcher,
+- text corruption or redraw behavior that suggests active monitoring,
+- status or map overlays framed as unauthorized or provisional tools,
+- moments where the parser seems to know more than the player should have entered.
+
 ## Content Style Guide
 
 - Keep descriptions vivid but compact.
@@ -482,6 +533,8 @@ Animation opportunities:
 - Make every important NPC sound distinct.
 - Let manners function as a game mechanic.
 - Let horror arrive through implication, not constant screaming prose.
+- Let the meta-game arrive through accumulation, not announcement.
+- Keep the watcher text terse, suggestive, and unlike the voice of the mansion.
 
 ## Definition Of Success For The First Oshregaal Build
 
