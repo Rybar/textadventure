@@ -6,7 +6,7 @@
     <title>Terminal Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-device-theme="desktop" data-mobile-input-active="false">
     <main id="screen-shell">
         <div id="meta-column-left" class="meta-column" aria-hidden="true">
             <div id="ephemeral-message-left" class="ephemeral-message"></div>
@@ -49,7 +49,20 @@
             <div id="ephemeral-message-lower-right" class="ephemeral-message"></div>
         </div>
     </main>
-    <input type="text" id="cli-input" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command input">
+    <form id="mobile-command-bar" aria-label="Command input" novalidate>
+        <label id="mobile-command-prompt" for="cli-input">&gt;</label>
+        <input
+            type="text"
+            id="cli-input"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            enterkeyhint="send"
+            aria-label="Command input"
+            placeholder="Enter command"
+        >
+        <button id="mobile-command-submit" type="submit">Enter</button>
+    </form>
     <script type="module" src="game.js"></script>
 </body>
 </html>

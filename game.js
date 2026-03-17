@@ -7,11 +7,14 @@ const textGrid = new TextGrid();
 const gameSession = new GameSession(createGameManifest);
 globalThis.game = gameSession;
 
+const bodyElement = document.body;
+const screenShellElement = document.getElementById('screen-shell');
 const transcriptLines = [];
 const commandHistory = [];
 let historyIndex = -1;
 let cursorVisible = true;
 const inputElement = document.getElementById('cli-input');
+const mobileCommandBarElement = document.getElementById('mobile-command-bar');
 const ephemeralMessageElements = {
     sideLeft: document.getElementById('ephemeral-message-left'),
     sideRight: document.getElementById('ephemeral-message-right'),
@@ -48,6 +51,39 @@ const metaColumns = {
     lowerLeft: document.getElementById('meta-column-left'),
     lowerRight: document.getElementById('meta-column-right'),
 };
+let isMobileThemeActive = false;
+
+function shouldUseMobileTheme() {
+    const hasMatchMedia = typeof globalThis.matchMedia === 'function';
+    const coarsePointer = hasMatchMedia ? globalThis.matchMedia('(pointer: coarse)').matches : false;
+    const narrowViewport = hasMatchMedia ? globalThis.matchMedia('(max-width: 900px)').matches : false;
+    const shortViewport = hasMatchMedia ? globalThis.matchMedia('(max-height: 560px)').matches : false;
+
+    return coarsePointer && (narrowViewport || shortViewport);
+}
+
+function updateViewportMetrics() {
+    const visualViewport = globalThis.visualViewport;
+    const viewportHeight = visualViewport?.height ?? globalThis.innerHeight;
+    const keyboardOffset = visualViewport
+        ? Math.max(0, globalThis.innerHeight - visualViewport.height - visualViewport.offsetTop)
+        : 0;
+
+    document.documentElement.style.setProperty('--visual-viewport-height', `${Math.round(viewportHeight)}px`);
+    document.documentElement.style.setProperty('--mobile-keyboard-offset', `${Math.round(keyboardOffset)}px`);
+}
+
+function applyDeviceTheme() {
+    isMobileThemeActive = shouldUseMobileTheme();
+    bodyElement.dataset.deviceTheme = isMobileThemeActive ? 'mobile' : 'desktop';
+
+    if (!isMobileThemeActive) {
+        bodyElement.dataset.mobileInputActive = 'false';
+        document.documentElement.style.setProperty('--mobile-keyboard-offset', '0px');
+    }
+
+    updateViewportMetrics();
+}
 
 function formatCounter(value, width = 3) {
     return String(value).padStart(width, '0');
@@ -116,6 +152,10 @@ function renderInterfaceChrome() {
 }
 
 function focusCommandInput() {
+    if (isMobileThemeActive && !mobileCommandBarElement) {
+        return;
+    }
+
     if (document.activeElement !== inputElement) {
         inputElement.focus({ preventScroll: true });
     }
@@ -254,6 +294,25 @@ inputElement.addEventListener('input', () => {
     renderScreen();
 });
 
+inputElement.addEventListener('focus', () => {
+    if (isMobileThemeActive) {
+        bodyElement.dataset.mobileInputActive = 'true';
+        updateViewportMetrics();
+    }
+
+    renderScreen();
+});
+
+inputElement.addEventListener('blur', () => {
+    bodyElement.dataset.mobileInputActive = 'false';
+
+    if (isMobileThemeActive) {
+        globalThis.setTimeout(updateViewportMetrics, 80);
+    }
+
+    renderScreen();
+});
+
 function handleInputKeyDown(event, input = inputElement) {
     switch (event.key) {
         case 'Enter': {
@@ -298,6 +357,21 @@ inputElement.addEventListener('keydown', function(event) {
     handleInputKeyDown(event, this);
 });
 
+mobileCommandBarElement.addEventListener('submit', event => {
+    event.preventDefault();
+    const command = inputElement.value.trim();
+
+    if (command) {
+        commandHistory.push(command);
+    }
+
+    historyIndex = commandHistory.length;
+    handleCommand(command);
+    inputElement.value = '';
+    renderScreen();
+    focusCommandInput();
+});
+
 document.addEventListener('keydown', event => {
     if (document.activeElement === inputElement) {
         return;
@@ -333,6 +407,7 @@ function handleCommand(command) {
 }
 
 globalThis.onload = function() {
+    applyDeviceTheme();
     textGrid.createOrUpdateGrid();
     const startupMetaMessage = gameSession.getStartupMetaMessage();
     if (startupMetaMessage?.text) {
@@ -341,7 +416,10 @@ globalThis.onload = function() {
 
     appendTranscriptEntry(gameSession.start());
     renderScreen();
-    focusCommandInput();
+
+    if (!isMobileThemeActive) {
+        focusCommandInput();
+    }
 };
 
 globalThis.setInterval(() => {
@@ -350,11 +428,20 @@ globalThis.setInterval(() => {
 }, 530);
 
 globalThis.addEventListener('pointerdown', () => {
-    focusCommandInput();
+    if (!isMobileThemeActive) {
+        focusCommandInput();
+    }
+
     renderScreen();
 });
 
 globalThis.addEventListener('focus', renderScreen);
 globalThis.addEventListener('blur', renderScreen);
+globalThis.addEventListener('resize', applyDeviceTheme);
+
+if (globalThis.visualViewport) {
+    globalThis.visualViewport.addEventListener('resize', updateViewportMetrics);
+    globalThis.visualViewport.addEventListener('scroll', updateViewportMetrics);
+}
 
 

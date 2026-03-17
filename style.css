@@ -8,6 +8,8 @@
   --panel-width: clamp(220px, 24vw, 320px);
   --panel-gap: clamp(10px, 1.5vw, 18px);
   --mobile-command-bar-height: 52px;
+  --visual-viewport-height: 100dvh;
+  --mobile-keyboard-offset: 0px;
 }
 
 html,
@@ -294,6 +296,210 @@ body {
   outline: none;
 }
 
+#mobile-command-bar {
+  display: none;
+}
+
+body[data-device-theme="mobile"] {
+  display: block;
+  overflow: auto;
+}
+
+body[data-device-theme="mobile"] #screen-shell {
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: var(--visual-viewport-height);
+  height: auto;
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-right: max(10px, env(safe-area-inset-right));
+  padding-bottom: calc(var(--mobile-command-bar-height) + 26px + env(safe-area-inset-bottom) + var(--mobile-keyboard-offset));
+  padding-left: max(10px, env(safe-area-inset-left));
+}
+
+body[data-device-theme="mobile"] #terminal-stage {
+  width: 100%;
+  max-width: 100%;
+  max-height: none;
+  gap: 8px;
+}
+
+body[data-device-theme="mobile"] #status-bar,
+body[data-device-theme="mobile"] #terminal-stage[data-layout="transcript-only"] #status-bar,
+body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  width: 100%;
+  align-self: stretch;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+body[data-device-theme="mobile"] #status-title-group,
+body[data-device-theme="mobile"] #status-stats {
+  width: 100%;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+body[data-device-theme="mobile"] .status-divider {
+  display: none;
+}
+
+body[data-device-theme="mobile"] #game-title,
+body[data-device-theme="mobile"] #current-location,
+body[data-device-theme="mobile"] #turn-counter,
+body[data-device-theme="mobile"] #score-counter {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body[data-device-theme="mobile"] .meta-column {
+  display: none;
+}
+
+body[data-device-theme="mobile"] #terminal-content,
+body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #terminal-content {
+  flex-direction: column;
+  gap: 8px;
+}
+
+body[data-device-theme="mobile"] #text-grid-container,
+body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #text-grid-container {
+  width: 100%;
+  max-width: 100%;
+  min-height: min(58svh, 520px);
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: none;
+  box-sizing: border-box;
+}
+
+body[data-device-theme="mobile"] #text-grid {
+  display: block;
+  min-width: max-content;
+  padding-bottom: 2px;
+}
+
+body[data-device-theme="mobile"] #panel-stack,
+body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-basis: auto;
+  width: 100%;
+  max-width: 100%;
+  opacity: 1;
+  overflow: visible;
+  transform: none;
+  pointer-events: auto;
+}
+
+body[data-device-theme="mobile"] #terminal-stage[data-layout="transcript-only"] #panel-stack {
+  width: 0;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+body[data-device-theme="mobile"] .ui-panel {
+  width: 100%;
+  max-height: none;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+body[data-device-theme="mobile"] .ui-panel[data-visible="false"] {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+body[data-device-theme="mobile"] .panel-heading {
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+}
+
+body[data-device-theme="mobile"] .panel-body {
+  min-height: 0;
+  max-height: 14lh;
+  overflow: auto;
+}
+
+body[data-device-theme="mobile"] #mobile-command-bar {
+  position: fixed;
+  left: max(10px, env(safe-area-inset-left));
+  right: max(10px, env(safe-area-inset-right));
+  bottom: calc(10px + env(safe-area-inset-bottom) + var(--mobile-keyboard-offset));
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--cga-amber);
+  background-color: rgba(0, 0, 0, 0.96);
+  box-shadow: 0 0 18px rgba(255, 191, 0, 0.12);
+  box-sizing: border-box;
+}
+
+body[data-device-theme="mobile"] #mobile-command-prompt {
+  color: var(--cga-amber);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: 16px;
+  line-height: 1;
+}
+
+body[data-device-theme="mobile"] #cli-input {
+  position: static;
+  left: auto;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 191, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.94);
+  color: var(--cga-amber);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 1;
+  pointer-events: auto;
+  box-sizing: border-box;
+  caret-color: var(--cga-amber);
+}
+
+body[data-device-theme="mobile"] #cli-input::placeholder {
+  color: rgba(255, 191, 0, 0.5);
+}
+
+body[data-device-theme="mobile"] #mobile-command-submit {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 191, 0, 0.5);
+  background-color: rgba(255, 191, 0, 0.08);
+  color: var(--cga-amber);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+body[data-device-theme="mobile"] #mobile-command-submit:active {
+  background-color: rgba(255, 191, 0, 0.18);
+}
+
+body[data-device-theme="mobile"][data-mobile-input-active="true"] #mobile-command-bar {
+  box-shadow: 0 0 22px rgba(255, 191, 0, 0.18);
+}
+
 @media (max-width: 1180px) {
   html,
   body {
@@ -370,6 +576,10 @@ body {
 }
 
 @media (max-width: 760px) {
+  body:not([data-device-theme="mobile"]) {
+    display: block;
+  }
+
   :root {
     --screen-shell-padding: max(8px, env(safe-area-inset-left));
     --terminal-frame-padding: 8px;
@@ -447,7 +657,7 @@ body {
     max-height: 16lh;
   }
 
-  #cli-input {
+  body:not([data-device-theme="mobile"]) #cli-input {
     position: fixed;
     left: max(8px, env(safe-area-inset-left));
     right: max(8px, env(safe-area-inset-right));
@@ -470,7 +680,7 @@ body {
     caret-color: var(--cga-amber);
   }
 
-  #cli-input::placeholder {
+  body:not([data-device-theme="mobile"]) #cli-input::placeholder {
     color: rgba(255, 191, 0, 0.5);
   }
 }
