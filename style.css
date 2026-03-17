@@ -549,7 +549,7 @@ body[data-device-theme="mobile"][data-mobile-input-active="true"] #mobile-comman
   box-shadow: 0 0 22px rgba(255, 191, 0, 0.18);
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 700px) {
   html,
   body {
     overflow: auto;

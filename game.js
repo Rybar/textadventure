@@ -59,10 +59,12 @@ let isMobileThemeActive = false;
 function shouldUseMobileTheme() {
     const hasMatchMedia = typeof globalThis.matchMedia === 'function';
     const coarsePointer = hasMatchMedia ? globalThis.matchMedia('(pointer: coarse)').matches : false;
-    const narrowViewport = hasMatchMedia ? globalThis.matchMedia('(max-width: 1180px)').matches : false;
-    const shortViewport = hasMatchMedia ? globalThis.matchMedia('(max-height: 900px)').matches : false;
+    const narrowViewport = hasMatchMedia ? globalThis.matchMedia('(max-width: 900px)').matches : false;
+    const shortViewport = hasMatchMedia ? globalThis.matchMedia('(max-height: 520px)').matches : false;
+    const userAgent = globalThis.navigator?.userAgent ?? '';
+    const handheldMobileAgent = /iphone|ipod|android.+mobile|windows phone|mobile/i.test(userAgent);
 
-    return coarsePointer && (narrowViewport || shortViewport);
+    return coarsePointer && (handheldMobileAgent || (narrowViewport && shortViewport));
 }
 
 function updateViewportMetrics() {
