@@ -8,6 +8,7 @@ import {
   moveToFoyer,
   moveToGrandfatherRoom,
   moveToGuestWing,
+  moveToNathemaRoom,
   moveToKitchen,
   moveToLibrary,
   moveToPlumRoom,
@@ -390,4 +391,36 @@ test('the stockroom contraband can be stolen or self-administered at a cost', ()
   assert.match(secondSession.submitCommand('drink elixir'), /corruption for capability/i);
   assert.equal(secondSession.worldState.getFlag('blackWindElixirConsumed'), true);
   assert.equal(secondSession.worldState.getItemLocation('black-wind-elixir'), null);
+});
+
+test('Nathema turns black-wind evidence or contraband into immediate leverage', () => {
+  const session = createTestSession();
+
+  moveToAlchemyStockroom(session);
+  assert.match(session.submitCommand('take ledger'), /you take the black wind ledger/i);
+  assert.match(session.submitCommand('west'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(session.submitCommand('show ledger to nathema'), /not gossip\. that is architecture/i);
+  assert.equal(session.worldState.getFlag('nathemaEvidenceShown'), true);
+  assert.match(session.submitCommand('ask nathema about escape'), /evidence if you want scandal/i);
+
+  const secondSession = createTestSession();
+  moveToAlchemyStockroom(secondSession);
+  assert.match(secondSession.submitCommand('take black wind fruit'), /you take the black wind fruit/i);
+  assert.match(secondSession.submitCommand('west'), /Wrongus holds dominion here/i);
+  assert.match(secondSession.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(secondSession.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(secondSession.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(secondSession.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(secondSession.submitCommand('give black wind fruit to nathema'), /alter decisions|turn leverage into alignment/i);
+  assert.equal(secondSession.worldState.getFlag('nathemaBlackWindSampleDelivered'), true);
+  assert.equal(secondSession.worldState.getItemLocation('black-wind-fruit'), null);
+  assert.match(secondSession.submitCommand('ask nathema about black wind'), /documents buy fear|fruit buys appetites/i);
+
+  const thirdSession = createTestSession();
+  moveToNathemaRoom(thirdSession);
+  assert.match(thirdSession.submitCommand('tell nathema i have evidence'), /show me something i can sell/i);
 });

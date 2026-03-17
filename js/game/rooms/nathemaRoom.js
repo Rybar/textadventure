@@ -19,6 +19,29 @@ export function createNathemaRoom() {
     setFlag('nathemaMet', true);
   };
 
+  const hasNathemaLeverage = getFlag => {
+    return getFlag('nathemaEvidenceShown') || getFlag('nathemaBlackWindSampleDelivered');
+  };
+
+  const handleNathemaLedgerReview = ({ setFlag }) => {
+    setFlag('nathemaBargained', true);
+    setFlag('nathemaEvidenceShown', true);
+
+    return 'Nathema opens the ledger only far enough to confirm the columns, the names, and Oshregaal\'s correction marks. Her expression sharpens into professional satisfaction. "There," she says softly. "That is not gossip. That is architecture. Keep it for now. A document this toxic is worth more in a hand that can still leave the room with it."';
+  };
+
+  const handleNathemaBlackWindSample = ({ item, setFlag, worldState }) => {
+    setFlag('nathemaBargained', true);
+    setFlag('nathemaBlackWindSampleDelivered', true);
+    worldState.removeItemById(item.id);
+
+    if (item.id === 'black-wind-fruit') {
+      return 'Nathema accepts the fruit with immediate, disciplined hunger, wrapping it in cloth before the room can fully witness the exchange. "Now we are speaking in quantities that alter decisions," she says. "Good. Do not ask for trust. Ask what this buys."';
+    }
+
+    return 'Nathema takes the elixir phial, turns it once against the light, and hides it inside her sleeve with practiced speed. "Concentrated, portable, and deniable," she murmurs. "You have finally brought me a sentence this house understands."';
+  };
+
   const nathemaAsk = createTopicResponder({
     before: markNathemaMet,
     rules: [
@@ -32,16 +55,32 @@ export function createNathemaRoom() {
       },
       {
         match: ['fruit', 'black wind', 'elixir'],
-        effect: ({ triggerEvent }) => {
-          triggerEvent('startNathemaBargain');
+        effect: ({ setFlag }) => {
+          setFlag('nathemaBargained', true);
         },
-        reply: 'Nathema studies you with sudden professional interest. "So you have heard useful words," she says. "Bring me anything from the black wind line and I may decide your survival has become strategically attractive."',
+        reply: ({ getFlag }) => hasNathemaLeverage(getFlag)
+          ? 'Nathema smiles with all the warmth of a sharpened treaty. "Now you understand the scale of the thing," she says. "Fruit buys appetites. Elixir buys armies. Documents buy fear. Any of them can open a road if used at the correct angle."'
+          : 'Nathema studies you with sudden professional interest. "So you have heard useful words," she says. "Bring me anything from the black wind line and I may decide your survival has become strategically attractive."',
       },
       {
         match: ['escape', 'leave', 'outside'],
-        reply: ({ getFlag }) => getFlag('nathemaBargained')
-          ? '"Escape is easiest when everyone mistakes it for a transaction," Nathema says. "Acquire leverage first. Doors respect leverage more than sincerity."'
-          : 'Nathema glances toward the corridor. "Everyone in this house wants out in some sense," she says. "The relevant question is who expects to own the road afterward."',
+        reply: ({ getFlag }) => {
+          if (hasNathemaLeverage(getFlag)) {
+            return '"Now you have the beginnings of a real departure," Nathema says. "Evidence if you want scandal. Sample if you want bargaining power. Bring one more useful thing or one precise opportunity, and I can turn this from survival into negotiation."';
+          }
+
+          if (getFlag('nathemaBargained')) {
+            return '"Escape is easiest when everyone mistakes it for a transaction," Nathema says. "Acquire leverage first. Doors respect leverage more than sincerity."';
+          }
+
+          return 'Nathema glances toward the corridor. "Everyone in this house wants out in some sense," she says. "The relevant question is who expects to own the road afterward."';
+        },
+      },
+      {
+        match: ['ledger', 'records', 'evidence', 'proof'],
+        reply: ({ getFlag }) => getFlag('nathemaEvidenceShown')
+          ? 'Nathema taps one finger against her knee. "The ledger is excellent leverage," she says. "Not because it is true, but because it is legible to people who pay others to fear truth for them."'
+          : 'Nathema tilts her head. "If you can produce written proof instead of tavern outrage, my interest improves dramatically," she says.',
       },
       {
         match: ['chest', 'contraband', 'luggage'],
@@ -73,10 +112,16 @@ export function createNathemaRoom() {
       },
       {
         match: ['i can help', 'we can help'],
-        effect: ({ triggerEvent }) => {
-          triggerEvent('startNathemaBargain');
+        effect: ({ setFlag }) => {
+          setFlag('nathemaBargained', true);
         },
         reply: 'Nathema appraises you like contraband with legs. "Possibly," she says. "Bring me leverage rather than enthusiasm and I may begin to agree."',
+      },
+      {
+        match: ['i have evidence', 'i have proof', 'i found records'],
+        reply: ({ getFlag }) => getFlag('nathemaEvidenceShown')
+          ? '"Yes," Nathema says. "You have already improved from rumor to usefulness. Continue."'
+          : 'Nathema makes a small inviting motion with two fingers. "Then show me something I can sell, threaten with, or survive by," she says.',
       },
     ],
     fallback: 'Nathema receives your words without giving them the dignity of visible surprise.',
@@ -122,6 +167,10 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
         when: ({ getFlag }) => getFlag('nathemaBargained'),
         text: 'Nathema now regards you as a potential instrument rather than an idle guest, which is not safety but may prove adjacent to usefulness.',
       },
+      {
+        when: ({ getFlag }) => hasNathemaLeverage(getFlag),
+        text: 'The room has shifted from speculative intrigue to active negotiation. Nathema is no longer evaluating whether you might matter, only what price your usefulness can command.',
+      },
     ],
     objects: {
       nathema: {
@@ -131,6 +180,29 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
         actions: {
           ask: nathemaAsk,
           tell: nathemaTell,
+          show({ item, setFlag }) {
+            if (item.id === 'black-wind-ledger') {
+              return handleNathemaLedgerReview({ setFlag });
+            }
+
+            if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir') {
+              setFlag('nathemaBargained', true);
+              return `Nathema studies the ${item.name} without touching it. "Good," she says. "Now either keep it as leverage or give it to me and turn leverage into alignment."`;
+            }
+
+            return `Nathema glances at the ${item.name} and decides it is not yet a persuasive argument.`;
+          },
+          give({ item, setFlag, worldState }) {
+            if (item.id === 'black-wind-ledger') {
+              return handleNathemaLedgerReview({ setFlag });
+            }
+
+            if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir') {
+              return handleNathemaBlackWindSample({ item, setFlag, worldState });
+            }
+
+            return `Nathema declines the ${item.name} with the air of someone refusing a coin too small to insult her properly.`;
+          },
         },
       },
       chest: 'One travel chest is wrapped in diplomatic cloth and bound with a cord too practical for ceremony. It is the room\'s least innocent object.',

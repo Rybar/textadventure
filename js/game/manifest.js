@@ -95,6 +95,8 @@ export function createGameManifest() {
       nathemaMet: false,
       nathemaBargained: false,
       nathemaContrabandKnown: false,
+      nathemaEvidenceShown: false,
+      nathemaBlackWindSampleDelivered: false,
       foundTeleportCircle: false,
       hasTeleportScroll: false,
       secretCircleUnlocked: false,

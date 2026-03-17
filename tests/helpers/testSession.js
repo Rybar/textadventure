@@ -61,6 +61,11 @@ export function moveToGuestWing(session) {
   session.submitCommand('up');
 }
 
+export function moveToNathemaRoom(session) {
+  moveToGuestWing(session);
+  session.submitCommand('north');
+}
+
 export function moveToKitchen(session) {
   moveToFeastHall(session);
   session.submitCommand('east');
