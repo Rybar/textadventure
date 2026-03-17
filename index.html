@@ -14,15 +14,7 @@
         </div>
         <div id="terminal-stage" data-layout="transcript-only">
             <header id="status-bar" aria-label="Game status">
-                <div id="status-title-group">
-                    <span id="game-title">The Meal of Oshregaal</span>
-                    <span class="status-divider">//</span>
-                    <span id="current-location">Booting shell</span>
-                </div>
-                <div id="status-stats">
-                    <span id="turn-counter">TURNS 000</span>
-                    <span id="score-counter">SCORE ---</span>
-                </div>
+                    <div id="status-meta-line" data-source="" aria-live="polite"></div>
             </header>
             <div id="mobile-panel-tabs" aria-label="Mobile panel tabs" aria-hidden="true">
                 <button type="button" class="mobile-panel-tab" data-panel-id="map" hidden>MAP</button>
@@ -31,8 +23,7 @@
             </div>
             <div id="terminal-content">
                 <div id="text-grid-container">
-                    <pre id="text-grid" aria-live="polite"></pre>
-                    <div id="mobile-transcript" aria-live="polite"></div>
+                    <div id="transcript-output" aria-live="polite"></div>
                 </div>
                 <aside id="panel-stack" aria-label="Interface panels" aria-hidden="true">
                     <section id="panel-map" class="ui-panel" data-state="locked" data-visible="false" aria-hidden="true">
@@ -49,26 +40,26 @@
                     </section>
                 </aside>
             </div>
+            <form id="command-bar" aria-label="Command input" novalidate>
+                <label id="command-prompt" for="cli-input">&gt;</label>
+                <input
+                    type="text"
+                    id="cli-input"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    enterkeyhint="send"
+                    aria-label="Command input"
+                    placeholder="Enter command"
+                >
+                <button id="command-submit" type="submit">Enter</button>
+            </form>
         </div>
         <div id="meta-column-right" class="meta-column" aria-hidden="true">
             <div id="ephemeral-message-right" class="ephemeral-message"></div>
             <div id="ephemeral-message-lower-right" class="ephemeral-message"></div>
         </div>
     </main>
-    <form id="mobile-command-bar" aria-label="Command input" novalidate>
-        <label id="mobile-command-prompt" for="cli-input">&gt;</label>
-        <input
-            type="text"
-            id="cli-input"
-            autocomplete="off"
-            autocapitalize="off"
-            spellcheck="false"
-            enterkeyhint="send"
-            aria-label="Command input"
-            placeholder="Enter command"
-        >
-        <button id="mobile-command-submit" type="submit">Enter</button>
-    </form>
     <script type="module" src="game.js"></script>
 </body>
 </html>

@@ -1,37 +1,29 @@
-import TextGrid from './js/engine/render/textGrid.js';
 import { animateScrambledText } from './js/engine/render/textEffects.js';
 import { GameSession } from './js/engine/world/gameSession.js';
 import { createGameManifest } from './js/game/manifest.js';
 
-const textGrid = new TextGrid();
 const gameSession = new GameSession(createGameManifest);
 globalThis.game = gameSession;
 
 const bodyElement = document.body;
-const screenShellElement = document.getElementById('screen-shell');
 const transcriptEntries = [];
 const commandHistory = [];
 let historyIndex = -1;
-let cursorVisible = true;
 let activeMobilePanelId = null;
+let nextTranscriptEntryId = 1;
+let activeTypingIntervalId = null;
+let activeTypingEntryId = null;
+let activeStatusMetaTimeoutId = null;
+let activeStatusMetaMessage = null;
+let stopActiveStatusMetaAnimation = null;
+const queuedStatusMetaMessages = [];
 const inputElement = document.getElementById('cli-input');
-const mobileCommandBarElement = document.getElementById('mobile-command-bar');
+const commandBarElement = document.getElementById('command-bar');
 const mobilePanelTabsElement = document.getElementById('mobile-panel-tabs');
 const mobilePanelTabElements = Array.from(document.querySelectorAll('.mobile-panel-tab'));
-const mobileTranscriptElement = document.getElementById('mobile-transcript');
-const ephemeralMessageElements = {
-    sideLeft: document.getElementById('ephemeral-message-left'),
-    sideRight: document.getElementById('ephemeral-message-right'),
-    lowerLeft: document.getElementById('ephemeral-message-lower-left'),
-    lowerRight: document.getElementById('ephemeral-message-lower-right'),
-};
-const stopEphemeralAnimations = new Map();
-const scheduledEphemeralTimeouts = new Map();
+const transcriptOutputElement = document.getElementById('transcript-output');
 const statusElements = {
-    gameTitle: document.getElementById('game-title'),
-    currentLocation: document.getElementById('current-location'),
-    turnCounter: document.getElementById('turn-counter'),
-    scoreCounter: document.getElementById('score-counter'),
+    metaLine: document.getElementById('status-meta-line'),
 };
 const terminalStageElement = document.getElementById('terminal-stage');
 const panelStackElement = document.getElementById('panel-stack');
@@ -49,13 +41,9 @@ const panelElements = {
         body: document.getElementById('panel-memory-body'),
     },
 };
-const metaColumns = {
-    sideLeft: document.getElementById('meta-column-left'),
-    sideRight: document.getElementById('meta-column-right'),
-    lowerLeft: document.getElementById('meta-column-left'),
-    lowerRight: document.getElementById('meta-column-right'),
-};
 let isMobileThemeActive = false;
+const TYPEWRITER_FRAME_MS = 16;
+const TYPEWRITER_CHARS_PER_FRAME = 4;
 
 function shouldUseMobileTheme() {
     const hasMatchMedia = typeof globalThis.matchMedia === 'function';
@@ -89,11 +77,6 @@ function applyDeviceTheme() {
     }
 
     updateViewportMetrics();
-    textGrid.setViewportMode({ mobile: isMobileThemeActive });
-}
-
-function formatCounter(value, width = 3) {
-    return String(value).padStart(width, '0');
 }
 
 function escapeHtml(text) {
@@ -169,13 +152,6 @@ function renderInterfaceChrome() {
     terminalStageElement.dataset.mobilePanelOpen = isMobileThemeActive && activeMobilePanelId ? 'true' : 'false';
     panelStackElement.setAttribute('aria-hidden', unlockedPanels.length > 0 ? 'false' : 'true');
 
-    statusElements.gameTitle.textContent = interfaceModel.title;
-    statusElements.currentLocation.textContent = interfaceModel.location;
-    statusElements.turnCounter.textContent = `TURNS ${formatCounter(interfaceModel.turns)}`;
-    statusElements.scoreCounter.textContent = interfaceModel.score == null
-        ? 'SCORE ---'
-        : `SCORE ${formatCounter(interfaceModel.score)}`;
-
     syncMobilePanelTabs(interfaceModel.panels);
 
     interfaceModel.panels.forEach(panel => {
@@ -188,8 +164,190 @@ function renderInterfaceChrome() {
     });
 }
 
+function clearStatusMetaDisplay() {
+    if (activeStatusMetaTimeoutId) {
+        globalThis.clearTimeout(activeStatusMetaTimeoutId);
+        activeStatusMetaTimeoutId = null;
+    }
+
+    if (stopActiveStatusMetaAnimation) {
+        stopActiveStatusMetaAnimation();
+        stopActiveStatusMetaAnimation = null;
+    }
+
+    activeStatusMetaMessage = null;
+    statusElements.metaLine.textContent = '';
+    statusElements.metaLine.dataset.source = '';
+}
+
+function estimateStatusMetaDuration(message) {
+    const options = message.options ?? {};
+    const frameRate = options.frameRate ?? 60;
+    const clearFrameLength = options.clearFrameLength ?? 40;
+    const revealFrameLength = Math.max(16, Math.round(1000 / frameRate));
+    const revealDuration = Math.max(700, Math.ceil(message.text.length / 3) * revealFrameLength * 0.9);
+    const clearDuration = Math.max(450, Math.ceil(message.text.length / 4) * (clearFrameLength * 0.55));
+    return revealDuration + (options.holdDuration ?? 1800) + clearDuration;
+}
+
+function showNextStatusMetaMessage() {
+    if (activeStatusMetaMessage || queuedStatusMetaMessages.length === 0) {
+        return;
+    }
+
+    const message = queuedStatusMetaMessages.shift();
+    if (!message?.text) {
+        showNextStatusMetaMessage();
+        return;
+    }
+
+    activeStatusMetaMessage = message;
+    statusElements.metaLine.dataset.source = message.source ?? '';
+    statusElements.metaLine.textContent = '';
+
+    stopActiveStatusMetaAnimation = animateScrambledText(statusElements.metaLine, message.text, message.options ?? {});
+    activeStatusMetaTimeoutId = globalThis.setTimeout(() => {
+        activeStatusMetaMessage = null;
+        activeStatusMetaTimeoutId = null;
+        stopActiveStatusMetaAnimation = null;
+        statusElements.metaLine.dataset.source = '';
+        showNextStatusMetaMessage();
+    }, estimateStatusMetaDuration(message));
+}
+
+function scrollTranscriptToBottom() {
+    const container = transcriptOutputElement.parentElement;
+    if (!container) {
+        return;
+    }
+
+    container.scrollTop = container.scrollHeight;
+}
+
+function renderTranscriptEntries() {
+    const fragment = document.createDocumentFragment();
+
+    transcriptEntries.forEach(entry => {
+        const entryElement = document.createElement('article');
+        entryElement.className = `transcript-entry transcript-entry-${entry.type}`;
+
+        if (entry.type === 'turn') {
+            const commandElement = document.createElement('div');
+            commandElement.className = 'transcript-command';
+            commandElement.textContent = `> ${entry.command}`;
+            entryElement.appendChild(commandElement);
+
+            const responseElement = document.createElement('div');
+            responseElement.className = 'transcript-response';
+            responseElement.textContent = entry.renderedResponse;
+            entryElement.appendChild(responseElement);
+        } else {
+            const systemElement = document.createElement('div');
+            systemElement.className = 'transcript-system';
+            systemElement.textContent = entry.renderedText;
+            entryElement.appendChild(systemElement);
+        }
+
+        fragment.appendChild(entryElement);
+    });
+
+    transcriptOutputElement.replaceChildren(fragment);
+    scrollTranscriptToBottom();
+}
+
+function renderScreen() {
+    renderInterfaceChrome();
+    renderTranscriptEntries();
+}
+
+function finalizeTypingAnimation() {
+    if (activeTypingIntervalId) {
+        globalThis.clearInterval(activeTypingIntervalId);
+        activeTypingIntervalId = null;
+    }
+
+    if (activeTypingEntryId == null) {
+        return;
+    }
+
+    const entry = transcriptEntries.find(candidate => candidate.id === activeTypingEntryId);
+    if (entry) {
+        if (entry.type === 'turn') {
+            entry.renderedResponse = entry.response;
+        } else {
+            entry.renderedText = entry.text;
+        }
+    }
+
+    activeTypingEntryId = null;
+}
+
+function startTypingAnimation(entry) {
+    const fullText = entry.type === 'turn' ? entry.response : entry.text;
+    if (!fullText) {
+        return;
+    }
+
+    activeTypingEntryId = entry.id;
+    let visibleLength = 0;
+
+    activeTypingIntervalId = globalThis.setInterval(() => {
+        visibleLength = Math.min(fullText.length, visibleLength + TYPEWRITER_CHARS_PER_FRAME);
+
+        if (entry.type === 'turn') {
+            entry.renderedResponse = fullText.slice(0, visibleLength);
+        } else {
+            entry.renderedText = fullText.slice(0, visibleLength);
+        }
+
+        renderScreen();
+
+        if (visibleLength >= fullText.length) {
+            finalizeTypingAnimation();
+        }
+    }, TYPEWRITER_FRAME_MS);
+}
+
+function appendTranscriptEntry(entry) {
+    finalizeTypingAnimation();
+
+    if (!entry) {
+        return;
+    }
+
+    if (entry.type === 'turn') {
+        const transcriptEntry = {
+            id: nextTranscriptEntryId,
+            type: 'turn',
+            command: entry.command,
+            response: entry.response,
+            renderedResponse: '',
+        };
+        nextTranscriptEntryId += 1;
+        transcriptEntries.push(transcriptEntry);
+        renderScreen();
+        startTypingAnimation(transcriptEntry);
+        return;
+    }
+
+    const transcriptEntry = {
+        id: nextTranscriptEntryId,
+        type: 'system',
+        text: entry.text,
+        renderedText: '',
+    };
+    nextTranscriptEntryId += 1;
+    transcriptEntries.push(transcriptEntry);
+    renderScreen();
+    startTypingAnimation(transcriptEntry);
+}
+
+function appendLatestTranscriptEntry() {
+    appendTranscriptEntry(gameSession.transcript.entries.at(-1) ?? null);
+}
+
 function focusCommandInput() {
-    if (isMobileThemeActive && !mobileCommandBarElement) {
+    if (!commandBarElement) {
         return;
     }
 
@@ -202,139 +360,36 @@ function isPrintableKey(event) {
     return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
 }
 
-function positionEphemeralMessage(element, options = {}) {
-    if (!element) {
-        return;
-    }
-
-    const topPercent = options.topPercent ?? 6;
-    element.style.top = `${topPercent}%`;
-}
-
-function clearEphemeralSlot(elementKey) {
-    const existingTimeout = scheduledEphemeralTimeouts.get(elementKey);
-    if (existingTimeout) {
-        globalThis.clearTimeout(existingTimeout);
-        scheduledEphemeralTimeouts.delete(elementKey);
-    }
-
-    const existingStop = stopEphemeralAnimations.get(elementKey);
-    if (existingStop) {
-        existingStop();
-        stopEphemeralAnimations.delete(elementKey);
-    }
-}
-
-function renderEphemeralMessage(elementKey, message, options = {}) {
-    const element = ephemeralMessageElements[elementKey];
-    const column = metaColumns[elementKey];
-    if (!element || !column) {
-        return;
-    }
-    const isLower = elementKey === 'lowerLeft' || elementKey === 'lowerRight';
-    const topPercent = options.topPercent ?? (isLower ? 60 + (Math.random() * 18) : 6);
-    const columnWidth = column.getBoundingClientRect().width;
-    const inset = Math.max(0, Math.floor(columnWidth * 0.03));
-
-    element.style.left = `${inset}px`;
-    element.style.right = `${inset}px`;
-    element.style.maxWidth = `${Math.max(120, Math.floor(columnWidth - (inset * 2)))}px`;
-    element.style.textAlign = 'left';
-
-    if (options.scramble === false) {
-        element.textContent = message;
-        positionEphemeralMessage(element, { topPercent });
-        return;
-    }
-
-    const stopAnimation = animateScrambledText(element, message, {
-        frameRate: options.frameRate ?? 60,
-        holdDuration: options.holdDuration,
-        clearFrameLength: options.clearFrameLength,
-        revealChance: options.revealChance,
-        clearFraction: options.clearFraction,
-    });
-    stopEphemeralAnimations.set(elementKey, stopAnimation);
-
-    globalThis.requestAnimationFrame(() => {
-        positionEphemeralMessage(element, { topPercent });
-    });
-}
-
-function updateEphemeralMessage(elementKey, message, options = {}) {
-    clearEphemeralSlot(elementKey);
-
-    const delayMs = options.delayMs ?? 0;
-    if (delayMs > 0) {
-        const timeoutId = globalThis.setTimeout(() => {
-            scheduledEphemeralTimeouts.delete(elementKey);
-            renderEphemeralMessage(elementKey, message, options);
-        }, delayMs);
-        scheduledEphemeralTimeouts.set(elementKey, timeoutId);
-        return;
-    }
-
-    renderEphemeralMessage(elementKey, message, options);
-}
-
 function updateMetaMessages(messages = []) {
     messages.forEach(message => {
         if (!message?.text) {
             return;
         }
 
-        const messageOptions = message.options;
-
-        if (message.placement === 'side-left') {
-            updateEphemeralMessage('sideLeft', message.text, {
-                ...messageOptions,
-                placement: 'side-left',
-                delayMs: message.delayMs ?? 0,
-            });
-            return;
-        }
-
-        if (message.placement === 'side-right') {
-            updateEphemeralMessage('sideRight', message.text, {
-                ...messageOptions,
-                placement: 'side-right',
-                delayMs: message.delayMs ?? 0,
-            });
-            return;
-        }
-
-        const lowerKey = Math.random() < 0.5 ? 'lowerLeft' : 'lowerRight';
-        clearEphemeralSlot('lowerLeft');
-        clearEphemeralSlot('lowerRight');
-        updateEphemeralMessage(lowerKey, message.text, {
-            ...messageOptions,
-            placement: message.placement ?? 'lower-random',
+        queuedStatusMetaMessages.push({
+            ...message,
             delayMs: message.delayMs ?? 0,
         });
     });
-}
 
-function renderScreen() {
-    renderInterfaceChrome();
+    if (!activeStatusMetaMessage) {
+        if (queuedStatusMetaMessages[0]?.delayMs > 0) {
+            const delayedMessage = queuedStatusMetaMessages.shift();
+            activeStatusMetaMessage = { delayed: true };
+            activeStatusMetaTimeoutId = globalThis.setTimeout(() => {
+                activeStatusMetaMessage = null;
+                activeStatusMetaTimeoutId = null;
+                queuedStatusMetaMessages.unshift({
+                    ...delayedMessage,
+                    delayMs: 0,
+                });
+                showNextStatusMetaMessage();
+            }, delayedMessage.delayMs);
+            return;
+        }
 
-    if (isMobileThemeActive) {
-        mobileTranscriptElement.textContent = transcriptEntries.join('\n\n');
-        mobileTranscriptElement.scrollTop = mobileTranscriptElement.scrollHeight;
-        return;
+        showNextStatusMetaMessage();
     }
-
-    textGrid.setViewportMode({ mobile: false });
-    const transcriptLines = transcriptEntries.flatMap(entry => textGrid.wrapText(entry));
-    textGrid.renderFrame({
-        transcriptLines,
-        promptText: inputElement.value,
-        cursorVisible: document.activeElement === inputElement && cursorVisible,
-        promptVisible: true,
-    });
-}
-
-function appendTranscriptEntry(text) {
-    transcriptEntries.push(String(text));
 }
 
 inputElement.addEventListener('input', () => {
@@ -404,7 +459,7 @@ inputElement.addEventListener('keydown', function(event) {
     handleInputKeyDown(event, this);
 });
 
-mobileCommandBarElement.addEventListener('submit', event => {
+commandBarElement.addEventListener('submit', event => {
     event.preventDefault();
     const command = inputElement.value.trim();
 
@@ -455,32 +510,27 @@ document.addEventListener('keydown', event => {
 });
 
 function handleCommand(command) {
-    const transcriptEntry = gameSession.submitCommand(command);
-    appendTranscriptEntry(transcriptEntry);
+    gameSession.submitCommand(command);
+    appendLatestTranscriptEntry();
     updateMetaMessages(gameSession.consumePendingMetaMessages());
     renderScreen();
 }
 
 globalThis.onload = function() {
     applyDeviceTheme();
-    textGrid.createOrUpdateGrid();
     const startupMetaMessage = gameSession.getStartupMetaMessage();
     if (startupMetaMessage?.text) {
         updateMetaMessages([startupMetaMessage]);
     }
 
-    appendTranscriptEntry(gameSession.start());
+    gameSession.start();
+    appendLatestTranscriptEntry();
     renderScreen();
 
     if (!isMobileThemeActive) {
         focusCommandInput();
     }
 };
-
-globalThis.setInterval(() => {
-    cursorVisible = !cursorVisible;
-    renderScreen();
-}, 530);
 
 globalThis.addEventListener('pointerdown', () => {
     if (!isMobileThemeActive) {

@@ -872,6 +872,54 @@ export class WorldState {
     return nextMessages;
   }
 
+  buildNextHackerMessages({ force = false } = {}) {
+    const hackerEntries = this.getHackerScheduleEntries();
+    if (hackerEntries.length === 0) {
+      return [];
+    }
+
+    const nextHackerEntry = this.findNextMetaEntry(
+      hackerEntries,
+      this.metaState.shownHackerIds,
+      'hacker-message',
+      { force },
+    );
+
+    if (!nextHackerEntry) {
+      return [];
+    }
+
+    const { entry, entryId } = nextHackerEntry;
+    const hackerMessage = this.getMetaMessage(entry.messageId);
+    this.metaState.shownHackerIds = [
+      ...this.metaState.shownHackerIds,
+      entryId,
+    ];
+
+    if (!hackerMessage) {
+      return [];
+    }
+
+    return [{
+      ...hackerMessage,
+      placement: entry.placement ?? 'lower-random',
+      delayMs: entry.delayMs ?? 0,
+    }];
+  }
+
+  normalizePreviewMessages(nextMessages = []) {
+    const minimumDelay = nextMessages.reduce((lowestDelay, message) => {
+      const nextDelay = message?.delayMs ?? 0;
+      return Math.min(lowestDelay, nextDelay);
+    }, Infinity);
+    const normalizedDelay = Number.isFinite(minimumDelay) ? minimumDelay : 0;
+
+    return nextMessages.map(message => ({
+      ...message,
+      delayMs: Math.max(0, (message.delayMs ?? 0) - normalizedDelay),
+    }));
+  }
+
   advanceMetaMessages() {
     const nextMessages = this.buildNextMetaMessages();
 
@@ -881,16 +929,15 @@ export class WorldState {
 
   forceNextMetaMessages() {
     const nextMessages = this.buildNextMetaMessages({ force: true });
-    const minimumDelay = nextMessages.reduce((lowestDelay, message) => {
-      const nextDelay = message?.delayMs ?? 0;
-      return Math.min(lowestDelay, nextDelay);
-    }, Infinity);
-    const normalizedDelay = Number.isFinite(minimumDelay) ? minimumDelay : 0;
+    const previewMessages = this.normalizePreviewMessages(nextMessages);
 
-    const previewMessages = nextMessages.map(message => ({
-      ...message,
-      delayMs: Math.max(0, (message.delayMs ?? 0) - normalizedDelay),
-    }));
+    this.queueMetaMessages(previewMessages);
+    return previewMessages;
+  }
+
+  forceNextHackerMessages() {
+    const nextMessages = this.buildNextHackerMessages({ force: true });
+    const previewMessages = this.normalizePreviewMessages(nextMessages);
 
     this.queueMetaMessages(previewMessages);
     return previewMessages;

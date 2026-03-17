@@ -114,6 +114,40 @@ test('meta debug toggle and nextmeta can preview the next scheduled exchange', (
   assert.ok(messages[1].delayMs >= 4000);
 });
 
+test('debughacker and nexthacker preview only hacker messages without spending a turn', () => {
+  const session = createTestSession();
+
+  session.start();
+
+  const disabledResponse = session.submitCommand('nexthacker');
+  assert.match(disabledResponse, /meta debug mode is off/i);
+  assert.equal(session.worldState.turns, 0);
+
+  const enableResponse = session.submitCommand('debughacker');
+  assert.match(enableResponse, /meta debug mode enabled/i);
+  assert.equal(session.worldState.turns, 0);
+
+  session.worldState.setFlag('metOshregaal', true);
+  session.worldState.turns = 16;
+  session.worldState.metaState.shownConversationIds = [
+    'baseline-hold',
+    'foyer-screening',
+    'host-contact',
+    'curiosity-breakpoint',
+  ];
+
+  const previewResponse = session.submitCommand('nexthacker');
+  assert.match(previewResponse, /queued 1 hacker message/i);
+  assert.equal(session.worldState.turns, 16);
+
+  const messages = session.consumePendingMetaMessages();
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].source, 'hacker');
+  assert.equal(messages[0].id, 'ghostHandshake');
+  assert.equal(messages[0].placement, 'lower-random');
+  assert.equal(messages[0].delayMs, 0);
+});
+
 test('lackeys react if the player echoes their side-channel language back at them', () => {
   const session = createTestSession();
 

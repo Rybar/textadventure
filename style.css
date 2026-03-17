@@ -2,7 +2,7 @@
   --cga-amber: #ffbf00;
   --cga-amber-dim: #8a6700;
   --cga-background: #000000;
-  --terminal-font-size: clamp(9px, min(1.06vw, 1.24vh), 15px);
+  --terminal-font-size: clamp(13px, min(1.28vw, 1.5vh), 20px);
   --screen-shell-padding: clamp(8px, 1.5vh, 24px);
   --terminal-frame-padding: clamp(8px, 1.2vh, 14px);
   --panel-width: clamp(220px, 24vw, 320px);
@@ -54,10 +54,9 @@ body {
 #status-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
   padding: 10px 14px;
-  border: 1px solid var(--cga-amber);
+  border: none;
   background-color: rgba(0, 0, 0, 0.94);
   color: var(--cga-amber);
   box-shadow: 0 0 24px rgba(255, 191, 0, 0.08);
@@ -67,35 +66,42 @@ body {
   text-transform: uppercase;
   transition: width 420ms ease, transform 420ms ease;
   min-width: 0;
+  min-height: calc(var(--terminal-font-size) * 2.6);
 }
 
 #terminal-stage[data-layout="transcript-only"] #status-bar {
-  align-self: center;
-  width: min(100%, 980px);
-}
-
-#terminal-stage[data-layout="with-panels"] #status-bar {
   align-self: stretch;
   width: 100%;
 }
 
-#status-title-group,
-#status-stats {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+#terminal-stage[data-layout="with-panels"] #status-bar {
+  align-self: flex-start;
+  width: calc(100% - var(--panel-width) - var(--panel-gap));
 }
 
-#game-title,
-#current-location {
+#status-meta-line {
+  min-height: 1lh;
+  color: #9fd7ff;
+  font-size: calc(var(--terminal-font-size) * 0.84);
+  line-height: 1.18;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  opacity: 0.9;
+  text-align: center;
+  align-self: center;
+  width: 100%;
+  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
 }
 
-.status-divider {
-  opacity: 0.55;
+#status-meta-line[data-source="hacker"] {
+  color: #9dff9f;
+  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
+}
+
+#status-meta-line[data-source="experiment-lackeys"] {
+  color: #9fd7ff;
+  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
 }
 
 #terminal-content {
@@ -156,17 +162,18 @@ body {
 
 #text-grid-container {
   position: relative;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   border: 1px solid var(--cga-amber);
   padding: var(--terminal-frame-padding);
   background-color: var(--cga-background);
   box-shadow: 0 0 24px rgba(255, 191, 0, 0.15);
+  min-height: clamp(420px, 68vh, 860px);
   min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: auto;
   transform: translateX(0);
   transition: transform 420ms ease, box-shadow 420ms ease;
 }
@@ -175,22 +182,49 @@ body {
   transform: translateX(-10px);
 }
 
-#text-grid {
-  display: block;
+#transcript-output {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.95rem;
   margin: 0;
   color: var(--cga-amber);
   background-color: var(--cga-background);
   font-family: 'Perfect-DOS-VGA-437-Win', monospace;
   font-size: var(--terminal-font-size);
-  line-height: 1;
-  white-space: pre;
+  line-height: 1.3;
+  white-space: pre-wrap;
   letter-spacing: 0;
-  user-select: none;
-  min-width: max-content;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  user-select: text;
+  width: 100%;
+  min-height: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-#mobile-transcript {
-  display: none;
+.transcript-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.transcript-command,
+.transcript-response,
+.transcript-system {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.transcript-command {
+  color: rgba(255, 191, 0, 0.82);
+}
+
+.transcript-response,
+.transcript-system {
+  color: var(--cga-amber);
 }
 
 #panel-stack {
@@ -288,21 +322,58 @@ body {
   color: var(--cga-amber-dim);
 }
 
+#command-bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--cga-amber);
+  background-color: rgba(0, 0, 0, 0.96);
+  box-shadow: 0 0 18px rgba(255, 191, 0, 0.12);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  color: var(--cga-amber);
+  box-sizing: border-box;
+}
+
+#command-prompt {
+  font-size: var(--terminal-font-size);
+  line-height: 1;
+}
+
 #cli-input {
-  position: absolute;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 191, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.94);
+  color: var(--cga-amber);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: var(--terminal-font-size);
+  line-height: 1;
+  box-sizing: border-box;
+  caret-color: var(--cga-amber);
+}
+
+#cli-input::placeholder {
+  color: rgba(255, 191, 0, 0.5);
 }
 
 #cli-input:focus {
   outline: none;
+  border-color: var(--cga-amber);
 }
 
-#mobile-command-bar {
-  display: none;
+#command-submit {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 191, 0, 0.5);
+  background-color: rgba(255, 191, 0, 0.08);
+  color: var(--cga-amber);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: var(--terminal-font-size);
+  text-transform: uppercase;
 }
 
 #mobile-panel-tabs {
@@ -351,44 +422,16 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #sta
   z-index: 3;
   width: 100%;
   align-self: stretch;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  justify-content: center;
   padding: 8px 10px;
   box-sizing: border-box;
 }
 
-body[data-device-theme="mobile"] #status-title-group,
-body[data-device-theme="mobile"] #status-stats {
-  width: 100%;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-body[data-device-theme="mobile"] #status-title-group {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-}
-
-body[data-device-theme="mobile"] .status-divider {
-  display: none;
-}
-
-body[data-device-theme="mobile"] #game-title,
-body[data-device-theme="mobile"] #current-location,
-body[data-device-theme="mobile"] #turn-counter,
-body[data-device-theme="mobile"] #score-counter {
+body[data-device-theme="mobile"] #status-meta-line {
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
-  overflow-wrap: anywhere;
-}
-
-body[data-device-theme="mobile"] #game-title,
-body[data-device-theme="mobile"] #current-location {
-  line-height: 1.18;
 }
 
 body[data-device-theme="mobile"] .meta-column {
@@ -430,24 +473,13 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #tex
   box-sizing: border-box;
 }
 
-body[data-device-theme="mobile"] #text-grid {
-  display: none;
-}
-
-body[data-device-theme="mobile"] #mobile-transcript {
-  display: block;
+body[data-device-theme="mobile"] #transcript-output {
   width: 100%;
   min-height: 100%;
   margin: 0;
-  color: var(--cga-amber);
-  background-color: var(--cga-background);
-  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
   font-size: clamp(17px, 1rem + 0.45vw, 20px);
   line-height: 1.4;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  user-select: text;
+  gap: 1rem;
 }
 
 body[data-device-theme="mobile"] #panel-stack,
@@ -499,69 +531,35 @@ body[data-device-theme="mobile"] .panel-body {
   line-height: 1.28;
 }
 
-body[data-device-theme="mobile"] #mobile-command-bar {
+body[data-device-theme="mobile"] #command-bar {
   position: fixed;
   left: max(10px, env(safe-area-inset-left));
   right: max(10px, env(safe-area-inset-right));
   bottom: calc(10px + env(safe-area-inset-bottom) + var(--mobile-keyboard-offset));
   z-index: 5;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
   padding: 8px;
-  border: 1px solid var(--cga-amber);
-  background-color: rgba(0, 0, 0, 0.96);
-  box-shadow: 0 0 18px rgba(255, 191, 0, 0.12);
-  box-sizing: border-box;
 }
 
-body[data-device-theme="mobile"] #mobile-command-prompt {
-  color: var(--cga-amber);
-  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+body[data-device-theme="mobile"] #command-prompt {
   font-size: 16px;
   line-height: 1;
 }
 
 body[data-device-theme="mobile"] #cli-input {
-  position: static;
-  left: auto;
-  width: 100%;
-  min-width: 0;
   height: 36px;
-  padding: 0 10px;
-  border: 1px solid rgba(255, 191, 0, 0.5);
-  background-color: rgba(0, 0, 0, 0.94);
-  color: var(--cga-amber);
-  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
   font-size: clamp(16px, 1rem + 0.2vw, 18px);
-  line-height: 1;
-  opacity: 1;
-  pointer-events: auto;
-  box-sizing: border-box;
-  caret-color: var(--cga-amber);
 }
 
-body[data-device-theme="mobile"] #cli-input::placeholder {
-  color: rgba(255, 191, 0, 0.5);
-}
-
-body[data-device-theme="mobile"] #mobile-command-submit {
+body[data-device-theme="mobile"] #command-submit {
   height: 36px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 191, 0, 0.5);
-  background-color: rgba(255, 191, 0, 0.08);
-  color: var(--cga-amber);
-  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
   font-size: 14px;
-  text-transform: uppercase;
 }
 
-body[data-device-theme="mobile"] #mobile-command-submit:active {
+body[data-device-theme="mobile"] #command-submit:active {
   background-color: rgba(255, 191, 0, 0.18);
 }
 
-body[data-device-theme="mobile"][data-mobile-input-active="true"] #mobile-command-bar {
+body[data-device-theme="mobile"][data-mobile-input-active="true"] #command-bar {
   box-shadow: 0 0 22px rgba(255, 191, 0, 0.18);
 }
 
@@ -723,31 +721,12 @@ body[data-device-theme="mobile"][data-mobile-input-active="true"] #mobile-comman
     max-height: 16lh;
   }
 
-  body:not([data-device-theme="mobile"]) #cli-input {
-    position: fixed;
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
-    bottom: calc(8px + env(safe-area-inset-bottom));
-    width: auto;
-    height: var(--mobile-command-bar-height);
-    padding: 0 14px;
-    border: 1px solid var(--cga-amber);
-    background-color: rgba(0, 0, 0, 0.96);
-    box-shadow: 0 0 18px rgba(255, 191, 0, 0.12);
-    color: var(--cga-amber);
-    font-family: 'Perfect-DOS-VGA-437-Win', monospace;
-    font-size: 16px;
-    line-height: 1;
-    opacity: 1;
-    pointer-events: auto;
-    z-index: 4;
-    box-sizing: border-box;
-    border-radius: 0;
-    caret-color: var(--cga-amber);
+  body:not([data-device-theme="mobile"]) #command-bar {
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
-  body:not([data-device-theme="mobile"]) #cli-input::placeholder {
-    color: rgba(255, 191, 0, 0.5);
+  body:not([data-device-theme="mobile"]) #command-submit {
+    display: none;
   }
 }
 

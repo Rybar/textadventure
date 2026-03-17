@@ -125,7 +125,7 @@ export class GameSession {
       take: context => this.handleTake(context.command),
       drop: context => this.handleDrop(context.command),
       inventory: () => this.worldState.listInventory(),
-      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
+      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA. For hacker-only previewing, use DEBUGHACKER and NEXTHACKER. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
       give: context => this.handleGive(context.command, context),
       show: context => this.handleShow(context.command, context),
       ask: context => this.handleAsk(context.command, context),
@@ -141,8 +141,10 @@ export class GameSession {
       greet: context => this.handleGenericAction(context.command, context),
       wait: () => 'You wait for a moment.',
       debugmeta: context => this.toggleMetaDebug(context.command.directObject),
+      debughacker: context => this.toggleHackerDebug(context.command.directObject),
       debugpanel: context => this.debugPanel(context.command.directObject),
       nextmeta: () => this.forceNextMetaEvent(),
+      nexthacker: () => this.forceNextHackerEvent(),
       save: context => this.saveGame(context.command.directObject),
       load: context => this.loadGame(context.command.directObject),
       map: () => this.worldState.describeMapPanel(),
@@ -160,7 +162,11 @@ export class GameSession {
   }
 
   isNonTurnCommand(verb) {
-    return verb === 'debugmeta' || verb === 'debugpanel' || verb === 'nextmeta';
+    return verb === 'debugmeta'
+      || verb === 'debughacker'
+      || verb === 'debugpanel'
+      || verb === 'nextmeta'
+      || verb === 'nexthacker';
   }
 
   normalizeInputText(rawInput) {
@@ -452,6 +458,11 @@ export class GameSession {
       : 'Meta debug mode disabled.';
   }
 
+  toggleHackerDebug(argument = '') {
+    const response = this.toggleMetaDebug(argument);
+    return response.replaceAll('NEXTMETA', 'NEXTHACKER');
+  }
+
   forceNextMetaEvent() {
     if (!this.debugState.metaDebugEnabled) {
       return 'Meta debug mode is off. Use DEBUGMETA to enable it first.';
@@ -465,6 +476,21 @@ export class GameSession {
     }
 
     return `Queued ${messages.length} meta ${messages.length === 1 ? 'message' : 'messages'} for preview.`;
+  }
+
+  forceNextHackerEvent() {
+    if (!this.debugState.metaDebugEnabled) {
+      return 'Meta debug mode is off. Use DEBUGHACKER to enable it first.';
+    }
+
+    const messages = this.worldState.forceNextHackerMessages();
+    this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
+
+    if (messages.length === 0) {
+      return 'No additional hacker messages are queued.';
+    }
+
+    return `Queued ${messages.length} hacker ${messages.length === 1 ? 'message' : 'messages'} for preview.`;
   }
 
   debugPanel(argument = '') {
