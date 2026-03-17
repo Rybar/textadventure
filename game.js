@@ -9,12 +9,15 @@ globalThis.game = gameSession;
 
 const bodyElement = document.body;
 const screenShellElement = document.getElementById('screen-shell');
-const transcriptLines = [];
+const transcriptEntries = [];
 const commandHistory = [];
 let historyIndex = -1;
 let cursorVisible = true;
+let activeMobilePanelId = null;
 const inputElement = document.getElementById('cli-input');
 const mobileCommandBarElement = document.getElementById('mobile-command-bar');
+const mobilePanelTabsElement = document.getElementById('mobile-panel-tabs');
+const mobilePanelTabElements = Array.from(document.querySelectorAll('.mobile-panel-tab'));
 const ephemeralMessageElements = {
     sideLeft: document.getElementById('ephemeral-message-left'),
     sideRight: document.getElementById('ephemeral-message-right'),
@@ -56,8 +59,8 @@ let isMobileThemeActive = false;
 function shouldUseMobileTheme() {
     const hasMatchMedia = typeof globalThis.matchMedia === 'function';
     const coarsePointer = hasMatchMedia ? globalThis.matchMedia('(pointer: coarse)').matches : false;
-    const narrowViewport = hasMatchMedia ? globalThis.matchMedia('(max-width: 900px)').matches : false;
-    const shortViewport = hasMatchMedia ? globalThis.matchMedia('(max-height: 560px)').matches : false;
+    const narrowViewport = hasMatchMedia ? globalThis.matchMedia('(max-width: 1180px)').matches : false;
+    const shortViewport = hasMatchMedia ? globalThis.matchMedia('(max-height: 900px)').matches : false;
 
     return coarsePointer && (narrowViewport || shortViewport);
 }
@@ -83,6 +86,7 @@ function applyDeviceTheme() {
     }
 
     updateViewportMetrics();
+    textGrid.setViewportMode({ mobile: isMobileThemeActive });
 }
 
 function formatCounter(value, width = 3) {
@@ -134,11 +138,32 @@ function renderPanel(panelModel) {
     panelElement.body.textContent = panelModel.lines.join('\n');
 }
 
+function syncMobilePanelTabs(panels) {
+    const unlockedPanels = panels.filter(panel => panel.unlocked);
+    const unlockedIds = new Set(unlockedPanels.map(panel => panel.id));
+
+    if (!unlockedIds.has(activeMobilePanelId)) {
+        activeMobilePanelId = null;
+    }
+
+    mobilePanelTabsElement.setAttribute('aria-hidden', unlockedPanels.length > 0 ? 'false' : 'true');
+    mobilePanelTabsElement.dataset.visible = unlockedPanels.length > 0 ? 'true' : 'false';
+
+    mobilePanelTabElements.forEach(button => {
+        const panelId = button.dataset.panelId;
+        const isUnlocked = unlockedIds.has(panelId);
+        button.hidden = !isUnlocked;
+        button.dataset.active = activeMobilePanelId === panelId ? 'true' : 'false';
+        button.setAttribute('aria-pressed', activeMobilePanelId === panelId ? 'true' : 'false');
+    });
+}
+
 function renderInterfaceChrome() {
     const interfaceModel = gameSession.getInterfaceModel();
     const unlockedPanels = interfaceModel.panels.filter(panel => panel.unlocked);
 
-    terminalStageElement.dataset.layout = unlockedPanels.length > 0 ? 'with-panels' : 'transcript-only';
+    terminalStageElement.dataset.layout = !isMobileThemeActive && unlockedPanels.length > 0 ? 'with-panels' : 'transcript-only';
+    terminalStageElement.dataset.mobilePanelOpen = isMobileThemeActive && activeMobilePanelId ? 'true' : 'false';
     panelStackElement.setAttribute('aria-hidden', unlockedPanels.length > 0 ? 'false' : 'true');
 
     statusElements.gameTitle.textContent = interfaceModel.title;
@@ -148,7 +173,16 @@ function renderInterfaceChrome() {
         ? 'SCORE ---'
         : `SCORE ${formatCounter(interfaceModel.score)}`;
 
-    interfaceModel.panels.forEach(renderPanel);
+    syncMobilePanelTabs(interfaceModel.panels);
+
+    interfaceModel.panels.forEach(panel => {
+        renderPanel({
+            ...panel,
+            unlocked: isMobileThemeActive
+                ? panel.unlocked && panel.id === activeMobilePanelId
+                : panel.unlocked,
+        });
+    });
 }
 
 function focusCommandInput() {
@@ -278,16 +312,19 @@ function updateMetaMessages(messages = []) {
 }
 
 function renderScreen() {
+    textGrid.setViewportMode({ mobile: isMobileThemeActive });
     renderInterfaceChrome();
+    const transcriptLines = transcriptEntries.flatMap(entry => textGrid.wrapText(entry));
     textGrid.renderFrame({
         transcriptLines,
-        promptText: inputElement.value,
+        promptText: isMobileThemeActive ? '' : inputElement.value,
         cursorVisible: document.activeElement === inputElement && cursorVisible,
+        promptVisible: !isMobileThemeActive,
     });
 }
 
 function appendTranscriptEntry(text) {
-    transcriptLines.push(...textGrid.wrapText(text));
+    transcriptEntries.push(String(text));
 }
 
 inputElement.addEventListener('input', () => {
@@ -370,6 +407,14 @@ mobileCommandBarElement.addEventListener('submit', event => {
     inputElement.value = '';
     renderScreen();
     focusCommandInput();
+});
+
+mobilePanelTabElements.forEach(button => {
+    button.addEventListener('click', () => {
+        const panelId = button.dataset.panelId;
+        activeMobilePanelId = activeMobilePanelId === panelId ? null : panelId;
+        renderScreen();
+    });
 });
 
 document.addEventListener('keydown', event => {

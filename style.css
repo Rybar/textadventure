@@ -66,6 +66,7 @@ body {
   line-height: 1;
   text-transform: uppercase;
   transition: width 420ms ease, transform 420ms ease;
+  min-width: 0;
 }
 
 #terminal-stage[data-layout="transcript-only"] #status-bar {
@@ -300,9 +301,24 @@ body {
   display: none;
 }
 
+#mobile-panel-tabs {
+  display: none;
+}
+
+.mobile-panel-tab {
+  border: 1px solid rgba(255, 191, 0, 0.5);
+  background: rgba(255, 191, 0, 0.06);
+  color: var(--cga-amber);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: var(--terminal-font-size);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 body[data-device-theme="mobile"] {
   display: block;
   overflow: auto;
+  --terminal-font-size: clamp(13px, 1.2vw + 0.45rem, 16px);
 }
 
 body[data-device-theme="mobile"] #screen-shell {
@@ -341,8 +357,15 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #sta
 body[data-device-theme="mobile"] #status-title-group,
 body[data-device-theme="mobile"] #status-stats {
   width: 100%;
-  justify-content: space-between;
+  justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+body[data-device-theme="mobile"] #status-title-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
 }
 
 body[data-device-theme="mobile"] .status-divider {
@@ -353,13 +376,35 @@ body[data-device-theme="mobile"] #game-title,
 body[data-device-theme="mobile"] #current-location,
 body[data-device-theme="mobile"] #turn-counter,
 body[data-device-theme="mobile"] #score-counter {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+body[data-device-theme="mobile"] #game-title,
+body[data-device-theme="mobile"] #current-location {
+  line-height: 1.18;
 }
 
 body[data-device-theme="mobile"] .meta-column {
   display: none;
+}
+
+body[data-device-theme="mobile"] #mobile-panel-tabs[data-visible="true"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body[data-device-theme="mobile"] .mobile-panel-tab {
+  min-height: 34px;
+  padding: 8px 10px 7px;
+}
+
+body[data-device-theme="mobile"] .mobile-panel-tab[data-active="true"] {
+  background: rgba(255, 191, 0, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(255, 191, 0, 0.15);
 }
 
 body[data-device-theme="mobile"] #terminal-content,
@@ -383,7 +428,9 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #tex
 
 body[data-device-theme="mobile"] #text-grid {
   display: block;
-  min-width: max-content;
+  min-width: 0;
+  width: 100%;
+  line-height: 1.22;
   padding-bottom: 2px;
 }
 
@@ -395,18 +442,17 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #pan
   flex-basis: auto;
   width: 100%;
   max-width: 100%;
-  opacity: 1;
-  overflow: visible;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
   transform: none;
   pointer-events: auto;
 }
 
-body[data-device-theme="mobile"] #terminal-stage[data-layout="transcript-only"] #panel-stack {
-  width: 0;
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
+body[data-device-theme="mobile"] #terminal-stage[data-mobile-panel-open="true"] #panel-stack {
+  opacity: 1;
+  max-height: 60svh;
+  overflow: visible;
 }
 
 body[data-device-theme="mobile"] .ui-panel {
@@ -414,6 +460,7 @@ body[data-device-theme="mobile"] .ui-panel {
   max-height: none;
   padding: 8px 10px;
   box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(255, 191, 0, 0.08), rgba(255, 191, 0, 0.02));
 }
 
 body[data-device-theme="mobile"] .ui-panel[data-visible="false"] {
@@ -430,8 +477,10 @@ body[data-device-theme="mobile"] .panel-heading {
 
 body[data-device-theme="mobile"] .panel-body {
   min-height: 0;
-  max-height: 14lh;
+  max-height: min(28lh, 44svh);
   overflow: auto;
+  font-size: inherit;
+  line-height: 1.28;
 }
 
 body[data-device-theme="mobile"] #mobile-command-bar {
@@ -469,7 +518,7 @@ body[data-device-theme="mobile"] #cli-input {
   background-color: rgba(0, 0, 0, 0.94);
   color: var(--cga-amber);
   font-family: 'Perfect-DOS-VGA-437-Win', monospace;
-  font-size: 16px;
+  font-size: clamp(16px, 1rem + 0.2vw, 18px);
   line-height: 1;
   opacity: 1;
   pointer-events: auto;
@@ -609,6 +658,7 @@ body[data-device-theme="mobile"][data-mobile-input-active="true"] #mobile-comman
   #status-stats {
     width: 100%;
     justify-content: space-between;
+    min-width: 0;
   }
 
   #status-title-group {
