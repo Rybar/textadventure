@@ -23,9 +23,34 @@ function createAuthoringManifest() {
         ],
         text: 'The gate is revealed.',
       },
+      queueBell: {
+        actions: [
+          {
+            type: 'scheduleEvent',
+            eventId: 'ringBell',
+            delayTurns: 2,
+            scheduleId: 'bell-sequence',
+            data: {
+              source: 'rope',
+            },
+          },
+        ],
+        text: 'You set the bell sequence in motion.',
+      },
+      ringBell: {
+        actions: [
+          {
+            type: 'setFlag',
+            flag: 'bellRang',
+            value: true,
+          },
+        ],
+        text: ({ scheduledData }) => `The bell finally answers from above (${scheduledData.source}).`,
+      },
     },
     flags: {
       eventRaised: false,
+      bellRang: false,
     },
     rooms: {
       start: new Room({
@@ -102,6 +127,27 @@ test('global events fire once and stay spent after save/load', () => {
   assert.deepEqual(restoredWorldState.runEvent('revealGate'), []);
 });
 
+test('scheduled events persist across save/load and fire on the correct turn', () => {
+  const worldState = new WorldState(createAuthoringManifest());
+
+  assert.deepEqual(worldState.runEvent('queueBell'), ['You set the bell sequence in motion.']);
+  assert.equal(worldState.hasScheduledEvent('bell-sequence'), true);
+
+  worldState.incrementTurn();
+  assert.deepEqual(worldState.advanceScheduledEvents(), []);
+  assert.equal(worldState.getFlag('bellRang'), false);
+
+  const restoredWorldState = new WorldState(createAuthoringManifest());
+  restoredWorldState.importSaveData(worldState.exportSaveData());
+
+  assert.equal(restoredWorldState.hasScheduledEvent('bell-sequence'), true);
+
+  restoredWorldState.incrementTurn();
+  assert.deepEqual(restoredWorldState.advanceScheduledEvents(), ['The bell finally answers from above (rope).']);
+  assert.equal(restoredWorldState.getFlag('bellRang'), true);
+  assert.equal(restoredWorldState.hasScheduledEvent('bell-sequence'), false);
+});
+
 test('generic action resolution supports using an item on a target object', () => {
   const key = new Item({
     id: 'test-key',
@@ -136,4 +182,155 @@ test('generic action resolution supports using an item on a target object', () =
 
   session.start();
   assert.match(session.submitCommand('use key on door'), /door unlocks/i);
+});
+
+test('ambiguous room items prompt for clarification and resolve on the follow-up input', () => {
+  const brassKey = new Item({
+    id: 'brass-key',
+    name: 'brass key',
+    description: 'A polished brass key.',
+    aliases: ['key'],
+  });
+  const boneKey = new Item({
+    id: 'bone-key',
+    name: 'bone key',
+    description: 'A key carved from bone.',
+    aliases: ['key'],
+  });
+
+  const session = new GameSession({
+    id: 'disambiguation-direct-test',
+    startingRoomId: 'start',
+    rooms: {
+      start: new Room({
+        id: 'start',
+        title: 'Start',
+        description: 'A plain test room.',
+        items: [brassKey, boneKey],
+      }),
+    },
+  });
+
+  session.start();
+
+  const ambiguousResponse = session.submitCommand('take key');
+  assert.match(ambiguousResponse, /which do you mean for "key"\?/i);
+  assert.match(ambiguousResponse, /1\. brass key/i);
+  assert.match(ambiguousResponse, /2\. bone key/i);
+  assert.equal(session.worldState.turns, 0);
+
+  const clarifiedResponse = session.submitCommand('bone key');
+  assert.match(clarifiedResponse, /you take the bone key/i);
+  assert.equal(session.worldState.turns, 1);
+  assert.ok(session.worldState.findInventoryItem('bone key'));
+  assert.ok(session.worldState.findVisibleItem('brass key'));
+});
+
+test('ambiguous indirect targets prompt for clarification and resume the original action', () => {
+  const key = new Item({
+    id: 'test-key',
+    name: 'key',
+    description: 'A plain brass key.',
+  });
+
+  const session = new GameSession({
+    id: 'disambiguation-indirect-test',
+    startingRoomId: 'start',
+    startingInventory: [key],
+    rooms: {
+      start: new Room({
+        id: 'start',
+        title: 'Start',
+        description: 'A plain test room.',
+        objects: {
+          ironDoor: {
+            name: 'iron door',
+            aliases: ['door'],
+            description: 'A dented iron door.',
+            actions: {
+              use({ item }) {
+                return item?.id === 'test-key'
+                  ? 'The key turns in the iron door.'
+                  : 'Nothing happens.';
+              },
+            },
+          },
+          boneDoor: {
+            name: 'bone door',
+            aliases: ['door'],
+            description: 'A door plated in bone.',
+            actions: {
+              use() {
+                return 'The bone door stays stubbornly shut.';
+              },
+            },
+          },
+        },
+      }),
+    },
+  });
+
+  session.start();
+
+  const ambiguousResponse = session.submitCommand('use key on door');
+  assert.match(ambiguousResponse, /which do you mean for "door"\?/i);
+  assert.match(ambiguousResponse, /1\. iron door/i);
+  assert.match(ambiguousResponse, /2\. bone door/i);
+  assert.equal(session.worldState.turns, 0);
+
+  const clarifiedResponse = session.submitCommand('1');
+  assert.match(clarifiedResponse, /iron door/i);
+  assert.equal(session.worldState.turns, 1);
+});
+
+test('wait advances the scheduler and prints due event text', () => {
+  const session = new GameSession({
+    id: 'wait-scheduler-test',
+    startingRoomId: 'start',
+    flags: {
+      bellRang: false,
+    },
+    events: {
+      queueBell: {
+        actions: [
+          {
+            type: 'scheduleEvent',
+            eventId: 'ringBell',
+            delayTurns: 1,
+            scheduleId: 'bell-sequence',
+          },
+        ],
+        text: 'You tug the bell rope, and something in the walls begins to count.',
+      },
+      ringBell: {
+        actions: [
+          {
+            type: 'setFlag',
+            flag: 'bellRang',
+            value: true,
+          },
+        ],
+        text: 'A distant bell finally sounds through the house.',
+      },
+    },
+    rooms: {
+      start: new Room({
+        id: 'start',
+        title: 'Start',
+        description: 'A plain test room.',
+        verbs: {
+          ring: ({ emitEvent }) => emitEvent('queueBell'),
+        },
+      }),
+    },
+  });
+
+  session.start();
+  assert.match(session.submitCommand('ring'), /tug the bell rope|begins to count/i);
+  assert.equal(session.worldState.hasScheduledEvent('bell-sequence'), true);
+
+  const waitResponse = session.submitCommand('wait');
+  assert.match(waitResponse, /you wait for a moment/i);
+  assert.match(waitResponse, /distant bell finally sounds/i);
+  assert.equal(session.worldState.getFlag('bellRang'), true);
 });

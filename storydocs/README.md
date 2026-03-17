@@ -25,6 +25,8 @@ When two ideas conflict, prefer them in this order:
 - Read [ITEMS_AND_RELICS.md](./ITEMS_AND_RELICS.md) when implementing inventory, clue items, consumables, cursed objects, or objective rewards.
 - Read [PLOT_AND_META.md](./PLOT_AND_META.md) when writing milestones, pacing revelations, endings, or UI/meta interruptions.
 - Read [ENGINE_CONTENT_INTERFACE.md](./ENGINE_CONTENT_INTERFACE.md) when changing engine features, parser support, flags, tests, or authoring patterns.
+- Read [AUTHORING_GUIDE.md](./AUTHORING_GUIDE.md) for the current engine-facing content API and authoring reference.
+- Read [AUTHORING_TUTORIAL.md](./AUTHORING_TUTORIAL.md) for a step-by-step walkthrough of adding a new room feature using items, dialogue, events, and the scheduler.
 
 ## Internal Ground Rules
 

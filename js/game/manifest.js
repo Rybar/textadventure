@@ -7,27 +7,37 @@ import { createCavernRoom } from './rooms/cavern.js';
 import { createFeastHall } from './rooms/feastHall.js';
 import { createFernGardenRoom } from './rooms/fernGarden.js';
 import { createFoyerRoom } from './rooms/foyer.js';
+import { createGrandfatherRoom } from './rooms/grandfatherRoom.js';
 import { createGrandStairsRoom } from './rooms/grandStairs.js';
 import { createGuestRoom } from './rooms/guestRoom.js';
 import { createKelagoRoom } from './rooms/kelagoRoom.js';
 import { createKitchenRoom } from './rooms/kitchen.js';
+import { createLibraryRoom } from './rooms/library.js';
 import { createNathemaRoom } from './rooms/nathemaRoom.js';
 import { createOgreBedsRoom } from './rooms/ogreBeds.js';
+import { createPlumRoom } from './rooms/plumRoom.js';
 import { createSecretCircleRoom } from './rooms/secretCircle.js';
 import { createSittingRoom } from './rooms/sittingRoom.js';
+import { createFoldedHallwayRoom } from './rooms/foldedHallway.js';
+import { createTunnelRoom } from './rooms/tunnel.js';
 
 export function createGameManifest() {
   const cavern = createCavernRoom();
   const fernGarden = createFernGardenRoom();
   const grandStairs = createGrandStairsRoom();
   const foyer = createFoyerRoom();
+  const grandfatherRoom = createGrandfatherRoom();
   const sittingRoom = createSittingRoom();
   const guestRoom = createGuestRoom();
   const nathemaRoom = createNathemaRoom();
   const feastHall = createFeastHall();
   const kelagoRoom = createKelagoRoom();
   const kitchen = createKitchenRoom();
+  const library = createLibraryRoom();
   const ogreBeds = createOgreBedsRoom();
+  const plumRoom = createPlumRoom();
+  const foldedHallway = createFoldedHallwayRoom();
+  const tunnel = createTunnelRoom();
   const metaGame = createMetaGameContent();
   const events = createGameEventDefinitions();
   const map = createGameMapDefinition();
@@ -87,6 +97,19 @@ export function createGameManifest() {
       hasTeleportScroll: false,
       secretCircleUnlocked: false,
       escapeRouteUnlocked: false,
+      metalHandDoorUnlocked: false,
+      waxPlugFound: false,
+      plumFound: false,
+      plumTrustEarned: false,
+      plumMemoryRead: false,
+      plumEscapePlanned: false,
+      libraryRouteKnown: false,
+      foldedHallwaySeen: false,
+      foldedHallwayUnderstood: false,
+      idolPairingKnown: false,
+      foldedHallwayUnlocked: false,
+      tunnelRouteKnown: false,
+      plumTunnelRouteReady: false,
     },
     rooms: {
       cavern,
@@ -98,8 +121,13 @@ export function createGameManifest() {
       nathemaRoom,
       feastHall,
       kelagoRoom,
+      grandfatherRoom,
       kitchen,
+      library,
       ogreBeds,
+      plumRoom,
+      foldedHallway,
+      tunnel,
       secretCircle,
     },
   };

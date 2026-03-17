@@ -65,3 +65,34 @@ export function moveToKitchen(session) {
   moveToFeastHall(session);
   session.submitCommand('east');
 }
+
+export function moveToGrandfatherRoom(session) {
+  moveToFeastHall(session);
+  session.submitCommand('north');
+  session.submitCommand('east');
+}
+
+export function moveToPlumRoom(session) {
+  moveToGrandfatherRoom(session);
+  session.submitCommand('shake hand');
+  session.submitCommand('north');
+}
+
+export function moveToLibrary(session) {
+  moveToPlumRoom(session);
+  session.submitCommand('east');
+}
+
+export function moveToFoldedHallway(session) {
+  moveToLibrary(session);
+  session.submitCommand('north');
+}
+
+export function moveToTunnel(session) {
+  moveToLibrary(session);
+  session.submitCommand('take meditative incense');
+  session.submitCommand('take wax palm');
+  session.submitCommand('north');
+  session.submitCommand('use wax palm on idol');
+  session.submitCommand('north');
+}

@@ -15,6 +15,7 @@ export class GameSession {
     this.actionRegistry = options.actionRegistry ?? new ActionRegistry();
     this.worldState = new WorldState(this.manifest);
     this.pendingMetaMessages = [];
+    this.pendingClarification = null;
     this.debugState = {
       metaDebugEnabled: false,
     };
@@ -46,15 +47,26 @@ export class GameSession {
   }
 
   submitCommand(rawInput) {
-    const parsedCommand = this.commandParser.parse(rawInput);
-    const normalizedCommand = parsedCommand.type === 'empty'
-      ? parsedCommand
-      : this.normalizeCommand(parsedCommand);
-    const response = this.execute(parsedCommand);
+    const clarificationExecution = this.tryHandlePendingClarification(rawInput);
+    if (clarificationExecution) {
+      if (clarificationExecution.normalizedCommand?.type !== 'empty' && clarificationExecution.consumeTurn) {
+        this.worldState.advanceMetaMessages();
+        this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
+      }
 
-    if (normalizedCommand.type !== 'empty' && !this.isNonTurnCommand(normalizedCommand.verb)) {
+      this.transcript.recordTurn(rawInput, clarificationExecution.response);
+      return this.transcript.getLatestPrintableEntry();
+    }
+
+    const parsedCommand = this.commandParser.parse(rawInput);
+    const execution = this.execute(parsedCommand);
+    const { normalizedCommand, response } = execution;
+
+    if (normalizedCommand.type !== 'empty' && execution.consumeTurn) {
       this.worldState.advanceMetaMessages();
-      this.collectReactiveLackeyMessages(rawInput, normalizedCommand);
+      if (!execution.usedClarification) {
+        this.collectReactiveLackeyMessages(rawInput, normalizedCommand);
+      }
       this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
     }
 
@@ -64,35 +76,54 @@ export class GameSession {
 
   execute(command) {
     if (command.type === 'empty') {
-      return 'Enter a command.';
+      return this.createExecutionResult('Enter a command.', command, {
+        consumeTurn: false,
+      });
     }
 
     const normalizedCommand = this.normalizeCommand(command);
-    if (!this.isNonTurnCommand(normalizedCommand.verb)) {
+    const consumeTurn = !this.isNonTurnCommand(normalizedCommand.verb);
+    if (consumeTurn) {
       this.worldState.incrementTurn();
     }
 
     const actionContext = this.createActionContext(normalizedCommand);
+    let primaryResponse = null;
     const globalVerbHandler = this.actionRegistry.getGlobalVerbHandler(normalizedCommand.verb);
     if (globalVerbHandler) {
-      return this.finalizeResponse(globalVerbHandler(actionContext));
+      primaryResponse = globalVerbHandler(actionContext);
+    } else {
+      const currentRoom = this.worldState.getCurrentRoom();
+      if (currentRoom.hasVerb(normalizedCommand.verb)) {
+        primaryResponse = currentRoom.performVerb(normalizedCommand.verb, actionContext);
+      } else {
+        primaryResponse = this.handleGenericAction(normalizedCommand, actionContext);
+      }
     }
 
-    const currentRoom = this.worldState.getCurrentRoom();
-    if (currentRoom.hasVerb(normalizedCommand.verb)) {
-      return this.finalizeResponse(currentRoom.performVerb(normalizedCommand.verb, actionContext));
+    const clarificationPending = Boolean(this.pendingClarification);
+    if (clarificationPending && consumeTurn) {
+      this.worldState.turns = Math.max(0, this.worldState.turns - 1);
     }
 
-    return this.finalizeResponse(this.handleGenericAction(normalizedCommand, actionContext));
+    const scheduledOutputs = consumeTurn && !clarificationPending
+      ? this.worldState.advanceScheduledEvents()
+      : [];
+
+    const combinedResponse = [primaryResponse, ...scheduledOutputs].filter(Boolean).join('\n\n');
+
+    return this.createExecutionResult(this.finalizeResponse(combinedResponse), normalizedCommand, {
+      consumeTurn: consumeTurn && !clarificationPending,
+    });
   }
 
   initializeActionRegistry() {
     this.actionRegistry.registerGlobalVerbs({
-      look: context => this.handleLook(context.command),
+      look: context => this.handleLook(context.command, context),
       go: context => this.handleMovement(context.command.directObject),
       exits: () => this.worldState.getCurrentRoom().listExits(),
-      take: context => this.worldState.takeItem(context.command.directObject),
-      drop: context => this.worldState.dropItem(context.command.directObject),
+      take: context => this.handleTake(context.command),
+      drop: context => this.handleDrop(context.command),
       inventory: () => this.worldState.listInventory(),
       help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
       give: context => this.handleGive(context.command, context),
@@ -108,7 +139,7 @@ export class GameSession {
       smell: context => this.handleGenericAction(context.command, context),
       taste: context => this.handleGenericAction(context.command, context),
       greet: context => this.handleGenericAction(context.command, context),
-      wait: () => 'You wait for a moment. Nothing obliging happens yet.',
+      wait: () => 'You wait for a moment.',
       debugmeta: context => this.toggleMetaDebug(context.command.directObject),
       debugpanel: context => this.debugPanel(context.command.directObject),
       nextmeta: () => this.forceNextMetaEvent(),
@@ -188,7 +219,7 @@ export class GameSession {
     for (let index = tokens.length - 1; index > 0; index -= 1) {
       const candidateTarget = tokens.slice(0, index).join(' ');
       const candidateTopic = tokens.slice(index).join(' ');
-      if (this.worldState.findInteractiveTarget(candidateTarget)) {
+      if (this.worldState.resolveInteractiveTarget(candidateTarget).status !== 'none') {
         return {
           ...command,
           directObject: candidateTarget,
@@ -198,6 +229,203 @@ export class GameSession {
     }
 
     return command;
+  }
+
+  createExecutionResult(response, normalizedCommand, options = {}) {
+    return {
+      response,
+      normalizedCommand,
+      consumeTurn: options.consumeTurn ?? false,
+      usedClarification: options.usedClarification ?? false,
+    };
+  }
+
+  normalizeClarificationInput(rawInput) {
+    return this.normalizeInputText(rawInput).replace(/^(?:the|a|an)\s+/u, '');
+  }
+
+  getClarificationOptionLabel(candidate, candidates = []) {
+    const baseLabel = candidate.target.name;
+    const matchingNameCount = candidates.filter(other => other.target.name === candidate.target.name).length;
+    if (matchingNameCount <= 1) {
+      return baseLabel;
+    }
+
+    if (candidate.scope === 'inventory') {
+      return `${baseLabel} (inventory)`;
+    }
+
+    if (candidate.type === 'object') {
+      return `${baseLabel} (object)`;
+    }
+
+    return `${baseLabel} (here)`;
+  }
+
+  buildClarificationPrompt(requestedName, candidates) {
+    const requestedText = requestedName ? ` for "${requestedName}"` : '';
+    const optionLines = candidates.map((candidate, index) => `${index + 1}. ${this.getClarificationOptionLabel(candidate, candidates)}`);
+    return [`Which do you mean${requestedText}?`, ...optionLines, 'Reply with a number or CANCEL.'].join('\n');
+  }
+
+  requestClarification({ command, property, resolvedProperty, requestedName, candidates }) {
+    this.pendingClarification = {
+      command: { ...command },
+      property,
+      resolvedProperty,
+      requestedName,
+      candidates,
+    };
+
+    return this.buildClarificationPrompt(requestedName, candidates);
+  }
+
+  clearPendingClarification() {
+    this.pendingClarification = null;
+  }
+
+  getClarificationCandidateTerms(candidate) {
+    const terms = new Set([
+      candidate.target.name.toLowerCase(),
+      ...candidate.target.aliases,
+    ]);
+
+    if (candidate.scope === 'inventory') {
+      terms.add(`inventory ${candidate.target.name.toLowerCase()}`);
+      terms.add(`${candidate.target.name.toLowerCase()} in inventory`);
+    }
+
+    if (candidate.type === 'object') {
+      terms.add(`object ${candidate.target.name.toLowerCase()}`);
+    }
+
+    return terms;
+  }
+
+  selectClarificationCandidate(rawInput, candidates) {
+    const normalizedInput = this.normalizeClarificationInput(rawInput);
+    if (!normalizedInput) {
+      return {
+        status: 'invalid',
+        candidate: null,
+      };
+    }
+
+    const numericSelection = Number.parseInt(normalizedInput, 10);
+    if (String(numericSelection) === normalizedInput && numericSelection >= 1 && numericSelection <= candidates.length) {
+      return {
+        status: 'resolved',
+        candidate: candidates[numericSelection - 1],
+      };
+    }
+
+    const matchingCandidates = candidates.filter(candidate => this.getClarificationCandidateTerms(candidate).has(normalizedInput));
+    if (matchingCandidates.length === 1) {
+      return {
+        status: 'resolved',
+        candidate: matchingCandidates[0],
+      };
+    }
+
+    if (matchingCandidates.length > 1) {
+      return {
+        status: 'ambiguous',
+        candidate: null,
+      };
+    }
+
+    return {
+      status: 'invalid',
+      candidate: null,
+    };
+  }
+
+  tryHandlePendingClarification(rawInput) {
+    if (!this.pendingClarification) {
+      return null;
+    }
+
+    const normalizedInput = this.normalizeClarificationInput(rawInput);
+    if (['cancel', 'nevermind', 'never mind'].includes(normalizedInput)) {
+      const cancelledCommand = this.pendingClarification.command;
+      this.clearPendingClarification();
+      return this.createExecutionResult('Clarification cancelled.', cancelledCommand, {
+        consumeTurn: false,
+        usedClarification: true,
+      });
+    }
+
+    const selection = this.selectClarificationCandidate(rawInput, this.pendingClarification.candidates);
+    if (selection.status !== 'resolved') {
+      const response = selection.status === 'ambiguous'
+        ? 'That still matches more than one option.\n'
+        : '';
+
+      return this.createExecutionResult(
+        `${response}${this.buildClarificationPrompt(
+          this.pendingClarification.requestedName,
+          this.pendingClarification.candidates,
+        )}`,
+        this.pendingClarification.command,
+        {
+          consumeTurn: false,
+          usedClarification: true,
+        },
+      );
+    }
+
+    const pendingClarification = this.pendingClarification;
+    this.clearPendingClarification();
+    return {
+      ...this.execute({
+        ...pendingClarification.command,
+        [pendingClarification.resolvedProperty]: selection.candidate,
+      }),
+      usedClarification: true,
+    };
+  }
+
+  resolveCommandTarget({ command, property, resolvedProperty, resolve, missingMessage }) {
+    const targetName = command[property];
+    if (!targetName) {
+      return {
+        status: 'missing',
+        response: typeof missingMessage === 'function' ? missingMessage(targetName) : missingMessage,
+      };
+    }
+
+    if (command[resolvedProperty]) {
+      return {
+        status: 'resolved',
+        candidate: command[resolvedProperty],
+      };
+    }
+
+    const resolution = resolve(targetName);
+    if (resolution.status === 'none') {
+      return {
+        status: 'missing',
+        response: typeof missingMessage === 'function' ? missingMessage(targetName) : missingMessage,
+      };
+    }
+
+    if (resolution.status === 'ambiguous') {
+      return {
+        status: 'clarification',
+        response: this.requestClarification({
+          command,
+          property,
+          resolvedProperty,
+          requestedName: targetName,
+          candidates: resolution.candidates,
+        }),
+      };
+    }
+
+    return {
+      status: 'resolved',
+      candidate: resolution.candidate,
+    };
   }
 
   finalizeResponse(primaryResponse) {
@@ -268,12 +496,38 @@ export class GameSession {
     return `${normalizedArgument.toUpperCase()} panel ${isUnlocked ? 'unlocked' : 'locked'}.`;
   }
 
-  handleLook(command) {
+  handleLook(command, actionContext = this.createActionContext(command)) {
     if (!command.directObject || command.directObject === 'around') {
       return this.worldState.lookAroundCurrentRoom();
     }
 
-    return this.worldState.describeObject(command.directObject);
+    const resolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveInteractiveTarget(targetName),
+      missingMessage: targetName => `There is no ${targetName} to look at here.`,
+    });
+
+    if (resolution.status !== 'resolved') {
+      return resolution.response;
+    }
+
+    if (resolution.candidate.type === 'object') {
+      return typeof resolution.candidate.target.description === 'function'
+        ? resolution.candidate.target.description(actionContext)
+        : resolution.candidate.target.description;
+    }
+
+    const item = resolution.candidate.target;
+    if (item.hasAction('look')) {
+      return item.performAction('look', {
+        ...actionContext,
+        item,
+      });
+    }
+
+    return item.description;
   }
 
   handleMovement(direction) {
@@ -364,18 +618,13 @@ export class GameSession {
       return result;
     }
 
-    this.worldState.removeVisibleItem(item.name);
+    this.worldState.removeItemById(item.id);
     return `${result} The ${item.name} is now used up.`;
   }
 
-  performTargetAction(actionName, targetName, actionContext, fallbackText) {
-    const resolvedTarget = this.worldState.findInteractiveTarget(targetName);
-    if (!resolvedTarget) {
-      return `You don't see ${targetName} here.`;
-    }
-
+  performTargetAction(actionName, resolvedTarget, actionContext, fallbackText) {
     if (resolvedTarget.type === 'item') {
-      return this.handleItemAction(targetName, actionName, actionContext);
+      return this.handleItemAction(resolvedTarget.target.name, actionName, actionContext, resolvedTarget);
     }
 
     const handler = resolvedTarget.target.actions?.[actionName];
@@ -402,15 +651,30 @@ export class GameSession {
       return `Show ${command.directObject} to whom?`;
     }
 
-    const item = this.worldState.findVisibleItem(command.directObject);
-    if (!item) {
-      return `You don't see a ${command.directObject} here.`;
+    const itemResolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveVisibleItem(targetName),
+      missingMessage: targetName => `You don't see a ${targetName} here.`,
+    });
+    if (itemResolution.status !== 'resolved') {
+      return itemResolution.response;
     }
 
-    const resolvedTarget = this.worldState.findInteractiveTarget(command.indirectObject);
-    if (!resolvedTarget) {
-      return `You don't see ${command.indirectObject} here.`;
+    const targetResolution = this.resolveCommandTarget({
+      command,
+      property: 'indirectObject',
+      resolvedProperty: 'resolvedIndirectTarget',
+      resolve: targetName => this.worldState.resolveInteractiveTarget(targetName),
+      missingMessage: targetName => `You don't see ${targetName} here.`,
+    });
+    if (targetResolution.status !== 'resolved') {
+      return targetResolution.response;
     }
+
+    const item = itemResolution.candidate.target;
+    const resolvedTarget = targetResolution.candidate;
 
     const showContext = {
       ...actionContext,
@@ -445,12 +709,30 @@ export class GameSession {
       return `Give ${command.directObject} to whom?`;
     }
 
-    const item = this.worldState.findInventoryItem(command.directObject);
-    if (!item) {
-      return `You don't have a ${command.directObject}.`;
+    const itemResolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveInventoryItem(targetName),
+      missingMessage: targetName => `You don't have a ${targetName}.`,
+    });
+    if (itemResolution.status !== 'resolved') {
+      return itemResolution.response;
     }
 
-    return this.performTargetAction('give', command.indirectObject, {
+    const targetResolution = this.resolveCommandTarget({
+      command,
+      property: 'indirectObject',
+      resolvedProperty: 'resolvedIndirectTarget',
+      resolve: targetName => this.worldState.resolveInteractiveTarget(targetName),
+      missingMessage: targetName => `You don't see ${targetName} here.`,
+    });
+    if (targetResolution.status !== 'resolved') {
+      return targetResolution.response;
+    }
+
+    const item = itemResolution.candidate.target;
+    return this.performTargetAction('give', targetResolution.candidate, {
       ...actionContext,
       item,
     }, `No one here seems interested in the ${item.name}.`);
@@ -465,7 +747,18 @@ export class GameSession {
       return `Ask ${command.directObject} about what?`;
     }
 
-    return this.performTargetAction('ask', command.directObject, {
+    const targetResolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveInteractiveTarget(targetName),
+      missingMessage: targetName => `You don't see ${targetName} here.`,
+    });
+    if (targetResolution.status !== 'resolved') {
+      return targetResolution.response;
+    }
+
+    return this.performTargetAction('ask', targetResolution.candidate, {
       ...actionContext,
       topic: command.indirectObject,
     }, `${command.directObject} offers no useful answer.`);
@@ -480,10 +773,69 @@ export class GameSession {
       return `Tell ${command.directObject} what?`;
     }
 
-    return this.performTargetAction('tell', command.directObject, {
+    const targetResolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveInteractiveTarget(targetName),
+      missingMessage: targetName => `You don't see ${targetName} here.`,
+    });
+    if (targetResolution.status !== 'resolved') {
+      return targetResolution.response;
+    }
+
+    return this.performTargetAction('tell', targetResolution.candidate, {
       ...actionContext,
       topic: command.indirectObject,
     }, `${command.directObject} does not seem interested.`);
+  }
+
+  handleTake(command) {
+    if (!command.directObject) {
+      return 'Take what?';
+    }
+
+    const resolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveCandidates(this.worldState.getRoomItemCandidates(targetName)),
+      missingMessage: targetName => `There is no ${targetName} here to take.`,
+    });
+    if (resolution.status !== 'resolved') {
+      return resolution.response;
+    }
+
+    const item = resolution.candidate.target;
+    if (!item.portable) {
+      return `You can't take the ${item.name}.`;
+    }
+
+    this.worldState.removeItemById(item.id);
+    this.worldState.inventory.push(item);
+    return `You take the ${item.name}.`;
+  }
+
+  handleDrop(command) {
+    if (!command.directObject) {
+      return 'Drop what?';
+    }
+
+    const resolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveInventoryItem(targetName),
+      missingMessage: targetName => `You don't have a ${targetName}.`,
+    });
+    if (resolution.status !== 'resolved') {
+      return resolution.response;
+    }
+
+    const item = resolution.candidate.target;
+    this.worldState.removeItemById(item.id);
+    this.worldState.getCurrentRoom().addItem(item);
+    return `You drop the ${item.name}.`;
   }
 
   handleGenericAction(command, actionContext = this.createActionContext(command)) {
@@ -493,17 +845,33 @@ export class GameSession {
       return `${this.capitalizeVerb(actionName)} what?`;
     }
 
-    const directTarget = this.worldState.findInteractiveTarget(command.directObject);
-    if (!directTarget) {
-      return `You don't see ${command.directObject} here.`;
+    const directResolution = this.resolveCommandTarget({
+      command,
+      property: 'directObject',
+      resolvedProperty: 'resolvedDirectTarget',
+      resolve: targetName => this.worldState.resolveInteractiveTarget(targetName),
+      missingMessage: targetName => `You don't see ${targetName} here.`,
+    });
+    if (directResolution.status !== 'resolved') {
+      return directResolution.response;
     }
+
+    const directTarget = directResolution.candidate;
 
     let indirectTarget = null;
     if (command.indirectObject) {
-      indirectTarget = this.worldState.findInteractiveTarget(command.indirectObject);
-      if (!indirectTarget) {
-        return `You don't see ${command.indirectObject} here.`;
+      const indirectResolution = this.resolveCommandTarget({
+        command,
+        property: 'indirectObject',
+        resolvedProperty: 'resolvedIndirectTarget',
+        resolve: targetName => this.worldState.resolveInteractiveTarget(targetName),
+        missingMessage: targetName => `You don't see ${targetName} here.`,
+      });
+      if (indirectResolution.status !== 'resolved') {
+        return indirectResolution.response;
       }
+
+      indirectTarget = indirectResolution.candidate;
     }
 
     const directResult = this.invokeResolvedAction(directTarget, actionName, actionContext, {
@@ -549,12 +917,12 @@ export class GameSession {
     type: 'command',
     verb: actionName,
     directObject: itemName,
-  })) {
+  }), resolvedItem = null) {
     if (!itemName) {
       return `${actionName.charAt(0).toUpperCase()}${actionName.slice(1)} what?`;
     }
 
-    const item = this.worldState.findVisibleItem(itemName);
+    const item = resolvedItem?.target ?? this.worldState.findVisibleItem(itemName);
     if (!item) {
       return `You don't see a ${itemName} here.`;
     }

@@ -82,6 +82,10 @@ export function createFeastHall() {
           : '"Kelago is an artist," Oshregaal says. "Try not to look at her with the face of a peasant confronting genius."',
       },
       {
+        match: ['plum', 'scribe'],
+        reply: 'Oshregaal smiles like a man complimented on a tool he intends to keep. "My little scribe is invaluable," he says. "She remembers things for me, especially when I prefer that she remember them differently later."',
+      },
+      {
         match: ['curtain', 'west'],
         reply: 'Oshregaal smiles too broadly. "Private family business, little guest. If the house wants you there, it will extend a hand."',
       },
@@ -179,6 +183,10 @@ export function createFeastHall() {
       {
         match: 'kelago',
         reply: '"Artistic," the imp says darkly. "Which in this family means the screaming is usually very well curated."',
+      },
+      {
+        match: ['plum', 'scribe'],
+        reply: 'The imp gives you a fast sideways look. "North of the old fraud\'s chamber," he mutters. "Still herself in fragments, last I checked. If you reach her, listen faster than the house lies."',
       },
     ],
     fallback: 'The imp answers in fragments sharp enough to draw blood if handled carelessly.',

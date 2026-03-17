@@ -54,6 +54,10 @@ export function createKelagoRoom() {
         reply: 'Kelago smiles with old-sister fondness sharpened on realism. "My brother is a glutton, a genius, a sentimentalist, and an exhausting host. He improves with distance and worsens with applause."',
       },
       {
+        match: ['plum', 'scribe'],
+        reply: 'Kelago sighs with real irritation. "My brother keeps a clever scribe in his private rooms because admiration pleases him more when catalogued. Poor Plum writes notes to herself faster than he can become offended by them."',
+      },
+      {
         match: ['bed', 'crab'],
         reply: 'Kelago rests her fingertips on the living bed with proprietary affection. "It used to pinch," she says. "Now it only judges. Improvement is often a matter of editing temperament."',
       },
@@ -75,6 +79,10 @@ export function createKelagoRoom() {
       {
         match: ['guest', 'guests'],
         reply: '"Guests are materials under temporary legal protection," Kelago says. "The duration of the protection varies with manners, novelty, and family mood."',
+      },
+      {
+        match: ['room', 'door', 'private chamber'],
+        reply: 'Kelago gestures east with one elegant hand. "My brother keeps his private chamber through that door," she says. "If you go bothering his north door, remember that he adores manners even in his hardware."',
       },
     ],
     fallback: 'Kelago answers with cordial precision, as though deciding how much of you might eventually become decorative.',
@@ -109,9 +117,11 @@ export function createKelagoRoom() {
 Kelago's workroom-bedroom is crowded with knives, crumbs, cups, clothing, and projects best left undescribed until one has to describe them.
 At the center stands a cleared workspace watched over by a living crab-bed and the calm logic of a woman who has made biomantic furniture into an art.
 The feast hall waits to the south.
+An ornate private door stands to the east.
 `.trim(),
     exits: {
       south: 'feastHall',
+      east: 'grandfatherRoom',
     },
     items: [livingBed, wizardInk, eyeSpellbook],
     objects: {
@@ -137,6 +147,7 @@ The feast hall waits to the south.
       knives: 'There are knives everywhere: long, hooked, delicate, ribbed, and unmistakably specialized.',
       tortoises: 'Three headless tortoises shuffle through the clutter with patient, chest-like dignity.',
       workspace: 'The central workspace is suspiciously clean, suggesting that whatever was last done here concluded successfully.',
+      door: 'An ornate side door leads east into Oshregaal\'s private rooms. Even from here it looks overconfident.',
     },
   });
 }

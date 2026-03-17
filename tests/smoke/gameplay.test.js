@@ -1,7 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createTestSession, moveToFeastHall, moveToFoyer, moveToGuestWing, moveToKitchen } from '../helpers/testSession.js';
+import {
+  createTestSession,
+  moveToFeastHall,
+  moveToFoyer,
+  moveToGrandfatherRoom,
+  moveToGuestWing,
+  moveToKitchen,
+  moveToLibrary,
+  moveToPlumRoom,
+  moveToFoldedHallway,
+  moveToTunnel,
+} from '../helpers/testSession.js';
 
 test('custom verbs work across the current vertical slice', () => {
   const session = createTestSession();
@@ -190,4 +201,84 @@ test('new rooms beyond the initial slice extend the household and political map'
   assert.match(secondSession.submitCommand('ask nathema about black wind'), /Bring me anything from the black wind line/i);
   assert.equal(secondSession.worldState.getFlag('nathemaBargained'), true);
   assert.match(secondSession.submitCommand('tell nathema about escape'), /stop treating departure as a confession/i);
+});
+
+test('the deeper private rooms now introduce Plum and the rescue branch', () => {
+  const session = createTestSession();
+
+  moveToGrandfatherRoom(session);
+  assert.match(session.submitCommand('search vanity'), /wrapped plug of dark ear wax/i);
+  assert.equal(session.worldState.getFlag('waxPlugFound'), true);
+  assert.match(session.submitCommand('use wax plug'), /voices would have to work harder/i);
+  assert.match(session.submitCommand('north'), /iron hand waits upright/i);
+  assert.match(session.submitCommand('shake hand'), /inside the wall, hidden catches withdraw/i);
+  assert.equal(session.worldState.getFlag('metalHandDoorUnlocked'), true);
+  assert.match(session.submitCommand('north'), /smaller chamber has the careful plainness/i);
+  assert.equal(session.worldState.getFlag('plumFound'), true);
+  assert.match(session.submitCommand('ask plum about escape'), /circle behind the curtains is real|folded hall/i);
+  assert.match(session.submitCommand('read memory folder'), /Wax in one ear blunts the host-voice/i);
+  assert.equal(session.worldState.getFlag('plumMemoryRead'), true);
+  assert.match(session.submitCommand('tell plum i will get you out'), /read the folder\. keep the wax/i);
+  assert.equal(session.worldState.getFlag('plumEscapePlanned'), true);
+
+  const secondSession = createTestSession();
+  moveToPlumRoom(secondSession);
+  assert.match(secondSession.submitCommand('ask plum about wax'), /keep it\. when he speaks in the voice/i);
+  assert.match(secondSession.submitCommand('ask plum about folder'), /write to the next version of myself/i);
+});
+
+test('the library and folded hallway now extend the deep escape cluster', () => {
+  const session = createTestSession();
+
+  moveToLibrary(session);
+  assert.equal(session.worldState.currentRoomId, 'library');
+  assert.match(session.submitCommand('search shelves'), /obedient geometry|folded corridor/i);
+  assert.equal(session.worldState.getFlag('libraryRouteKnown'), true);
+  assert.match(session.submitCommand('read geometry folio'), /paired living contact|competent fraud/i);
+  assert.equal(session.worldState.getFlag('foldedHallwayUnderstood'), true);
+  assert.match(session.submitCommand('smell incense'), /cedar, dust, and the sort of disciplined breathing/i);
+
+  assert.match(session.submitCommand('north'), /corridor beyond the library refuses to behave/i);
+  assert.equal(session.worldState.currentRoomId, 'foldedHallway');
+  assert.match(session.submitCommand('search hall'), /one hall folded around itself and pinned in place/i);
+  assert.equal(session.worldState.getFlag('foldedHallwaySeen'), true);
+  assert.match(session.submitCommand('search idol'), /two palms turned outward|answering living contact/i);
+  assert.equal(session.worldState.getFlag('idolPairingKnown'), true);
+  assert.match(session.submitCommand('touch idol'), /one hand is enough to prove the mechanism/i);
+  assert.match(session.submitCommand('search hall'), /corridor is taking attendance|one hall folded around itself/i);
+
+  const secondSession = createTestSession();
+  moveToFoldedHallway(secondSession);
+  assert.match(secondSession.submitCommand('look at idol'), /both hands extended to receive contact/i);
+  assert.match(secondSession.submitCommand('south'), /Oshregaal's library is less a scholarly refuge/i);
+});
+
+test('the wax-palm workaround now unfolds the hall and reaches the tunnel route', () => {
+  const session = createTestSession();
+
+  moveToLibrary(session);
+  assert.match(session.submitCommand('take meditative incense'), /you take the meditative incense/i);
+  assert.match(session.submitCommand('take wax palm'), /you take the wax palm/i);
+  assert.match(session.submitCommand('north'), /corridor beyond the library refuses to behave/i);
+  assert.match(session.submitCommand('north'), /loops you back toward the idol/i);
+  assert.equal(session.worldState.currentRoomId, 'foldedHallway');
+  assert.match(session.submitCommand('use wax palm on idol'), /corridor shudders, reluctantly accepts the fraud/i);
+  assert.equal(session.worldState.getFlag('foldedHallwayUnlocked'), true);
+  assert.match(session.submitCommand('north'), /house gives way to older stone/i);
+  assert.equal(session.worldState.currentRoomId, 'tunnel');
+  assert.match(session.submitCommand('search roots'), /outer gardens and probably beyond|not yet a rescue route/i);
+  assert.equal(session.worldState.getFlag('tunnelRouteKnown'), true);
+  assert.match(session.submitCommand('light incense'), /roots loosen, the cold wind steadies/i);
+  assert.equal(session.worldState.getFlag('plumTunnelRouteReady'), true);
+  assert.match(session.submitCommand('search tunnel'), /route you could ask Plum to survive with you/i);
+
+  const secondSession = createTestSession();
+  moveToTunnel(secondSession);
+  assert.match(secondSession.submitCommand('light incense'), /roots loosen, the cold wind steadies/i);
+  assert.match(secondSession.submitCommand('search tunnel'), /route you could ask Plum to survive with you/i);
+  assert.match(secondSession.submitCommand('south'), /corridor beyond the library refuses to behave/i);
+  assert.match(secondSession.submitCommand('south'), /Oshregaal's library is less a scholarly refuge/i);
+  assert.match(secondSession.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(secondSession.submitCommand('ask plum about escape'), /tunnel may actually take us both/i);
+  assert.match(secondSession.submitCommand('ask plum about help'), /stop planning and start leaving/i);
 });

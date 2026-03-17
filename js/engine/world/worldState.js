@@ -16,6 +16,7 @@ export class WorldState {
     this.panelDefinitions = this.createPanelDefinitions(manifest.ui?.panels);
     this.panelState = this.createDefaultPanelState();
     this.triggerState = this.createDefaultTriggerState();
+    this.schedulerState = this.createDefaultSchedulerState();
     this.turns = 0;
     this.roomVisits = {};
     this.outputBuffer = [];
@@ -71,6 +72,13 @@ export class WorldState {
     };
   }
 
+  createDefaultSchedulerState() {
+    return {
+      nextEntryId: 1,
+      entries: [],
+    };
+  }
+
   normalizeEventDefinitions(eventDefinitions = {}) {
     return Object.fromEntries(
       Object.entries(eventDefinitions ?? {}).map(([eventId, definition]) => {
@@ -95,6 +103,30 @@ export class WorldState {
     return {
       rooms: mapDefinition?.rooms ? { ...mapDefinition.rooms } : {},
     };
+  }
+
+  normalizeSchedulerState(schedulerState = {}) {
+    const nextState = this.createDefaultSchedulerState();
+
+    nextState.nextEntryId = Number.isInteger(schedulerState?.nextEntryId) && schedulerState.nextEntryId > 0
+      ? schedulerState.nextEntryId
+      : nextState.nextEntryId;
+    nextState.entries = Array.isArray(schedulerState?.entries)
+      ? schedulerState.entries
+        .filter(entry => entry && typeof entry === 'object' && Number.isFinite(entry.dueTurn))
+        .map(entry => ({
+          id: entry.id,
+          scheduleId: entry.scheduleId ?? null,
+          type: entry.type ?? 'event',
+          dueTurn: entry.dueTurn,
+          eventId: entry.eventId ?? null,
+          roomId: entry.roomId ?? null,
+          triggerName: entry.triggerName ?? null,
+          data: entry.data && typeof entry.data === 'object' ? { ...entry.data } : {},
+        }))
+      : [];
+
+    return nextState;
   }
 
   static get MAP_DIRECTION_VECTORS() {
@@ -342,6 +374,9 @@ export class WorldState {
       triggerEvent: (eventId, eventContext = {}) => this.runEvent(eventId, eventContext),
       emitEvent: (eventId, eventContext = {}) => this.runEvent(eventId, eventContext).join('\n\n'),
       hasRunEvent: eventId => this.hasTriggeredEvent(this.getEventStateId(eventId)),
+      scheduleEvent: (eventId, scheduleOptions = {}) => this.scheduleEvent(eventId, scheduleOptions),
+      cancelScheduledEvent: scheduleId => this.cancelScheduledEvent(scheduleId),
+      hasScheduledEvent: scheduleId => this.hasScheduledEvent(scheduleId),
       print: text => this.print(text),
       ...additionalContext,
     };
@@ -459,6 +494,21 @@ export class WorldState {
       }
       case 'event': {
         return this.runEvent(this.resolveContextValue(action.eventId, context), context);
+      }
+      case 'scheduleEvent': {
+        this.scheduleEvent(
+          this.resolveContextValue(action.eventId, context),
+          {
+            delayTurns: this.resolveContextValue(action.delayTurns, context),
+            scheduleId: this.resolveContextValue(action.scheduleId, context),
+            data: this.resolveContextValue(action.data, context),
+          },
+        );
+        return null;
+      }
+      case 'cancelScheduledEvent': {
+        this.cancelScheduledEvent(this.resolveContextValue(action.scheduleId, context));
+        return null;
       }
       case 'roomTrigger': {
         return this.runRoomTrigger(
@@ -607,6 +657,106 @@ export class WorldState {
 
   queueMetaMessages(messages = []) {
     this.pendingMetaMessages.push(...messages.filter(Boolean));
+  }
+
+  createScheduledEntry(baseEntry = {}) {
+    const entryId = this.schedulerState.nextEntryId;
+    this.schedulerState.nextEntryId += 1;
+
+    return {
+      id: `scheduled:${entryId}`,
+      scheduleId: baseEntry.scheduleId ?? null,
+      type: baseEntry.type ?? 'event',
+      dueTurn: baseEntry.dueTurn,
+      eventId: baseEntry.eventId ?? null,
+      roomId: baseEntry.roomId ?? null,
+      triggerName: baseEntry.triggerName ?? null,
+      data: baseEntry.data && typeof baseEntry.data === 'object' ? { ...baseEntry.data } : {},
+    };
+  }
+
+  hasScheduledEvent(scheduleId) {
+    if (!scheduleId) {
+      return false;
+    }
+
+    return this.schedulerState.entries.some(entry => entry.scheduleId === scheduleId);
+  }
+
+  cancelScheduledEvent(scheduleId) {
+    if (!scheduleId) {
+      return false;
+    }
+
+    const originalLength = this.schedulerState.entries.length;
+    this.schedulerState.entries = this.schedulerState.entries.filter(entry => entry.scheduleId !== scheduleId);
+    return this.schedulerState.entries.length !== originalLength;
+  }
+
+  scheduleEvent(eventId, options = {}) {
+    if (!eventId) {
+      return null;
+    }
+
+    const delayTurns = Math.max(0, Number.isFinite(options.delayTurns) ? Number(options.delayTurns) : 0);
+    const scheduleId = options.scheduleId ? String(options.scheduleId) : null;
+    if (scheduleId) {
+      this.cancelScheduledEvent(scheduleId);
+    }
+
+    const entry = this.createScheduledEntry({
+      type: 'event',
+      eventId,
+      scheduleId,
+      dueTurn: this.turns + delayTurns,
+      data: options.data ?? {},
+    });
+
+    this.schedulerState.entries = [...this.schedulerState.entries, entry]
+      .sort((left, right) => left.dueTurn - right.dueTurn || String(left.id).localeCompare(String(right.id)));
+    return entry;
+  }
+
+  runScheduledEntry(entry) {
+    if (!entry) {
+      return [];
+    }
+
+    if (entry.type === 'event') {
+      return this.runEvent(entry.eventId, {
+        scheduledEntry: entry,
+        scheduledData: entry.data ?? {},
+        ...entry.data,
+      });
+    }
+
+    if (entry.type === 'roomTrigger') {
+      return this.runRoomTrigger(entry.roomId, entry.triggerName, {
+        scheduledEntry: entry,
+        scheduledData: entry.data ?? {},
+        ...entry.data,
+      });
+    }
+
+    return [];
+  }
+
+  advanceScheduledEvents() {
+    const dueEntries = [];
+    const futureEntries = [];
+
+    this.schedulerState.entries.forEach(entry => {
+      if (entry.dueTurn <= this.turns) {
+        dueEntries.push(entry);
+        return;
+      }
+
+      futureEntries.push(entry);
+    });
+
+    this.schedulerState.entries = futureEntries;
+
+    return dueEntries.flatMap(entry => this.runScheduledEntry(entry)).filter(Boolean);
   }
 
   consumePendingMetaMessages() {
@@ -858,35 +1008,134 @@ export class WorldState {
   }
 
   findInventoryItem(itemName) {
-    return this.inventory.find(item => item.matchesName(itemName));
+    return this.resolveInventoryItem(itemName).candidate?.target ?? null;
   }
 
   findVisibleItem(itemName) {
-    return this.getCurrentRoom().findItem(itemName) ?? this.findInventoryItem(itemName);
+    return this.resolveVisibleItem(itemName).candidate?.target ?? null;
   }
 
   findVisibleObject(objectName) {
-    return this.getCurrentRoom().findObject(objectName);
+    return this.resolveVisibleObject(objectName).candidate?.target ?? null;
   }
 
   findInteractiveTarget(targetName) {
-    const objectTarget = this.findVisibleObject(targetName);
-    if (objectTarget) {
+    return this.resolveInteractiveTarget(targetName).candidate ?? null;
+  }
+
+  normalizeLookupName(targetName) {
+    return String(targetName ?? '').trim().toLowerCase();
+  }
+
+  resolveCandidates(candidates = []) {
+    if (candidates.length === 0) {
       return {
-        type: 'object',
-        target: objectTarget,
+        status: 'none',
+        candidate: null,
+        candidates: [],
       };
     }
 
-    const itemTarget = this.findVisibleItem(targetName);
-    if (itemTarget) {
+    if (candidates.length === 1) {
       return {
+        status: 'unique',
+        candidate: candidates[0],
+        candidates,
+      };
+    }
+
+    return {
+      status: 'ambiguous',
+      candidate: null,
+      candidates,
+    };
+  }
+
+  getInventoryItemCandidates(itemName) {
+    const normalizedName = this.normalizeLookupName(itemName);
+    if (!normalizedName) {
+      return [];
+    }
+
+    return this.inventory
+      .filter(item => item.matchesName(normalizedName))
+      .map(item => ({
         type: 'item',
-        target: itemTarget,
-      };
+        target: item,
+        scope: 'inventory',
+      }));
+  }
+
+  getRoomItemCandidates(itemName, room = this.getCurrentRoom()) {
+    const normalizedName = this.normalizeLookupName(itemName);
+    if (!normalizedName || !room) {
+      return [];
     }
 
-    return null;
+    return room.items
+      .filter(item => item.matchesName(normalizedName))
+      .map(item => ({
+        type: 'item',
+        target: item,
+        scope: 'room',
+      }));
+  }
+
+  getVisibleItemCandidates(itemName) {
+    return [
+      ...this.getRoomItemCandidates(itemName),
+      ...this.getInventoryItemCandidates(itemName),
+    ];
+  }
+
+  getVisibleObjectCandidates(objectName, room = this.getCurrentRoom()) {
+    const normalizedName = this.normalizeLookupName(objectName);
+    if (!normalizedName || !room) {
+      return [];
+    }
+
+    return Object.values(room.objects)
+      .filter(object => object.name.toLowerCase() === normalizedName || object.aliases.includes(normalizedName))
+      .map(object => ({
+        type: 'object',
+        target: object,
+        scope: 'room',
+      }));
+  }
+
+  resolveInventoryItem(itemName) {
+    return this.resolveCandidates(this.getInventoryItemCandidates(itemName));
+  }
+
+  resolveVisibleItem(itemName) {
+    return this.resolveCandidates(this.getVisibleItemCandidates(itemName));
+  }
+
+  resolveVisibleObject(objectName) {
+    return this.resolveCandidates(this.getVisibleObjectCandidates(objectName));
+  }
+
+  resolveInteractiveTarget(targetName, options = {}) {
+    const {
+      includeObjects = true,
+      includeRoomItems = true,
+      includeInventoryItems = true,
+    } = options;
+
+    const candidates = [];
+    if (includeObjects) {
+      candidates.push(...this.getVisibleObjectCandidates(targetName));
+    }
+
+    if (includeRoomItems) {
+      candidates.push(...this.getRoomItemCandidates(targetName));
+    }
+
+    if (includeInventoryItems) {
+      candidates.push(...this.getInventoryItemCandidates(targetName));
+    }
+
+    return this.resolveCandidates(candidates);
   }
 
   takeItem(itemName) {
@@ -1026,7 +1275,7 @@ export class WorldState {
     const currentRoom = this.getCurrentRoom();
     const context = this.createContext({ currentRoom });
 
-    const visibleObject = currentRoom.findObject(itemName);
+    const visibleObject = this.findVisibleObject(itemName);
     if (visibleObject) {
       return typeof visibleObject.description === 'function'
         ? visibleObject.description(context)
@@ -1480,6 +1729,13 @@ export class WorldState {
       metaState: { ...this.metaState },
       panelState: { ...this.panelState },
       triggerState: { ...this.triggerState },
+      schedulerState: {
+        nextEntryId: this.schedulerState.nextEntryId,
+        entries: this.schedulerState.entries.map(entry => ({
+          ...entry,
+          data: entry.data && typeof entry.data === 'object' ? { ...entry.data } : {},
+        })),
+      },
       items: Object.values(this.itemIndex).map(item => ({
         id: item.id,
         location: this.getItemLocation(item.id),
@@ -1506,6 +1762,7 @@ export class WorldState {
     this.metaState = this.normalizeMetaState(saveData.metaState ?? this.createDefaultMetaState());
     this.panelState = this.normalizePanelState(saveData.panelState ?? this.createDefaultPanelState());
     this.triggerState = this.normalizeTriggerState(saveData.triggerState ?? this.createDefaultTriggerState());
+    this.schedulerState = this.normalizeSchedulerState(saveData.schedulerState ?? this.createDefaultSchedulerState());
     this.outputBuffer = [];
     this.pendingMetaMessages = [];
     this.inventory = [];
