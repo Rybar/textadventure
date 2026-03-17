@@ -106,11 +106,15 @@ function buildRevealBase(targetText, visibleMask, activeText = '') {
         return character;
       }
 
-      return visibleMask[index] && activeText[index] && activeText[index] !== ' '
-        ? activeText[index]
-        : visibleMask[index]
-          ? randomChar()
-          : ' ';
+      if (visibleMask[index] && activeText[index] && activeText[index] !== ' ') {
+        return activeText[index];
+      }
+
+      if (visibleMask[index]) {
+        return randomChar();
+      }
+
+      return ' ';
     })
     .join('');
 }
@@ -149,7 +153,7 @@ function revealScrambledText(element, text, frameLength, revealChance = 0.06) {
   return intervalId;
 }
 
-function clearScrambledText(element, text, frameLength, clearFraction = 0.05) {
+function clearScrambledText(element, text, frameLength, clearFraction = 0.05, onComplete = null) {
   const targetText = String(text);
   let clearedMask = targetText
     .split('')
@@ -166,6 +170,9 @@ function clearScrambledText(element, text, frameLength, clearFraction = 0.05) {
     if (remainingIndexes.length === 0) {
       globalThis.clearInterval(intervalId);
       element.textContent = '';
+      if (typeof onComplete === 'function') {
+        onComplete();
+      }
       return;
     }
 
@@ -190,11 +197,24 @@ export function animateScrambledText(element, text, options = {}) {
   const clearFrameLength = options.clearFrameLength ?? 40;
   const revealChance = options.revealChance ?? 0.06;
   const clearFraction = options.clearFraction ?? 0.05;
+  const onComplete = typeof options.onComplete === 'function' ? options.onComplete : null;
   const frameLength = Math.max(16, Math.round(1000 / frameRate));
   const targetText = String(text);
   let revealIntervalId = null;
   let clearIntervalId = null;
   let holdTimeoutId = null;
+  let didComplete = false;
+
+  function finishAnimation() {
+    if (didComplete) {
+      return;
+    }
+
+    didComplete = true;
+    if (onComplete) {
+      onComplete();
+    }
+  }
 
   element.textContent = buildRevealBase(targetText, targetText.split('').map(character => character === '\n' || character === ' '));
 
@@ -211,7 +231,7 @@ export function animateScrambledText(element, text, options = {}) {
 
     globalThis.clearInterval(revealCompletionPollId);
     holdTimeoutId = globalThis.setTimeout(() => {
-      clearIntervalId = clearScrambledText(element, targetText, clearFrameLength, clearFraction);
+      clearIntervalId = clearScrambledText(element, targetText, clearFrameLength, clearFraction, finishAnimation);
     }, holdDuration);
   }, frameLength);
 

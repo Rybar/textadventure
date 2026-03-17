@@ -198,12 +198,30 @@ function getActiveStatusMetaElement() {
     return isMobileThemeActive ? statusElements.mobileMetaLine : statusElements.metaLine;
 }
 
-function syncStatusMetaContainers({ text = '', source = '', visible = false } = {}) {
+function getMetaMessageTone(message = {}) {
+    if (message.source === 'hacker') {
+        return 'hacker';
+    }
+
+    if (message.source === 'experiment-lackeys-aware' || /Reactive/i.test(message.id ?? '')) {
+        return 'aware';
+    }
+
+    if (message.source === 'experiment-lackeys') {
+        return 'lackey';
+    }
+
+    return '';
+}
+
+function syncStatusMetaContainers({ text = '', source = '', tone = '', visible = false } = {}) {
     statusElements.metaLine.textContent = '';
     statusElements.metaLine.dataset.source = '';
+    statusElements.metaLine.dataset.tone = '';
 
     statusElements.mobileMetaLine.textContent = '';
     statusElements.mobileMetaLine.dataset.source = '';
+    statusElements.mobileMetaLine.dataset.tone = '';
     statusElements.mobileMetaOverlay.dataset.visible = 'false';
     statusElements.mobileMetaOverlay.setAttribute('aria-hidden', 'true');
 
@@ -214,6 +232,7 @@ function syncStatusMetaContainers({ text = '', source = '', visible = false } = 
     const activeElement = getActiveStatusMetaElement();
     activeElement.textContent = text;
     activeElement.dataset.source = source;
+    activeElement.dataset.tone = tone;
 
     if (isMobileThemeActive) {
         statusElements.mobileMetaOverlay.dataset.visible = 'true';
@@ -236,14 +255,38 @@ function clearStatusMetaDisplay() {
     syncStatusMetaContainers();
 }
 
-function estimateStatusMetaDuration(message) {
-    const options = message.options ?? {};
-    const frameRate = options.frameRate ?? 60;
-    const clearFrameLength = options.clearFrameLength ?? 40;
-    const revealFrameLength = Math.max(16, Math.round(1000 / frameRate));
-    const revealDuration = Math.max(700, Math.ceil(message.text.length / 3) * revealFrameLength * 0.9);
-    const clearDuration = Math.max(450, Math.ceil(message.text.length / 4) * (clearFrameLength * 0.55));
-    return revealDuration + (options.holdDuration ?? 1800) + clearDuration;
+function getReadableMetaHoldDuration(message) {
+    const configuredHoldDuration = message.options?.holdDuration ?? 0;
+    const wordCount = String(message.text ?? '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .length;
+    const readingDuration = Math.max(2400, wordCount * 320);
+    return Math.max(configuredHoldDuration, readingDuration);
+}
+
+function startStatusMetaMessage(message) {
+    const animationOptions = message.options ? { ...message.options } : {};
+
+    activeStatusMetaMessage = message;
+    syncStatusMetaContainers({
+        visible: true,
+        source: message.source ?? '',
+        tone: getMetaMessageTone(message),
+    });
+
+    const activeMetaElement = getActiveStatusMetaElement();
+    stopActiveStatusMetaAnimation = animateScrambledText(activeMetaElement, message.text, {
+        ...animationOptions,
+        holdDuration: getReadableMetaHoldDuration(message),
+        onComplete: () => {
+            activeStatusMetaMessage = null;
+            stopActiveStatusMetaAnimation = null;
+            syncStatusMetaContainers();
+            showNextStatusMetaMessage();
+        },
+    });
 }
 
 function showNextStatusMetaMessage() {
@@ -257,18 +300,20 @@ function showNextStatusMetaMessage() {
         return;
     }
 
-    activeStatusMetaMessage = message;
-    syncStatusMetaContainers({ visible: true, source: message.source ?? '' });
+    if ((message.delayMs ?? 0) > 0) {
+        activeStatusMetaMessage = { delayed: true };
+        activeStatusMetaTimeoutId = globalThis.setTimeout(() => {
+            activeStatusMetaMessage = null;
+            activeStatusMetaTimeoutId = null;
+            startStatusMetaMessage({
+                ...message,
+                delayMs: 0,
+            });
+        }, message.delayMs);
+        return;
+    }
 
-    const activeMetaElement = getActiveStatusMetaElement();
-    stopActiveStatusMetaAnimation = animateScrambledText(activeMetaElement, message.text, message.options ?? {});
-    activeStatusMetaTimeoutId = globalThis.setTimeout(() => {
-        activeStatusMetaMessage = null;
-        activeStatusMetaTimeoutId = null;
-        stopActiveStatusMetaAnimation = null;
-        syncStatusMetaContainers();
-        showNextStatusMetaMessage();
-    }, estimateStatusMetaDuration(message));
+    startStatusMetaMessage(message);
 }
 
 function scrollTranscriptToBottom() {
@@ -429,21 +474,6 @@ function updateMetaMessages(messages = []) {
     });
 
     if (!activeStatusMetaMessage) {
-        if (queuedStatusMetaMessages[0]?.delayMs > 0) {
-            const delayedMessage = queuedStatusMetaMessages.shift();
-            activeStatusMetaMessage = { delayed: true };
-            activeStatusMetaTimeoutId = globalThis.setTimeout(() => {
-                activeStatusMetaMessage = null;
-                activeStatusMetaTimeoutId = null;
-                queuedStatusMetaMessages.unshift({
-                    ...delayedMessage,
-                    delayMs: 0,
-                });
-                showNextStatusMetaMessage();
-            }, delayedMessage.delayMs);
-            return;
-        }
-
         showNextStatusMetaMessage();
     }
 }

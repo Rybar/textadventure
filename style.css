@@ -10,6 +10,7 @@
   --mobile-command-bar-height: 52px;
   --visual-viewport-height: 100dvh;
   --mobile-keyboard-offset: 0px;
+  --status-bar-height: calc((var(--terminal-font-size) * 2.6) + 20px);
 }
 
 html,
@@ -37,6 +38,7 @@ body {
   height: 100dvh;
   padding: var(--screen-shell-padding);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 #terminal-stage {
@@ -47,7 +49,10 @@ body {
   gap: var(--panel-gap);
   width: min(100%, 1600px);
   max-width: calc(100vw - (var(--screen-shell-padding) * 2));
-  max-height: calc(100vh - (var(--screen-shell-padding) * 2));
+  height: calc(var(--visual-viewport-height) - (var(--screen-shell-padding) * 2));
+  max-height: calc(var(--visual-viewport-height) - (var(--screen-shell-padding) * 2));
+  min-height: 0;
+  overflow: hidden;
   transition: width 420ms ease;
 }
 
@@ -56,6 +61,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 10px 14px;
+  box-sizing: border-box;
   border: none;
   background-color: rgba(0, 0, 0, 0.94);
   color: var(--cga-amber);
@@ -66,7 +72,11 @@ body {
   text-transform: uppercase;
   transition: width 420ms ease, transform 420ms ease;
   min-width: 0;
-  min-height: calc(var(--terminal-font-size) * 2.6);
+  height: var(--status-bar-height);
+  min-height: var(--status-bar-height);
+  max-height: var(--status-bar-height);
+  overflow: hidden;
+  flex: 0 0 auto;
 }
 
 #terminal-stage[data-layout="transcript-only"] #status-bar {
@@ -81,6 +91,8 @@ body {
 
 #status-meta-line {
   min-height: 1lh;
+  min-width: 0;
+  max-width: 100%;
   color: #9dff9f;
   font-size: calc(var(--terminal-font-size) * 0.84);
   line-height: 1.18;
@@ -90,31 +102,34 @@ body {
   opacity: 0.9;
   text-align: center;
   align-self: center;
+  display: block;
   width: 100%;
   text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
 }
 
-#status-meta-line[data-source="hacker"] {
+#status-meta-line[data-tone="hacker"] {
   color: #9fd7ff;
   text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
 }
 
-#status-meta-line[data-source="experiment-lackeys"] {
+#status-meta-line[data-tone="lackey"] {
   color: #9dff9f;
   text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
 }
 
-#status-meta-line[data-source="experiment-lackeys-aware"] {
+#status-meta-line[data-tone="aware"] {
   color: #ffffff;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.24);
 }
 
 #terminal-content {
   display: flex;
+  flex: 1 1 auto;
   align-items: stretch;
   justify-content: center;
   gap: 0;
   min-height: 0;
+  overflow: hidden;
   transition: gap 420ms ease;
 }
 
@@ -175,7 +190,8 @@ body {
   padding: var(--terminal-frame-padding);
   background-color: var(--cga-background);
   box-shadow: 0 0 24px rgba(255, 191, 0, 0.15);
-  min-height: clamp(420px, 68vh, 860px);
+  min-height: 0;
+  max-height: 100%;
   min-width: 0;
   box-sizing: border-box;
   overflow: auto;
@@ -189,6 +205,8 @@ body {
 
 #mobile-meta-line {
   min-height: 1lh;
+  min-width: 0;
+  max-width: 100%;
   color: #9dff9f;
   font-family: 'Perfect-DOS-VGA-437-Win', monospace;
   font-size: calc(var(--terminal-font-size) * 0.84);
@@ -203,17 +221,17 @@ body {
   transition: opacity 160ms ease;
 }
 
-#mobile-meta-line[data-source="hacker"] {
+#mobile-meta-line[data-tone="hacker"] {
   color: #9fd7ff;
   text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
 }
 
-#mobile-meta-line[data-source="experiment-lackeys"] {
+#mobile-meta-line[data-tone="lackey"] {
   color: #9dff9f;
   text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
 }
 
-#mobile-meta-line[data-source="experiment-lackeys-aware"] {
+#mobile-meta-line[data-tone="aware"] {
   color: #ffffff;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.24);
 }
