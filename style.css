@@ -32,14 +32,25 @@ body {
   box-sizing: border-box;
 }
 
-#ephemeral-layer {
+.meta-column {
   position: absolute;
-  inset: 0;
+  top: var(--screen-shell-padding);
+  bottom: var(--screen-shell-padding);
+  width: clamp(140px, 20vw, 260px);
   pointer-events: none;
-  z-index: 3;
+  overflow: visible;
+  z-index: 2;
 }
 
-#ephemeral-message {
+#meta-column-left {
+  left: var(--screen-shell-padding);
+}
+
+#meta-column-right {
+  right: var(--screen-shell-padding);
+}
+
+.ephemeral-message {
   position: absolute;
   top: 0;
   left: 0;
@@ -47,9 +58,21 @@ body {
   font-family: 'Perfect-DOS-VGA-437-Win', monospace;
   font-size: var(--terminal-font-size);
   line-height: 1;
-  white-space: pre;
+  white-space: pre-wrap;
+  width: 100%;
   opacity: 0.9;
   text-shadow: 0 0 8px rgba(255, 191, 0, 0.25);
+  text-align: left;
+}
+
+#meta-column-left .ephemeral-message {
+  left: 0;
+  right: auto;
+}
+
+#meta-column-right .ephemeral-message {
+  left: auto;
+  right: 0;
 }
 
 #text-grid-container {

@@ -8,11 +8,16 @@
 </head>
 <body>
     <main id="screen-shell">
-        <div id="ephemeral-layer" aria-hidden="true">
-            <div id="ephemeral-message"></div>
+        <div id="meta-column-left" class="meta-column" aria-hidden="true">
+            <div id="ephemeral-message-left" class="ephemeral-message"></div>
+            <div id="ephemeral-message-lower-left" class="ephemeral-message"></div>
         </div>
         <div id="text-grid-container">
             <pre id="text-grid" aria-live="polite"></pre>
+        </div>
+        <div id="meta-column-right" class="meta-column" aria-hidden="true">
+            <div id="ephemeral-message-right" class="ephemeral-message"></div>
+            <div id="ephemeral-message-lower-right" class="ephemeral-message"></div>
         </div>
     </main>
     <input type="text" id="cli-input" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command input">

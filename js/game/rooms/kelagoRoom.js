@@ -50,7 +50,51 @@ The feast hall waits to the south.
     },
     items: [livingBed, wizardInk, eyeSpellbook],
     objects: {
-      kelago: 'Lady Kelago is composed, elegant, and only incidentally horrifying. She speaks of reshaping flesh the way another artist might discuss upholstery and line.',
+      kelago: {
+        name: 'Lady Kelago',
+        aliases: ['lady kelago', 'kelago'],
+        description: 'Lady Kelago is composed, elegant, and only incidentally horrifying. She speaks of reshaping flesh the way another artist might discuss upholstery and line.',
+        actions: {
+          ask({ topic, getFlag, setFlag }) {
+            setFlag('kelagoMet', true);
+
+            if (topic.includes('work') || topic.includes('furniture') || topic.includes('art')) {
+              return 'Kelago brightens. "At last, a guest with eyesight. Function is common. Comfort is common. Beauty joined to useful terror, however, remains an art."';
+            }
+
+            if (topic.includes('escape') || topic.includes('circle') || topic.includes('curtain') || topic.includes('west')) {
+              if (getFlag('kelagoPraised')) {
+                setFlag('kelagoHandshakeHintKnown', true);
+                return 'Kelago smiles with unnerving sincerity. "My brother keeps a hidden latch behind the feast-hall curtains. A brass hand. Shake it politely and the wall will remember its breeding."';
+              }
+
+              return 'Kelago glances toward the feast hall. "You ask practical questions with a stranger’s face. Admire something first. It improves the tone."';
+            }
+
+            return 'Kelago answers with cordial precision, as though deciding how much of you might eventually become decorative.';
+          },
+          tell({ topic, setFlag }) {
+            setFlag('kelagoMet', true);
+
+            if (topic.includes('beautiful') || topic.includes('art') || topic.includes('artist') || topic.includes('work')) {
+              setFlag('kelagoPraised', true);
+              return 'Kelago inclines her head, visibly pleased. "Kind and accurate," she says. "That combination is rarer than courage."';
+            }
+
+            return 'Kelago receives the remark with the calm interest of a woman capable of improving almost anything by force.';
+          },
+          give({ item, setFlag }) {
+            setFlag('kelagoMet', true);
+
+            if (item.id === 'wizard-ink') {
+              setFlag('kelagoPraised', true);
+              return 'Kelago accepts the wizard ink with immediate approval. "You do notice useful things," she says. "Ask me a better question and I may reward you with an answer."';
+            }
+
+            return `Kelago considers the ${item.name} and decides it does not improve the room.`;
+          },
+        },
+      },
       knives: 'There are knives everywhere: long, hooked, delicate, ribbed, and unmistakably specialized.',
       tortoises: 'Three headless tortoises shuffle through the clutter with patient, chest-like dignity.',
       workspace: 'The central workspace is suspiciously clean, suggesting that whatever was last done here concluded successfully.',

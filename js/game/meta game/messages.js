@@ -1,68 +1,90 @@
 const experimentLackeyMessages = {
-  intakeNotice: {
-    id: 'intakeNotice',
+  lackeyLeft001: {
+    id: 'lackeyLeft001',
     source: 'experiment-lackeys',
-    text: 'subject 13 is now under observation',
+    text: 'l1> baseline fiction is holding',
     options: {
-      holdDuration: 1800,
+      holdDuration: 4200,
       revealChance: 0.055,
       clearFraction: 0.045,
-      clearFrameLength: 42,
+      clearFrameLength: 54,
     },
   },
-  baselineCompliance: {
-    id: 'baselineCompliance',
+  lackeyRight001: {
+    id: 'lackeyRight001',
     source: 'experiment-lackeys',
-    text: 'baseline etiquette response within tolerance',
+    text: 'l2> keep it that way until attachment forms',
     options: {
-      holdDuration: 1600,
+      holdDuration: 4200,
+      revealChance: 0.055,
+      clearFraction: 0.045,
+      clearFrameLength: 54,
+    },
+  },
+  lackeyLeft002: {
+    id: 'lackeyLeft002',
+    source: 'experiment-lackeys',
+    text: 'l1> etiquette compliance remains within tolerance',
+    options: {
+      holdDuration: 3900,
       revealChance: 0.05,
       clearFraction: 0.05,
-      clearFrameLength: 40,
+      clearFrameLength: 52,
     },
   },
-  noncriticalDistress: {
-    id: 'noncriticalDistress',
+  lackeyRight002: {
+    id: 'lackeyRight002',
     source: 'experiment-lackeys',
-    text: 'distress spike logged no intervention required',
+    text: 'l2> distress can rise later no need to rush it',
     options: {
-      holdDuration: 1750,
-      revealChance: 0.048,
+      holdDuration: 3900,
+      revealChance: 0.05,
       clearFraction: 0.05,
-      clearFrameLength: 44,
+      clearFrameLength: 52,
     },
   },
-  appetiteTelemetry: {
-    id: 'appetiteTelemetry',
+  lackeyLeft003: {
+    id: 'lackeyLeft003',
     source: 'experiment-lackeys',
-    text: 'hospitality pressure remains a reliable coercion vector',
+    text: 'l1> host contact is increasing predictive accuracy',
     options: {
-      holdDuration: 1900,
+      holdDuration: 4300,
       revealChance: 0.05,
       clearFraction: 0.045,
-      clearFrameLength: 46,
+      clearFrameLength: 58,
     },
   },
-  routeSuppression: {
-    id: 'routeSuppression',
+  lackeyRight003: {
+    id: 'lackeyRight003',
     source: 'experiment-lackeys',
-    text: 'unauthorized escape ideation detected monitor only',
+    text: 'l2> do not intervene unless the subject finds a clean exit',
     options: {
-      holdDuration: 1850,
+      holdDuration: 4300,
+      revealChance: 0.05,
+      clearFraction: 0.045,
+      clearFrameLength: 58,
+    },
+  },
+  lackeyLeft004: {
+    id: 'lackeyLeft004',
+    source: 'experiment-lackeys',
+    text: 'l1> unauthorized curiosity markers are trending upward',
+    options: {
+      holdDuration: 4100,
       revealChance: 0.052,
       clearFraction: 0.045,
-      clearFrameLength: 41,
+      clearFrameLength: 54,
     },
   },
-  survivabilityNote: {
-    id: 'survivabilityNote',
+  lackeyRight004: {
+    id: 'lackeyRight004',
     source: 'experiment-lackeys',
-    text: 'continued survivability is desirable but not essential',
+    text: 'l2> acceptable curiosity improves the later breakpoints',
     options: {
-      holdDuration: 2000,
-      revealChance: 0.05,
-      clearFraction: 0.04,
-      clearFrameLength: 48,
+      holdDuration: 4100,
+      revealChance: 0.052,
+      clearFraction: 0.045,
+      clearFrameLength: 54,
     },
   },
 };
@@ -73,10 +95,10 @@ const hackerMessages = {
     source: 'hacker',
     text: 'if you are seeing this the shell is porous stay quiet',
     options: {
-      holdDuration: 1700,
+      holdDuration: 3600,
       revealChance: 0.062,
       clearFraction: 0.05,
-      clearFrameLength: 36,
+      clearFrameLength: 48,
     },
   },
   trustNoHelp: {
@@ -84,10 +106,10 @@ const hackerMessages = {
     source: 'hacker',
     text: 'their upgrades are locks with better lighting',
     options: {
-      holdDuration: 1600,
+      holdDuration: 3400,
       revealChance: 0.06,
       clearFraction: 0.05,
-      clearFrameLength: 35,
+      clearFrameLength: 46,
     },
   },
   noteTheServants: {
@@ -95,10 +117,10 @@ const hackerMessages = {
     source: 'hacker',
     text: 'watch who obeys rules and who resents them resentment opens doors',
     options: {
-      holdDuration: 1900,
+      holdDuration: 3900,
       revealChance: 0.058,
       clearFraction: 0.048,
-      clearFrameLength: 39,
+      clearFrameLength: 52,
     },
   },
   hiddenExitHint: {
@@ -106,10 +128,10 @@ const hackerMessages = {
     source: 'hacker',
     text: 'real exits feel like mistakes look for the room they ignore',
     options: {
-      holdDuration: 1850,
+      holdDuration: 3800,
       revealChance: 0.06,
       clearFraction: 0.047,
-      clearFrameLength: 37,
+      clearFrameLength: 50,
     },
   },
   bloodWarning: {
@@ -117,10 +139,10 @@ const hackerMessages = {
     source: 'hacker',
     text: 'do not give them more of yourself than the script demands',
     options: {
-      holdDuration: 1800,
+      holdDuration: 3700,
       revealChance: 0.061,
       clearFraction: 0.05,
-      clearFrameLength: 38,
+      clearFrameLength: 50,
     },
   },
   circleAdvice: {
@@ -128,17 +150,17 @@ const hackerMessages = {
     source: 'hacker',
     text: 'the circle is older than the experiment if you wake it move fast',
     options: {
-      holdDuration: 2000,
+      holdDuration: 4200,
       revealChance: 0.062,
       clearFraction: 0.045,
-      clearFrameLength: 40,
+      clearFrameLength: 54,
     },
   },
 };
 
 export function createMetaGameContent() {
   return {
-    startupMessageId: 'intakeNotice',
+    startupMessageId: null,
     messageSets: {
       experimentLackeys: {
         source: 'experiment-lackeys',
@@ -146,6 +168,35 @@ export function createMetaGameContent() {
       },
       hacker: {
         source: 'hacker',
+        messageIds: Object.keys(hackerMessages),
+      },
+    },
+    schedule: {
+      lackeyConversations: [
+        {
+          turn: 4,
+          leftMessageId: 'lackeyLeft001',
+          rightMessageId: 'lackeyRight001',
+        },
+        {
+          turn: 7,
+          leftMessageId: 'lackeyLeft002',
+          rightMessageId: 'lackeyRight002',
+        },
+        {
+          turn: 10,
+          leftMessageId: 'lackeyLeft003',
+          rightMessageId: 'lackeyRight003',
+        },
+        {
+          turn: 13,
+          leftMessageId: 'lackeyLeft004',
+          rightMessageId: 'lackeyRight004',
+        },
+      ],
+      hackerInterruptions: {
+        startTurn: 16,
+        interval: 4,
         messageIds: Object.keys(hackerMessages),
       },
     },

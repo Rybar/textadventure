@@ -13,6 +13,11 @@ export class WorldState {
     this.roomVisits = {};
     this.outputBuffer = [];
     this.itemIndex = this.buildItemIndex();
+    this.metaState = {
+      lackeyConversationIndex: 0,
+      hackerMessageIndex: 0,
+    };
+    this.pendingMetaMessages = [];
   }
 
   getCurrentRoom() {
@@ -105,6 +110,82 @@ export class WorldState {
     const output = [...this.outputBuffer];
     this.outputBuffer = [];
     return output;
+  }
+
+  queueMetaMessages(messages = []) {
+    this.pendingMetaMessages.push(...messages.filter(Boolean));
+  }
+
+  consumePendingMetaMessages() {
+    const messages = [...this.pendingMetaMessages];
+    this.pendingMetaMessages = [];
+    return messages;
+  }
+
+  buildNextMetaMessages({ force = false } = {}) {
+    const nextMessages = [];
+    const lackeyConversations = this.metaGame.schedule?.lackeyConversations ?? [];
+    const nextConversation = lackeyConversations[this.metaState.lackeyConversationIndex];
+
+    if (nextConversation && (force || this.turns >= nextConversation.turn)) {
+      const leftMessage = this.getMetaMessage(nextConversation.leftMessageId);
+      const rightMessage = this.getMetaMessage(nextConversation.rightMessageId);
+
+      nextMessages.push(
+        leftMessage ? { ...leftMessage, placement: 'side-left', delayMs: 0 } : null,
+        rightMessage ? { ...rightMessage, placement: 'side-right', delayMs: 4200 } : null,
+      );
+
+      this.metaState.lackeyConversationIndex += 1;
+    }
+
+    const hackerInterruptions = this.metaGame.schedule?.hackerInterruptions;
+    if (hackerInterruptions && nextMessages.length === 0) {
+      const { startTurn = Infinity, interval = 1, messageIds = [] } = hackerInterruptions;
+      const hackerIndex = this.metaState.hackerMessageIndex;
+      const nextHackerMessageId = messageIds[hackerIndex];
+      const readyForHackerMessage = force
+        ? this.turns >= startTurn
+        : this.turns >= startTurn && ((this.turns - startTurn) % interval === 0);
+
+      if (nextHackerMessageId && readyForHackerMessage) {
+        const hackerMessage = this.getMetaMessage(nextHackerMessageId);
+        if (hackerMessage) {
+          nextMessages.push({
+            ...hackerMessage,
+            placement: 'lower-random',
+          });
+        }
+
+        this.metaState.hackerMessageIndex += 1;
+      }
+    }
+
+    return nextMessages;
+  }
+
+  advanceMetaMessages() {
+    const nextMessages = this.buildNextMetaMessages();
+
+    this.queueMetaMessages(nextMessages);
+    return nextMessages;
+  }
+
+  forceNextMetaMessages() {
+    const nextMessages = this.buildNextMetaMessages({ force: true });
+    const minimumDelay = nextMessages.reduce((lowestDelay, message) => {
+      const nextDelay = message?.delayMs ?? 0;
+      return Math.min(lowestDelay, nextDelay);
+    }, Infinity);
+    const normalizedDelay = Number.isFinite(minimumDelay) ? minimumDelay : 0;
+
+    const previewMessages = nextMessages.map(message => ({
+      ...message,
+      delayMs: Math.max(0, (message.delayMs ?? 0) - normalizedDelay),
+    }));
+
+    this.queueMetaMessages(previewMessages);
+    return previewMessages;
   }
 
   getRoomVisitCount(roomId) {
@@ -275,6 +356,33 @@ export class WorldState {
     return this.getCurrentRoom();
   }
 
+  tryMove(direction) {
+    const currentRoom = this.getCurrentRoom();
+    const blockedReason = currentRoom.checkExit(direction, this.createContext({ currentRoom }));
+    if (blockedReason) {
+      return {
+        success: false,
+        message: blockedReason,
+        room: null,
+      };
+    }
+
+    const nextRoom = this.move(direction);
+    if (!nextRoom) {
+      return {
+        success: false,
+        message: 'There is no exit in that direction.',
+        room: null,
+      };
+    }
+
+    return {
+      success: true,
+      message: null,
+      room: nextRoom,
+    };
+  }
+
   enterCurrentRoom() {
     const currentRoom = this.getCurrentRoom();
     const visitCount = this.markCurrentRoomVisited();
@@ -383,6 +491,7 @@ export class WorldState {
       flags: { ...this.flags },
       turns: this.turns,
       roomVisits: { ...this.roomVisits },
+      metaState: { ...this.metaState },
       items: Object.values(this.itemIndex).map(item => ({
         id: item.id,
         location: this.getItemLocation(item.id),
@@ -406,7 +515,17 @@ export class WorldState {
     this.flags = saveData.flags ? { ...this.flags, ...saveData.flags } : { ...this.flags };
     this.turns = Number.isFinite(saveData.turns) ? saveData.turns : 0;
     this.roomVisits = saveData.roomVisits ? { ...saveData.roomVisits } : {};
+    this.metaState = saveData.metaState
+      ? {
+        lackeyConversationIndex: saveData.metaState.lackeyConversationIndex ?? 0,
+        hackerMessageIndex: saveData.metaState.hackerMessageIndex ?? 0,
+      }
+      : {
+        lackeyConversationIndex: 0,
+        hackerMessageIndex: 0,
+      };
     this.outputBuffer = [];
+    this.pendingMetaMessages = [];
     this.inventory = [];
     Object.values(this.rooms).forEach(room => {
       room.items = [];

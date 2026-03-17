@@ -52,6 +52,15 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
       north: 'feastHall',
       up: 'guestRoom',
     },
+    exitGuards: {
+      north({ getFlag }) {
+        if (getFlag('foyerAdmitted')) {
+          return null;
+        }
+
+        return 'One of the ogre butlers steps neatly into your path. "The feast receives invited guests," he says. The implication is that unverified guests may be received differently.';
+      },
+    },
     verbs: {
       shake({ command }) {
         const target = command.directObject;
@@ -76,6 +85,10 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
           ask({ topic }) {
             if (topic.includes('oshregaal') || topic.includes('grandfather')) {
               return 'The butlers answer in perfect unison: "Grandfather receives all worthy guests in due order." The wording suggests that worthiness and order are both actively supervised.';
+            }
+
+            if (topic.includes('invitation')) {
+              return '"Presentation is customary," says Oggaf. "Verification is healthier," adds Zamzam.';
             }
 
             if (topic.includes('guest') || topic.includes('room')) {

@@ -46,7 +46,12 @@ export function moveToFoyer(session) {
   session.submitCommand('north');
 }
 
-export function moveToFeastHall(session) {
+export function admitAtFoyer(session) {
   moveToFoyer(session);
+  session.submitCommand('give invitation to oggaf');
+}
+
+export function moveToFeastHall(session) {
+  admitAtFoyer(session);
   session.submitCommand('north');
 }

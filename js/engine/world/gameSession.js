@@ -14,6 +14,10 @@ export class GameSession {
     this.transcript = options.transcript ?? new Transcript();
     this.actionRegistry = options.actionRegistry ?? new ActionRegistry();
     this.worldState = new WorldState(this.manifest);
+    this.pendingMetaMessages = [];
+    this.debugState = {
+      metaDebugEnabled: false,
+    };
     this.initializeActionRegistry();
   }
 
@@ -31,9 +35,24 @@ export class GameSession {
     return this.worldState.getStartupMetaMessage();
   }
 
+  consumePendingMetaMessages() {
+    const messages = [...this.pendingMetaMessages];
+    this.pendingMetaMessages = [];
+    return messages;
+  }
+
   submitCommand(rawInput) {
     const parsedCommand = this.commandParser.parse(rawInput);
+    const normalizedCommand = parsedCommand.type === 'empty'
+      ? parsedCommand
+      : this.normalizeCommand(parsedCommand);
     const response = this.execute(parsedCommand);
+
+    if (normalizedCommand.type !== 'empty' && !this.isNonTurnCommand(normalizedCommand.verb)) {
+      this.worldState.advanceMetaMessages();
+      this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
+    }
+
     this.transcript.recordTurn(rawInput, response);
     return this.transcript.getLatestPrintableEntry();
   }
@@ -43,9 +62,11 @@ export class GameSession {
       return 'Enter a command.';
     }
 
-    this.worldState.incrementTurn();
-
     const normalizedCommand = this.normalizeCommand(command);
+    if (!this.isNonTurnCommand(normalizedCommand.verb)) {
+      this.worldState.incrementTurn();
+    }
+
     const actionContext = this.createActionContext(normalizedCommand);
     const globalVerbHandler = this.actionRegistry.getGlobalVerbHandler(normalizedCommand.verb);
     if (globalVerbHandler) {
@@ -68,10 +89,12 @@ export class GameSession {
       take: context => this.worldState.takeItem(context.command.directObject),
       drop: context => this.worldState.dropItem(context.command.directObject),
       inventory: () => this.worldState.listInventory(),
-      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, READ INVITATION, LISTEN TO FOUNTAIN, SIT ON COUCH, GO SOUTH, INVENTORY, SAVE, or LOAD.',
+      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, READ INVITATION, LISTEN TO FOUNTAIN, SIT ON COUCH, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA.',
       give: context => this.handleGive(context.command, context),
       ask: context => this.handleAsk(context.command, context),
       tell: context => this.handleTell(context.command, context),
+      debugmeta: context => this.toggleMetaDebug(context.command.directObject),
+      nextmeta: () => this.forceNextMetaEvent(),
       save: context => this.saveGame(context.command.directObject),
       load: context => this.loadGame(context.command.directObject),
       map: () => 'No map is available yet.',
@@ -86,6 +109,10 @@ export class GameSession {
       command,
       ...additionalContext,
     });
+  }
+
+  isNonTurnCommand(verb) {
+    return verb === 'debugmeta' || verb === 'nextmeta';
   }
 
   normalizeCommand(command) {
@@ -114,6 +141,40 @@ export class GameSession {
     return [primaryResponse, ...printedOutput].filter(Boolean).join('\n');
   }
 
+  toggleMetaDebug(argument = '') {
+    const normalizedArgument = String(argument ?? '').trim().toLowerCase();
+
+    if (normalizedArgument === 'on') {
+      this.debugState.metaDebugEnabled = true;
+      return 'Meta debug mode enabled. Use NEXTMETA to preview the next scheduled meta exchange.';
+    }
+
+    if (normalizedArgument === 'off') {
+      this.debugState.metaDebugEnabled = false;
+      return 'Meta debug mode disabled.';
+    }
+
+    this.debugState.metaDebugEnabled = !this.debugState.metaDebugEnabled;
+    return this.debugState.metaDebugEnabled
+      ? 'Meta debug mode enabled. Use NEXTMETA to preview the next scheduled meta exchange.'
+      : 'Meta debug mode disabled.';
+  }
+
+  forceNextMetaEvent() {
+    if (!this.debugState.metaDebugEnabled) {
+      return 'Meta debug mode is off. Use DEBUGMETA to enable it first.';
+    }
+
+    const messages = this.worldState.forceNextMetaMessages();
+    this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
+
+    if (messages.length === 0) {
+      return 'No additional meta messages are queued.';
+    }
+
+    return `Queued ${messages.length} meta ${messages.length === 1 ? 'message' : 'messages'} for preview.`;
+  }
+
   handleLook(command) {
     if (!command.directObject || command.directObject === 'around') {
       return this.worldState.lookAroundCurrentRoom();
@@ -127,9 +188,9 @@ export class GameSession {
       return 'Go where?';
     }
 
-    const nextRoom = this.worldState.move(direction);
-    if (!nextRoom) {
-      return 'There is no exit in that direction.';
+    const movementResult = this.worldState.tryMove(direction);
+    if (!movementResult.success) {
+      return movementResult.message;
     }
 
     return `\n${this.worldState.enterCurrentRoom()}`;
@@ -294,6 +355,7 @@ export class GameSession {
       const nextWorldState = new WorldState(this.createFreshManifest());
       nextWorldState.importSaveData(JSON.parse(savedData));
       this.worldState = nextWorldState;
+      this.pendingMetaMessages = [];
       return `Game loaded from slot "${normalizedSlot}".\n\n${this.worldState.lookAroundCurrentRoom()}`;
     } catch (error) {
       return `Unable to load slot "${normalizedSlot}": ${error.message}`;

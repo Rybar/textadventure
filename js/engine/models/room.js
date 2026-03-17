@@ -4,6 +4,7 @@ export class Room {
     title,
     description,
     exits = {},
+    exitGuards = {},
     items = [],
     objects = {},
     verbs = {},
@@ -15,6 +16,7 @@ export class Room {
     this.title = title ?? id;
     this.description = description;
     this.exits = exits;
+    this.exitGuards = exitGuards;
     this.items = items;
     this.objects = this.normalizeObjects(objects);
     this.verbs = verbs;
@@ -94,6 +96,19 @@ export class Room {
 
   setExit(direction, targetRoomId) {
     this.exits[direction] = targetRoomId;
+  }
+
+  checkExit(direction, context = {}) {
+    const guard = this.exitGuards[direction];
+    if (!guard) {
+      return null;
+    }
+
+    if (typeof guard === 'function') {
+      return guard(context);
+    }
+
+    return String(guard);
   }
 
   hasVerb(verb) {

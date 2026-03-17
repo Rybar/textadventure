@@ -11,10 +11,21 @@ const transcriptLines = [];
 const commandHistory = [];
 let historyIndex = -1;
 let cursorVisible = true;
-let stopEphemeralAnimation = null;
 const inputElement = document.getElementById('cli-input');
-const ephemeralMessageElement = document.getElementById('ephemeral-message');
-const textGridContainerElement = document.getElementById('text-grid-container');
+const ephemeralMessageElements = {
+    sideLeft: document.getElementById('ephemeral-message-left'),
+    sideRight: document.getElementById('ephemeral-message-right'),
+    lowerLeft: document.getElementById('ephemeral-message-lower-left'),
+    lowerRight: document.getElementById('ephemeral-message-lower-right'),
+};
+const stopEphemeralAnimations = new Map();
+const scheduledEphemeralTimeouts = new Map();
+const metaColumns = {
+    sideLeft: document.getElementById('meta-column-left'),
+    sideRight: document.getElementById('meta-column-right'),
+    lowerLeft: document.getElementById('meta-column-left'),
+    lowerRight: document.getElementById('meta-column-right'),
+};
 
 function focusCommandInput() {
     if (document.activeElement !== inputElement) {
@@ -26,57 +37,114 @@ function isPrintableKey(event) {
     return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
 }
 
-function positionEphemeralMessage() {
-    if (!ephemeralMessageElement || !textGridContainerElement) {
+function positionEphemeralMessage(element, options = {}) {
+    if (!element) {
         return;
     }
 
-    const gap = 16;
-    const viewportPadding = 12;
-    const displayRect = textGridContainerElement.getBoundingClientRect();
-    const messageRect = ephemeralMessageElement.getBoundingClientRect();
-
-    let left = displayRect.right + gap;
-    if (left + messageRect.width > globalThis.innerWidth - viewportPadding) {
-        left = displayRect.left - messageRect.width - gap;
-    }
-
-    left = Math.max(viewportPadding, left);
-
-    let top = displayRect.top + gap;
-    if (top + messageRect.height > globalThis.innerHeight - viewportPadding) {
-        top = Math.max(viewportPadding, displayRect.bottom - messageRect.height);
-    }
-
-    ephemeralMessageElement.style.left = `${Math.round(left)}px`;
-    ephemeralMessageElement.style.top = `${Math.round(top)}px`;
+    const topPercent = options.topPercent ?? 6;
+    element.style.top = `${topPercent}%`;
 }
 
-function updateEphemeralMessage(message, options = {}) {
-    if (!ephemeralMessageElement) {
-        return;
+function clearEphemeralSlot(elementKey) {
+    const existingTimeout = scheduledEphemeralTimeouts.get(elementKey);
+    if (existingTimeout) {
+        globalThis.clearTimeout(existingTimeout);
+        scheduledEphemeralTimeouts.delete(elementKey);
     }
 
-    if (stopEphemeralAnimation) {
-        stopEphemeralAnimation();
-        stopEphemeralAnimation = null;
+    const existingStop = stopEphemeralAnimations.get(elementKey);
+    if (existingStop) {
+        existingStop();
+        stopEphemeralAnimations.delete(elementKey);
     }
+}
+
+function renderEphemeralMessage(elementKey, message, options = {}) {
+    const element = ephemeralMessageElements[elementKey];
+    const column = metaColumns[elementKey];
+    if (!element || !column) {
+        return;
+    }
+    const isLower = elementKey === 'lowerLeft' || elementKey === 'lowerRight';
+    const topPercent = options.topPercent ?? (isLower ? 60 + (Math.random() * 18) : 6);
+    const columnWidth = column.getBoundingClientRect().width;
+    const inset = Math.max(0, Math.floor(columnWidth * 0.03));
+
+    element.style.left = `${inset}px`;
+    element.style.right = `${inset}px`;
+    element.style.maxWidth = `${Math.max(120, Math.floor(columnWidth - (inset * 2)))}px`;
+    element.style.textAlign = 'left';
 
     if (options.scramble === false) {
-        ephemeralMessageElement.textContent = message;
-        positionEphemeralMessage();
+        element.textContent = message;
+        positionEphemeralMessage(element, { topPercent });
         return;
     }
 
-    stopEphemeralAnimation = animateScrambledText(ephemeralMessageElement, message, {
+    const stopAnimation = animateScrambledText(element, message, {
         frameRate: options.frameRate ?? 60,
         holdDuration: options.holdDuration,
         clearFrameLength: options.clearFrameLength,
         revealChance: options.revealChance,
         clearFraction: options.clearFraction,
     });
+    stopEphemeralAnimations.set(elementKey, stopAnimation);
 
-    globalThis.requestAnimationFrame(positionEphemeralMessage);
+    globalThis.requestAnimationFrame(() => {
+        positionEphemeralMessage(element, { topPercent });
+    });
+}
+
+function updateEphemeralMessage(elementKey, message, options = {}) {
+    clearEphemeralSlot(elementKey);
+
+    const delayMs = options.delayMs ?? 0;
+    if (delayMs > 0) {
+        const timeoutId = globalThis.setTimeout(() => {
+            scheduledEphemeralTimeouts.delete(elementKey);
+            renderEphemeralMessage(elementKey, message, options);
+        }, delayMs);
+        scheduledEphemeralTimeouts.set(elementKey, timeoutId);
+        return;
+    }
+
+    renderEphemeralMessage(elementKey, message, options);
+}
+
+function updateMetaMessages(messages = []) {
+    messages.forEach(message => {
+        if (!message?.text) {
+            return;
+        }
+
+        if (message.placement === 'side-left') {
+            updateEphemeralMessage('sideLeft', message.text, {
+                ...(message.options ?? {}),
+                placement: 'side-left',
+                delayMs: message.delayMs ?? 0,
+            });
+            return;
+        }
+
+        if (message.placement === 'side-right') {
+            updateEphemeralMessage('sideRight', message.text, {
+                ...(message.options ?? {}),
+                placement: 'side-right',
+                delayMs: message.delayMs ?? 0,
+            });
+            return;
+        }
+
+        const lowerKey = Math.random() < 0.5 ? 'lowerLeft' : 'lowerRight';
+        clearEphemeralSlot('lowerLeft');
+        clearEphemeralSlot('lowerRight');
+        updateEphemeralMessage(lowerKey, message.text, {
+            ...(message.options ?? {}),
+            placement: message.placement ?? 'lower-random',
+            delayMs: message.delayMs ?? 0,
+        });
+    });
 }
 
 function renderScreen() {
@@ -169,6 +237,7 @@ document.addEventListener('keydown', event => {
 function handleCommand(command) {
     const transcriptEntry = gameSession.submitCommand(command);
     appendTranscriptEntry(transcriptEntry);
+    updateMetaMessages(gameSession.consumePendingMetaMessages());
     renderScreen();
 }
 
@@ -176,7 +245,7 @@ globalThis.onload = function() {
     textGrid.createOrUpdateGrid();
     const startupMetaMessage = gameSession.getStartupMetaMessage();
     if (startupMetaMessage?.text) {
-        updateEphemeralMessage(startupMetaMessage.text, startupMetaMessage.options ?? {});
+        updateMetaMessages([startupMetaMessage]);
     }
 
     appendTranscriptEntry(gameSession.start());
@@ -194,7 +263,6 @@ globalThis.addEventListener('pointerdown', () => {
     renderScreen();
 });
 
-globalThis.addEventListener('resize', positionEphemeralMessage);
 globalThis.addEventListener('focus', renderScreen);
 globalThis.addEventListener('blur', renderScreen);
 
