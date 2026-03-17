@@ -189,6 +189,10 @@ body {
   min-width: max-content;
 }
 
+#mobile-transcript {
+  display: none;
+}
+
 #panel-stack {
   display: flex;
   flex-direction: column;
@@ -427,11 +431,23 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #tex
 }
 
 body[data-device-theme="mobile"] #text-grid {
+  display: none;
+}
+
+body[data-device-theme="mobile"] #mobile-transcript {
   display: block;
-  min-width: 0;
   width: 100%;
-  line-height: 1.22;
-  padding-bottom: 2px;
+  min-height: 100%;
+  margin: 0;
+  color: var(--cga-amber);
+  background-color: var(--cga-background);
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: clamp(17px, 1rem + 0.45vw, 20px);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  user-select: text;
 }
 
 body[data-device-theme="mobile"] #panel-stack,

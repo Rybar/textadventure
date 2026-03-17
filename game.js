@@ -18,6 +18,7 @@ const inputElement = document.getElementById('cli-input');
 const mobileCommandBarElement = document.getElementById('mobile-command-bar');
 const mobilePanelTabsElement = document.getElementById('mobile-panel-tabs');
 const mobilePanelTabElements = Array.from(document.querySelectorAll('.mobile-panel-tab'));
+const mobileTranscriptElement = document.getElementById('mobile-transcript');
 const ephemeralMessageElements = {
     sideLeft: document.getElementById('ephemeral-message-left'),
     sideRight: document.getElementById('ephemeral-message-right'),
@@ -314,14 +315,21 @@ function updateMetaMessages(messages = []) {
 }
 
 function renderScreen() {
-    textGrid.setViewportMode({ mobile: isMobileThemeActive });
     renderInterfaceChrome();
+
+    if (isMobileThemeActive) {
+        mobileTranscriptElement.textContent = transcriptEntries.join('\n\n');
+        mobileTranscriptElement.scrollTop = mobileTranscriptElement.scrollHeight;
+        return;
+    }
+
+    textGrid.setViewportMode({ mobile: false });
     const transcriptLines = transcriptEntries.flatMap(entry => textGrid.wrapText(entry));
     textGrid.renderFrame({
         transcriptLines,
-        promptText: isMobileThemeActive ? '' : inputElement.value,
+        promptText: inputElement.value,
         cursorVisible: document.activeElement === inputElement && cursorVisible,
-        promptVisible: !isMobileThemeActive,
+        promptVisible: true,
     });
 }
 
