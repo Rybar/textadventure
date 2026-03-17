@@ -24,6 +24,8 @@ const mobilePanelTabElements = Array.from(document.querySelectorAll('.mobile-pan
 const transcriptOutputElement = document.getElementById('transcript-output');
 const statusElements = {
     metaLine: document.getElementById('status-meta-line'),
+    mobileMetaOverlay: document.getElementById('mobile-meta-overlay'),
+    mobileMetaLine: document.getElementById('mobile-meta-line'),
 };
 const terminalStageElement = document.getElementById('terminal-stage');
 const panelStackElement = document.getElementById('panel-stack');
@@ -68,6 +70,7 @@ function updateViewportMetrics() {
 }
 
 function applyDeviceTheme() {
+    const previousMobileTheme = isMobileThemeActive;
     isMobileThemeActive = shouldUseMobileTheme();
     bodyElement.dataset.deviceTheme = isMobileThemeActive ? 'mobile' : 'desktop';
 
@@ -77,6 +80,33 @@ function applyDeviceTheme() {
     }
 
     updateViewportMetrics();
+
+    if (previousMobileTheme !== isMobileThemeActive) {
+        if (activeStatusMetaMessage?.text) {
+            const interruptedMessage = activeStatusMetaMessage;
+
+            if (activeStatusMetaTimeoutId) {
+                globalThis.clearTimeout(activeStatusMetaTimeoutId);
+                activeStatusMetaTimeoutId = null;
+            }
+
+            if (stopActiveStatusMetaAnimation) {
+                stopActiveStatusMetaAnimation();
+                stopActiveStatusMetaAnimation = null;
+            }
+
+            activeStatusMetaMessage = null;
+            syncStatusMetaContainers();
+            queuedStatusMetaMessages.unshift({
+                ...interruptedMessage,
+                delayMs: 0,
+            });
+            showNextStatusMetaMessage();
+            return;
+        }
+
+        syncStatusMetaContainers();
+    }
 }
 
 function escapeHtml(text) {
@@ -164,6 +194,33 @@ function renderInterfaceChrome() {
     });
 }
 
+function getActiveStatusMetaElement() {
+    return isMobileThemeActive ? statusElements.mobileMetaLine : statusElements.metaLine;
+}
+
+function syncStatusMetaContainers({ text = '', source = '', visible = false } = {}) {
+    statusElements.metaLine.textContent = '';
+    statusElements.metaLine.dataset.source = '';
+
+    statusElements.mobileMetaLine.textContent = '';
+    statusElements.mobileMetaLine.dataset.source = '';
+    statusElements.mobileMetaOverlay.dataset.visible = 'false';
+    statusElements.mobileMetaOverlay.setAttribute('aria-hidden', 'true');
+
+    if (!visible || !text) {
+        return;
+    }
+
+    const activeElement = getActiveStatusMetaElement();
+    activeElement.textContent = text;
+    activeElement.dataset.source = source;
+
+    if (isMobileThemeActive) {
+        statusElements.mobileMetaOverlay.dataset.visible = 'true';
+        statusElements.mobileMetaOverlay.setAttribute('aria-hidden', 'false');
+    }
+}
+
 function clearStatusMetaDisplay() {
     if (activeStatusMetaTimeoutId) {
         globalThis.clearTimeout(activeStatusMetaTimeoutId);
@@ -176,8 +233,7 @@ function clearStatusMetaDisplay() {
     }
 
     activeStatusMetaMessage = null;
-    statusElements.metaLine.textContent = '';
-    statusElements.metaLine.dataset.source = '';
+    syncStatusMetaContainers();
 }
 
 function estimateStatusMetaDuration(message) {
@@ -202,15 +258,15 @@ function showNextStatusMetaMessage() {
     }
 
     activeStatusMetaMessage = message;
-    statusElements.metaLine.dataset.source = message.source ?? '';
-    statusElements.metaLine.textContent = '';
+    syncStatusMetaContainers({ visible: true, source: message.source ?? '' });
 
-    stopActiveStatusMetaAnimation = animateScrambledText(statusElements.metaLine, message.text, message.options ?? {});
+    const activeMetaElement = getActiveStatusMetaElement();
+    stopActiveStatusMetaAnimation = animateScrambledText(activeMetaElement, message.text, message.options ?? {});
     activeStatusMetaTimeoutId = globalThis.setTimeout(() => {
         activeStatusMetaMessage = null;
         activeStatusMetaTimeoutId = null;
         stopActiveStatusMetaAnimation = null;
-        statusElements.metaLine.dataset.source = '';
+        syncStatusMetaContainers();
         showNextStatusMetaMessage();
     }, estimateStatusMetaDuration(message));
 }

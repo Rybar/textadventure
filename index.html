@@ -23,6 +23,9 @@
             </div>
             <div id="terminal-content">
                 <div id="text-grid-container">
+                    <div id="mobile-meta-overlay" aria-hidden="true">
+                        <div id="mobile-meta-line" data-source="" aria-live="polite"></div>
+                    </div>
                     <div id="transcript-output" aria-live="polite"></div>
                 </div>
                 <aside id="panel-stack" aria-label="Interface panels" aria-hidden="true">
@@ -41,17 +44,19 @@
                 </aside>
             </div>
             <form id="command-bar" aria-label="Command input" novalidate>
-                <label id="command-prompt" for="cli-input">&gt;</label>
-                <input
-                    type="text"
-                    id="cli-input"
-                    autocomplete="off"
-                    autocapitalize="off"
-                    spellcheck="false"
-                    enterkeyhint="send"
-                    aria-label="Command input"
-                    placeholder="Enter command"
-                >
+                <div id="command-input-shell">
+                    <label id="command-prompt" for="cli-input">&gt;</label>
+                    <input
+                        type="text"
+                        id="cli-input"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        enterkeyhint="send"
+                        aria-label="Command input"
+                        placeholder="Enter command"
+                    >
+                </div>
                 <button id="command-submit" type="submit">Enter</button>
             </form>
         </div>

@@ -81,7 +81,7 @@ body {
 
 #status-meta-line {
   min-height: 1lh;
-  color: #9fd7ff;
+  color: #9dff9f;
   font-size: calc(var(--terminal-font-size) * 0.84);
   line-height: 1.18;
   white-space: nowrap;
@@ -91,17 +91,22 @@ body {
   text-align: center;
   align-self: center;
   width: 100%;
-  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
+  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
 }
 
 #status-meta-line[data-source="hacker"] {
+  color: #9fd7ff;
+  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
+}
+
+#status-meta-line[data-source="experiment-lackeys"] {
   color: #9dff9f;
   text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
 }
 
-#status-meta-line[data-source="experiment-lackeys"] {
-  color: #9fd7ff;
-  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
+#status-meta-line[data-source="experiment-lackeys-aware"] {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.24);
 }
 
 #terminal-content {
@@ -176,6 +181,45 @@ body {
   overflow: auto;
   transform: translateX(0);
   transition: transform 420ms ease, box-shadow 420ms ease;
+}
+
+#mobile-meta-overlay {
+  display: none;
+}
+
+#mobile-meta-line {
+  min-height: 1lh;
+  color: #9dff9f;
+  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+  font-size: calc(var(--terminal-font-size) * 0.84);
+  line-height: 1.18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  text-align: center;
+  width: 100%;
+  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
+  transition: opacity 160ms ease;
+}
+
+#mobile-meta-line[data-source="hacker"] {
+  color: #9fd7ff;
+  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
+}
+
+#mobile-meta-line[data-source="experiment-lackeys"] {
+  color: #9dff9f;
+  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
+}
+
+#mobile-meta-line[data-source="experiment-lackeys-aware"] {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.24);
+}
+
+#mobile-meta-overlay[data-visible="true"] #mobile-meta-line {
+  opacity: 0.92;
 }
 
 #terminal-stage[data-layout="with-panels"] #text-grid-container {
@@ -324,28 +368,39 @@ body {
 
 #command-bar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--cga-amber);
-  background-color: rgba(0, 0, 0, 0.96);
-  box-shadow: 0 0 18px rgba(255, 191, 0, 0.12);
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
   font-family: 'Perfect-DOS-VGA-437-Win', monospace;
   color: var(--cga-amber);
   box-sizing: border-box;
 }
 
+#command-input-shell {
+  position: relative;
+  min-width: 0;
+}
+
 #command-prompt {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  z-index: 1;
   font-size: var(--terminal-font-size);
   line-height: 1;
+  pointer-events: none;
 }
 
 #cli-input {
   width: 100%;
   min-width: 0;
   height: 38px;
-  padding: 0 10px;
+  padding: 0 10px 0 26px;
   border: 1px solid rgba(255, 191, 0, 0.5);
   background-color: rgba(0, 0, 0, 0.94);
   color: var(--cga-amber);
@@ -393,7 +448,7 @@ body {
 body[data-device-theme="mobile"] {
   display: block;
   overflow: auto;
-  --terminal-font-size: clamp(13px, 1.2vw + 0.45rem, 16px);
+  --terminal-font-size: clamp(12px, 1vw + 0.42rem, 15px);
 }
 
 body[data-device-theme="mobile"] #screen-shell {
@@ -412,6 +467,7 @@ body[data-device-theme="mobile"] #terminal-stage {
   max-width: 100%;
   max-height: none;
   gap: 8px;
+  min-height: calc(var(--visual-viewport-height) - max(8px, env(safe-area-inset-top)) - calc(var(--mobile-command-bar-height) + 26px + env(safe-area-inset-bottom) + var(--mobile-keyboard-offset)));
 }
 
 body[data-device-theme="mobile"] #status-bar,
@@ -426,12 +482,6 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #sta
   justify-content: center;
   padding: 8px 10px;
   box-sizing: border-box;
-}
-
-body[data-device-theme="mobile"] #status-meta-line {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
 }
 
 body[data-device-theme="mobile"] .meta-column {
@@ -458,6 +508,7 @@ body[data-device-theme="mobile"] #terminal-content,
 body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #terminal-content {
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
 }
 
 body[data-device-theme="mobile"] #text-grid-container,
@@ -465,6 +516,7 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #tex
   width: 100%;
   max-width: 100%;
   min-height: min(58svh, 520px);
+  max-height: min(58svh, 520px);
   justify-content: flex-start;
   align-items: flex-start;
   overflow: auto;
@@ -473,13 +525,35 @@ body[data-device-theme="mobile"] #terminal-stage[data-layout="with-panels"] #tex
   box-sizing: border-box;
 }
 
+body[data-device-theme="mobile"] #mobile-meta-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10px 12px 0;
+  pointer-events: none;
+}
+
+body[data-device-theme="mobile"] #mobile-meta-overlay[data-visible="true"] {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.68) 52%, rgba(0, 0, 0, 0) 100%);
+}
+
+body[data-device-theme="mobile"] #mobile-meta-line {
+  font-size: calc(var(--terminal-font-size) * 0.9);
+}
+
 body[data-device-theme="mobile"] #transcript-output {
   width: 100%;
   min-height: 100%;
   margin: 0;
-  font-size: clamp(17px, 1rem + 0.45vw, 20px);
-  line-height: 1.4;
+  font-size: clamp(15px, 0.95rem + 0.3vw, 18px);
+  line-height: 1.36;
   gap: 1rem;
+  padding-top: 1.9rem;
 }
 
 body[data-device-theme="mobile"] #panel-stack,
@@ -537,16 +611,17 @@ body[data-device-theme="mobile"] #command-bar {
   right: max(10px, env(safe-area-inset-right));
   bottom: calc(10px + env(safe-area-inset-bottom) + var(--mobile-keyboard-offset));
   z-index: 5;
-  padding: 8px;
 }
 
 body[data-device-theme="mobile"] #command-prompt {
   font-size: 16px;
   line-height: 1;
+  left: 10px;
 }
 
 body[data-device-theme="mobile"] #cli-input {
   height: 36px;
+  padding-left: 26px;
   font-size: clamp(16px, 1rem + 0.2vw, 18px);
 }
 
@@ -560,7 +635,22 @@ body[data-device-theme="mobile"] #command-submit:active {
 }
 
 body[data-device-theme="mobile"][data-mobile-input-active="true"] #command-bar {
-  box-shadow: 0 0 22px rgba(255, 191, 0, 0.18);
+  box-shadow: none;
+}
+
+body[data-device-theme="mobile"][data-mobile-input-active="true"] #terminal-stage {
+  min-height: calc(var(--visual-viewport-height) - max(8px, env(safe-area-inset-top)) - calc(var(--mobile-command-bar-height) + 26px + env(safe-area-inset-bottom)));
+}
+
+body[data-device-theme="mobile"][data-mobile-input-active="true"] #text-grid-container,
+body[data-device-theme="mobile"][data-mobile-input-active="true"] #terminal-stage[data-layout="with-panels"] #text-grid-container {
+  min-height: min(46dvh, calc((var(--visual-viewport-height) - var(--mobile-command-bar-height) - 32px) * 0.5));
+  max-height: min(46dvh, calc((var(--visual-viewport-height) - var(--mobile-command-bar-height) - 32px) * 0.5));
+}
+
+body[data-device-theme="mobile"][data-mobile-input-active="true"] #panel-stack,
+body[data-device-theme="mobile"][data-mobile-input-active="true"] #terminal-stage[data-layout="with-panels"] #panel-stack {
+  max-height: min(24dvh, calc((var(--visual-viewport-height) - var(--mobile-command-bar-height) - 40px) * 0.28));
 }
 
 @media (max-width: 700px) {
@@ -722,7 +812,7 @@ body[data-device-theme="mobile"][data-mobile-input-active="true"] #command-bar {
   }
 
   body:not([data-device-theme="mobile"]) #command-bar {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   body:not([data-device-theme="mobile"]) #command-submit {

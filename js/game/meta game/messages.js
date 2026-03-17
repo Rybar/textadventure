@@ -89,7 +89,7 @@ const experimentLackeyMessages = {
   },
   lackeyLeftReactive001: {
     id: 'lackeyLeftReactive001',
-    source: 'experiment-lackeys',
+    source: 'experiment-lackeys-aware',
     text: 'l1> it just echoed sideband language back at us',
     options: {
       holdDuration: 4300,
@@ -100,7 +100,7 @@ const experimentLackeyMessages = {
   },
   lackeyRightReactive001: {
     id: 'lackeyRightReactive001',
-    source: 'experiment-lackeys',
+    source: 'experiment-lackeys-aware',
     text: 'l2> can the subject see these messages or only guess at them',
     options: {
       holdDuration: 4300,
@@ -111,7 +111,7 @@ const experimentLackeyMessages = {
   },
   lackeyLeftReactive002: {
     id: 'lackeyLeftReactive002',
-    source: 'experiment-lackeys',
+    source: 'experiment-lackeys-aware',
     text: 'l1> that input was outside scenario grammar',
     options: {
       holdDuration: 4200,
@@ -122,7 +122,7 @@ const experimentLackeyMessages = {
   },
   lackeyRightReactive002: {
     id: 'lackeyRightReactive002',
-    source: 'experiment-lackeys',
+    source: 'experiment-lackeys-aware',
     text: 'l2> then why does it sound like it is answering us directly',
     options: {
       holdDuration: 4200,
