@@ -76,6 +76,13 @@ export function createKitchenRoom() {
         reply: 'Wrongus snorts. "Little silver cups come back here, yes? Scrape them into the reduction, coax the proteins proper, let the tiny red gentleman stand up in the pot. Good body. Good color. Grandfather likes tradition."',
       },
       {
+        match: ['black wind', 'fruit', 'elixir', 'trade'],
+        effect: ({ setFlag }) => {
+          setFlag('blackWindEvidenceLeadKnown', true);
+        },
+        reply: 'Wrongus lowers his ladle a fraction. "Not kitchen stock," he says. "Private stock. Bitter jars, black fruit, shipment nonsense. Grandfather keeps it behind the pantry shelf because guests prefer corruption plated, not shelved."',
+      },
+      {
         match: ['oshregaal', 'grandfather'],
         reply: '"Grandfather eats praise first, then stew, then consequences," Wrongus says. "Schedule depends on guests."',
       },
@@ -105,6 +112,52 @@ export function createKitchenRoom() {
     fallback: 'Wrongus grunts and keeps stirring.',
   });
 
+  const revealStockroom = emitEvent => emitEvent('discoverAlchemyStockroom');
+
+  const searchKitchen = ({ target, getFlag, emitEvent }) => {
+    const canRevealStockroom = getFlag('blackWindEvidenceLeadKnown') || getFlag('nathemaBargained');
+
+    if (!target || target.includes('room') || target.includes('kitchen')) {
+      if (!getFlag('kitchenBloodHintKnown')) {
+        return 'The kitchen is too active for a casual search. Wrongus, the cauldron, and the jars all seem capable of objecting in different ways.';
+      }
+
+      return 'You search the kitchen with more informed eyes and begin to see its stations as a system of ritual preparation rather than mere cooking.';
+    }
+
+    if (target.includes('silver') || target.includes('cups')) {
+      return getFlag('kitchenBloodHintKnown')
+        ? 'The silver cups stay close to the stove for quick use, but they are not the kitchen\'s only private apparatus.'
+        : 'The cups look like service ware until you consider how little in this house is ever only one thing.';
+    }
+
+    return searchKitchenStorage({ target, getFlag, emitEvent, canRevealStockroom });
+  };
+
+  const searchKitchenStorage = ({ target, getFlag, emitEvent, canRevealStockroom }) => {
+    if (target.includes('shelf') || target.includes('pantry') || target.includes('jars')) {
+      if (!getFlag('alchemyStockroomFound') && canRevealStockroom) {
+        return revealStockroom(emitEvent);
+      }
+
+      if (getFlag('alchemyStockroomFound')) {
+        return 'The pantry shelf now stands slightly ajar, its false back revealing the hidden stockroom behind it.';
+      }
+
+      return 'The shelf bows under jars and pantry clutter. Nothing about it would draw attention unless you already suspected the kitchen was hiding more than dessert.';
+    }
+
+    if (target.includes('barrel') || target.includes('barrels')) {
+      if (!getFlag('alchemyStockroomFound') && canRevealStockroom) {
+        return revealStockroom(emitEvent);
+      }
+
+      return 'The barrels hold wine, water, and kitchen necessities. The more interesting concealment is not in them but in the wall beyond the pantry shelf.';
+    }
+
+    return `You find nothing in the ${target} but expensive ingredients and disciplined menace.`;
+  };
+
   return new Room({
     id: 'kitchen',
     title: 'Kitchen',
@@ -116,11 +169,24 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
       west: 'feastHall',
       north: 'ogreBeds',
     },
+    verbs: {
+      search({ command, getFlag, emitEvent }) {
+        return searchKitchen({
+          target: command.directObject,
+          getFlag,
+          emitEvent,
+        });
+      },
+    },
     items: [spiceBundle, brandyPudding, cauldron, candyOozeJar],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('kitchenBloodHintKnown'),
         text: 'Now that you know what to notice, a rack of silver cups near the stove looks less ceremonial and more preparatory.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('alchemyStockroomFound'),
+        text: 'One pantry shelf now sits slightly proud of the wall, its false back exposing a hidden stockroom door to the east.',
       },
     ],
     objects: {
@@ -145,6 +211,26 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
       barrels: 'Half the barrels are wine. The rest are water pretending to be respectable company.',
       fish: 'Fresh cave fish lie stacked in readiness, all translucent flesh and milky eyes.',
       shelf: 'The shelf bows under jars of candy ooze, each one straining toward the room like a thought trying to become hunger.',
+      pantry: {
+        aliases: ['pantry shelf', 'shelf'],
+        description({ getFlag }) {
+          if (getFlag('alchemyStockroomFound')) {
+            return 'The pantry shelf has been displaced enough to reveal the lacquered edge of a concealed service door behind it.';
+          }
+
+          return 'The pantry shelf is crowded with jars, sweets, and kitchen clutter arranged to look more innocent than the rest of the room deserves.';
+        },
+      },
+      door: {
+        aliases: ['service panel', 'panel'],
+        description({ getFlag }) {
+          if (!getFlag('alchemyStockroomFound')) {
+            return 'You do not notice any door here beyond the obvious exits.';
+          }
+
+          return 'The concealed panel behind the pantry shelf slides open on well-maintained runners, revealing a private stockroom where the house stores things too incriminating for open kitchen use.';
+        },
+      },
       silver: {
         aliases: ['silver cups', 'cups'],
         description({ getFlag }) {

@@ -95,6 +95,10 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
     items: [waxPalm, geometryFolio, meditativeIncense],
     conditionalDescriptions: [
       {
+        when: ({ getFlag }) => getFlag('plumFollowing'),
+        text: 'Plum keeps close to the shelves, glancing at every open table as if each one might still contain a version of her life she failed to recover.',
+      },
+      {
         when: ({ getFlag }) => getFlag('libraryRouteKnown'),
         text: 'Now that you have noticed it properly, the northern passage no longer reads as shelving geometry gone wrong. It reads as intent.',
       },

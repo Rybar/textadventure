@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   createTestSession,
+  moveToAlchemyStockroom,
   moveToFeastHall,
   moveToFoyer,
   moveToGrandfatherRoom,
@@ -12,6 +13,7 @@ import {
   moveToPlumRoom,
   moveToFoldedHallway,
   moveToTunnel,
+  preparePlumTunnelRoute,
 } from '../helpers/testSession.js';
 
 test('custom verbs work across the current vertical slice', () => {
@@ -281,4 +283,111 @@ test('the wax-palm workaround now unfolds the hall and reaches the tunnel route'
   assert.match(secondSession.submitCommand('west'), /smaller chamber has the careful plainness/i);
   assert.match(secondSession.submitCommand('ask plum about escape'), /tunnel may actually take us both/i);
   assert.match(secondSession.submitCommand('ask plum about help'), /stop planning and start leaving/i);
+});
+
+test('the player can commit Plum to the route and rescue her through the tunnel', () => {
+  const session = createTestSession();
+
+  preparePlumTunnelRoute(session);
+  assert.match(session.submitCommand('south'), /corridor beyond the library refuses to behave/i);
+  assert.match(session.submitCommand('south'), /Oshregaal's library is less a scholarly refuge/i);
+  assert.match(session.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(session.submitCommand('tell plum come now'), /let us be gone before the house remembers to keep me/i);
+  assert.equal(session.worldState.getFlag('plumFollowing'), true);
+
+  assert.match(session.submitCommand('east'), /Plum keeps close to the shelves/i);
+  assert.match(session.submitCommand('north'), /house has begun to notice an absence|Plum stays just behind your shoulder/i);
+  assert.match(session.submitCommand('north'), /Plum crouches beside the arch/i);
+  assert.equal(session.worldState.getFlag('plumEscapeAlarmed'), true);
+
+  assert.match(session.submitCommand('crawl tunnel'), /spills both of you into the feral garden/i);
+  assert.equal(session.worldState.currentRoomId, 'fernGarden');
+  assert.equal(session.worldState.getFlag('plumFollowing'), false);
+  assert.equal(session.worldState.getFlag('plumRescued'), true);
+  assert.match(session.submitCommand('look'), /Plum stands among the gnome statues/i);
+
+  const secondSession = createTestSession();
+  preparePlumTunnelRoute(secondSession);
+  secondSession.submitCommand('south');
+  secondSession.submitCommand('south');
+  secondSession.submitCommand('west');
+  assert.match(secondSession.submitCommand('tell plum follow me'), /let us be gone before the house remembers to keep me/i);
+  secondSession.submitCommand('east');
+  secondSession.submitCommand('north');
+  secondSession.submitCommand('north');
+  assert.match(secondSession.submitCommand('escape'), /spills both of you into the feral garden/i);
+  assert.equal(secondSession.worldState.getFlag('plumRescued'), true);
+});
+
+test('rescued Plum can become an offstage ally and seed the evidence branch', () => {
+  const session = createTestSession();
+
+  preparePlumTunnelRoute(session);
+  session.submitCommand('south');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('tell plum come now');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  assert.match(session.submitCommand('crawl tunnel'), /spills both of you into the feral garden/i);
+
+  assert.match(session.submitCommand('ask plum about black wind'), /trade records are kept near the alchemical stock/i);
+  assert.equal(session.worldState.getFlag('blackWindEvidenceLeadKnown'), true);
+  assert.match(session.submitCommand('tell plum hide'), /let him lose me properly/i);
+  assert.equal(session.worldState.getFlag('plumAllianceSecured'), true);
+  assert.match(session.submitCommand('look'), /plum is gone from the open garden now/i);
+});
+
+test('the first black-wind evidence branch leads to a hidden stockroom and ledger', () => {
+  const session = createTestSession();
+
+  preparePlumTunnelRoute(session);
+  session.submitCommand('south');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('tell plum come now');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('crawl tunnel');
+  session.submitCommand('ask plum about black wind');
+  session.submitCommand('tell plum hide');
+
+  assert.match(session.submitCommand('southeast'), /vast natural cavern/i);
+  assert.match(session.submitCommand('north'), /white marble stair/i);
+  assert.match(session.submitCommand('north'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('give invitation to oggaf'), /proceed as a guest|accepted/i);
+  assert.match(session.submitCommand('north'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('east'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('search shelf'), /hidden stockroom|black-wind trade/i);
+  assert.equal(session.worldState.getFlag('alchemyStockroomFound'), true);
+  assert.match(session.submitCommand('east'), /hidden stockroom crouches behind the kitchen wall/i);
+  assert.equal(session.worldState.currentRoomId, 'alchemyStockroom');
+  assert.match(session.submitCommand('read black wind ledger'), /active trade book/i);
+  assert.equal(session.worldState.getFlag('blackWindEvidenceCollected'), true);
+
+  const secondSession = createTestSession();
+  moveToAlchemyStockroom(secondSession);
+  assert.equal(secondSession.worldState.currentRoomId, 'alchemyStockroom');
+  assert.match(secondSession.submitCommand('read ledger'), /named houses and clan factors on the surface/i);
+  assert.equal(secondSession.worldState.getFlag('blackWindEvidenceCollected'), true);
+});
+
+test('the stockroom contraband can be stolen or self-administered at a cost', () => {
+  const session = createTestSession();
+
+  moveToAlchemyStockroom(session);
+  assert.match(session.submitCommand('take black wind fruit'), /you take the black wind fruit/i);
+  assert.match(session.submitCommand('smell black wind fruit'), /storm passing over a pharmacy/i);
+  assert.match(session.submitCommand('eat black wind fruit'), /thoughts feel dangerously well-aligned/i);
+  assert.equal(session.worldState.getFlag('blackWindFruitConsumed'), true);
+  assert.equal(session.worldState.getItemLocation('black-wind-fruit'), null);
+
+  const secondSession = createTestSession();
+  moveToAlchemyStockroom(secondSession);
+  assert.match(secondSession.submitCommand('take black wind elixir'), /you take the black wind elixir/i);
+  assert.match(secondSession.submitCommand('drink elixir'), /corruption for capability/i);
+  assert.equal(secondSession.worldState.getFlag('blackWindElixirConsumed'), true);
+  assert.equal(secondSession.worldState.getItemLocation('black-wind-elixir'), null);
 });

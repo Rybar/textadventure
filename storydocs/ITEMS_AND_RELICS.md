@@ -66,6 +66,12 @@ In this game, items should usually do at least one of the following:
 - Strong story item for factions, bargaining, sabotage, and endings.
 - Should never feel safe just because it is useful.
 
+### Black Wind Ledger
+
+- Documentary proof that Oshregaal's black-wind trade is current, organized, and politically distributed.
+- Strong evidence item because it transforms the branch from rumor into leverage.
+- Should support `read` and portable theft even if later branches decide whether it is traded, exposed, or merely used as insurance.
+
 ### Crystal Sword
 
 - Plum's escape-grade weapon.

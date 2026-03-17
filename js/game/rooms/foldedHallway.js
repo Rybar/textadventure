@@ -75,6 +75,10 @@ South, at least, still behaves honestly enough to return to the library.
     },
     conditionalDescriptions: [
       {
+        when: ({ getFlag }) => getFlag('plumFollowing'),
+        text: 'Plum stays just behind your shoulder, refusing to look directly at the angles for longer than she must. The hallway seems offended by being witnessed by two minds at once.',
+      },
+      {
         when: ({ getFlag }) => getFlag('idolPairingKnown'),
         text: 'Now that you understand the idol\'s demand, the whole corridor feels less random and more insultingly specific.',
       },

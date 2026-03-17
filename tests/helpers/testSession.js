@@ -66,6 +66,13 @@ export function moveToKitchen(session) {
   session.submitCommand('east');
 }
 
+export function moveToAlchemyStockroom(session) {
+  moveToKitchen(session);
+  session.submitCommand('ask wrongus about black wind');
+  session.submitCommand('search shelf');
+  session.submitCommand('east');
+}
+
 export function moveToGrandfatherRoom(session) {
   moveToFeastHall(session);
   session.submitCommand('north');
@@ -95,4 +102,9 @@ export function moveToTunnel(session) {
   session.submitCommand('north');
   session.submitCommand('use wax palm on idol');
   session.submitCommand('north');
+}
+
+export function preparePlumTunnelRoute(session) {
+  moveToTunnel(session);
+  session.submitCommand('light incense');
 }

@@ -1,7 +1,58 @@
+import { createTopicResponder } from '../../engine/authoring/conversation.js';
 import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createFernGardenRoom() {
+  const plumAsk = createTopicResponder({
+    rules: [
+      {
+        when: ({ getFlag }) => getFlag('plumAllianceSecured'),
+        reply: 'Plum has already vanished into the garden shadows. Whatever help she offers next will have to arrive by preparation, not conversation.',
+      },
+      {
+        match: ['help', 'what now', 'now what', 'next'],
+        reply: 'Plum steadies herself against one of the gnome statues and looks back toward the house. "Now we stop confusing rescue with completion," she says. "If you are going back in, do it for something that changes the shape of the story. Evidence. A weapon. The source itself."',
+      },
+      {
+        match: ['black wind', 'evidence', 'records', 'ledgers', 'shipments', 'fruit', 'elixir', 'trade'],
+        effect: ({ setFlag }) => {
+          setFlag('blackWindEvidenceLeadKnown', true);
+        },
+        reply: 'Plum wipes dirt from one palm with scholarly irritation. "Oshregaal hides embarrassment more carefully than sorcery," she says. "The black-wind trade records are kept near the alchemical stock, wherever he stores fruit, elixir, or accounts that prove how much of the world still eats from his orchard. If you can steal those, you leave with leverage rather than a story nobody powerful needs to believe."',
+      },
+      {
+        match: ['grey grin', 'blade', 'sword', 'weapon'],
+        reply: '"The Grey Grin Blade is real," Plum says, "but it is a trophy before it is a tool. If you chase it, do so because you mean to use what it means, not because you want a prettier escape."',
+      },
+      {
+        match: ['oshregaal', 'grandfather'],
+        reply: 'Plum looks toward the mansion wall with open fatigue. "He will turn my absence into an anecdote first," she says. "That buys us a little time. After that he will become industrious."',
+      },
+    ],
+    fallback: 'Plum answers in the clipped, practical tone of someone spending borrowed safety on only the most useful words.',
+  });
+
+  const plumTell = createTopicResponder({
+    rules: [
+      {
+        when: ({ getFlag }) => getFlag('plumAllianceSecured'),
+        reply: 'Plum is already gone to ground. The ferns and culvert now keep her counsel better than this conversation can.',
+      },
+      {
+        match: ['hide', 'stay hidden', 'wait here', 'go to ground', 'get clear', 'run', 'leave'],
+        effect: ({ emitEvent }) => {
+          emitEvent('securePlumAlliance');
+        },
+        reply: 'Plum nods once, already choosing the least memorable path through the ferns. "Good," she says. "Let him lose me properly."',
+      },
+      {
+        match: ['stay with me', 'come with me', 'follow me'],
+        reply: 'Plum shakes her head. "Not now," she says. "If we both keep moving together, we are only one discovery instead of two problems. Better that one of us becomes difficult to count."',
+      },
+    ],
+    fallback: 'Plum takes the suggestion seriously, then discards it with the economy of someone who no longer has patience for decorative plans.',
+  });
+
   const gnomeStatue = new Item({
     id: 'gnome-statue',
     name: 'gnome statue',
@@ -57,11 +108,50 @@ The safer path leads back southeast toward the cavern and the stairs.
     items: [gnomeStatue, egg],
     conditionalDescriptions: [
       {
+        when: ({ getFlag }) => getFlag('plumRescued') && !getFlag('plumAllianceSecured'),
+        text: 'Plum stands among the gnome statues breathing cold garden air like someone relearning the existence of futures. The hidden culvert behind the ferns now looks less like trivia and more like the shape of a successful theft.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('plumAllianceSecured'),
+        text: 'Plum is gone from the open garden now, folded into fern-shadow and culvert-dark with the deliberate skill of someone protecting a future by withholding her location. Her last advice leaves the house feeling larger and more indictable: somewhere deeper in, Oshregaal keeps records worth stealing.',
+      },
+      {
         when: ({ getFlag }) => getFlag('fernCulvertNoticed'),
         text: 'Behind one of the statues, a root-choked stone culvert now stands out once you know to look for it.',
       },
     ],
     objects: {
+      plum: {
+        name: 'Plum',
+        aliases: ['plum', 'scribe'],
+        description({ getFlag }) {
+          if (getFlag('plumAllianceSecured')) {
+            return 'Plum is no longer visible. The flattened ferns and the culvert behind the statue are the only signs that she chose absence quickly and well.';
+          }
+
+          if (getFlag('plumRescued')) {
+            return 'Plum looks stunned, filthy, and newly dangerous in the way exhausted people become once they have proof that escape is physically possible.';
+          }
+
+          return 'Plum is not here.';
+        },
+        actions: {
+          ask({ topic, getFlag, setFlag }) {
+            if (!getFlag('plumRescued')) {
+              return 'Plum is not here.';
+            }
+
+            return plumAsk({ topic, getFlag, setFlag });
+          },
+          tell({ topic, getFlag, emitEvent }) {
+            if (!getFlag('plumRescued')) {
+              return 'Plum is not here.';
+            }
+
+            return plumTell({ topic, getFlag, emitEvent });
+          },
+        },
+      },
       ferns: 'The fronds are slick and cold to the touch. Between them, the darkness looks deeper than the cavern really is.',
       peafowl: 'You glimpse a length of impossible plumage and then nothing at all. Whatever nests here is not entirely concerned with remaining in one plane.',
       statues: 'Each gnome is uniquely mutated and improbably serene, as though the sculptor admired both ecstasy and deformity.',

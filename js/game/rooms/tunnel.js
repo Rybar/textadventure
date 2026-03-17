@@ -12,6 +12,29 @@ The passage narrows farther on beneath a cracked arch and a spill of roots, prom
       south: 'foldedHallway',
     },
     verbs: {
+      crawl({ command, getFlag, emitEvent }) {
+        const target = command.directObject;
+        if (target && !target.includes('tunnel') && !target.includes('roots') && !target.includes('arch') && !target.includes('passage')) {
+          return `Crawling through the ${target} would solve very little.`;
+        }
+
+        if (!getFlag('plumTunnelRouteReady')) {
+          return 'You could probably force yourself through alone, but not in a way that would get Plum out alive and sane. The tunnel still needs calming first.';
+        }
+
+        if (!getFlag('plumFollowing')) {
+          return 'The tunnel is finally ready, but Plum is not here with you. Going alone now would turn a rescue plan into abandonment.';
+        }
+
+        return emitEvent('completePlumTunnelEscape');
+      },
+      escape({ getFlag, emitEvent }) {
+        if (!getFlag('plumFollowing')) {
+          return 'You have a route, but not yet a completed rescue. If you mean to keep your promise, bring Plum here first.';
+        }
+
+        return emitEvent('completePlumTunnelEscape');
+      },
       search({ command, getFlag, setFlag }) {
         const target = command.directObject;
 
@@ -36,6 +59,10 @@ The passage narrows farther on beneath a cracked arch and a spill of roots, prom
       },
     },
     conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('plumFollowing'),
+        text: 'Plum crouches beside the arch with impressive control, watching the roots as though they might still decide the house deserves her more than you do.',
+      },
       {
         when: ({ getFlag }) => getFlag('tunnelRouteKnown'),
         text: 'Now that you have inspected the roots properly, the tunnel reads as a nearly-viable exit: excellent for one person, inadequate for the rescue you have promised.',
