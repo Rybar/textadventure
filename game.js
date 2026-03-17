@@ -4,7 +4,7 @@ import { GameSession } from './js/engine/world/gameSession.js';
 import { createGameManifest } from './js/game/manifest.js';
 
 const textGrid = new TextGrid();
-const gameSession = new GameSession(createGameManifest());
+const gameSession = new GameSession(createGameManifest);
 globalThis.game = gameSession;
 
 const transcriptLines = [];

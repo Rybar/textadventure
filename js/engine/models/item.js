@@ -62,6 +62,28 @@ export class Item {
 
     return false;
   }
+
+  serializeState() {
+    return {
+      description: this.description,
+      stateDescription: this.stateDescription,
+      uses: this.uses,
+    };
+  }
+
+  applyState(state = {}) {
+    if (Object.hasOwn(state, 'description')) {
+      this.description = state.description;
+    }
+
+    if (Object.hasOwn(state, 'stateDescription')) {
+      this.stateDescription = state.stateDescription;
+    }
+
+    if (Object.hasOwn(state, 'uses')) {
+      this.uses = state.uses;
+    }
+  }
 }
 
 export default Item;

@@ -1,6 +1,9 @@
 :root {
   --cga-amber: #ffbf00;
   --cga-background: #000000;
+  --terminal-font-size: clamp(10px, 1.22vh, 14px);
+  --screen-shell-padding: clamp(8px, 1.5vh, 24px);
+  --terminal-frame-padding: clamp(8px, 1.2vh, 14px);
 }
 
 html,
@@ -25,7 +28,7 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 24px;
+  padding: var(--screen-shell-padding);
   box-sizing: border-box;
 }
 
@@ -42,7 +45,7 @@ body {
   left: 0;
   color: var(--cga-amber);
   font-family: 'Perfect-DOS-VGA-437-Win', monospace;
-  font-size: 14px;
+  font-size: var(--terminal-font-size);
   line-height: 1;
   white-space: pre;
   opacity: 0.9;
@@ -56,9 +59,12 @@ body {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--cga-amber);
-  padding: 14px;
+  padding: var(--terminal-frame-padding);
   background-color: var(--cga-background);
   box-shadow: 0 0 24px rgba(255, 191, 0, 0.15);
+  max-width: calc(100vw - (var(--screen-shell-padding) * 2));
+  max-height: calc(100vh - (var(--screen-shell-padding) * 2));
+  box-sizing: border-box;
 }
 
 #text-grid {
@@ -66,7 +72,7 @@ body {
   color: var(--cga-amber);
   background-color: var(--cga-background);
   font-family: 'Perfect-DOS-VGA-437-Win', monospace;
-  font-size: 14px;
+  font-size: var(--terminal-font-size);
   line-height: 1;
   white-space: pre;
   letter-spacing: 0;
