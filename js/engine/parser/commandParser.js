@@ -1,5 +1,5 @@
 const ARTICLES = new Set(['a', 'an', 'the']);
-const PREPOSITIONS = new Set(['at', 'to', 'with', 'in', 'into', 'from', 'on']);
+const PREPOSITIONS = new Set(['at', 'to', 'with', 'in', 'into', 'from', 'on', 'about']);
 const DIRECTION_ALIASES = {
   n: 'north',
   s: 'south',
@@ -9,7 +9,7 @@ const DIRECTION_ALIASES = {
   d: 'down',
 };
 const DIRECTIONS = new Set(['north', 'south', 'east', 'west', 'up', 'down']);
-const VERB_ALIASES = {
+const DEFAULT_VERB_ALIASES = {
   x: 'look',
   examine: 'look',
   inspect: 'look',
@@ -17,6 +17,7 @@ const VERB_ALIASES = {
   i: 'inventory',
   inv: 'inventory',
 };
+const DEFAULT_PREPOSITION_OBJECT_VERBS = new Set(['look']);
 
 function stripArticles(text) {
   return text
@@ -35,6 +36,17 @@ function normalizeDirection(token) {
 }
 
 export class CommandParser {
+  constructor(options = {}) {
+    this.verbAliases = {
+      ...DEFAULT_VERB_ALIASES,
+      ...(options.verbAliases ?? {}),
+    };
+    this.prepositionObjectVerbs = new Set([
+      ...DEFAULT_PREPOSITION_OBJECT_VERBS,
+      ...(options.prepositionObjectVerbs ?? []),
+    ]);
+  }
+
   parse(rawInput = '') {
     const normalizedInput = rawInput.trim().toLowerCase().replaceAll(/\s+/g, ' ');
 
@@ -59,7 +71,7 @@ export class CommandParser {
     }
 
     const rawVerb = tokens.shift();
-    const verb = VERB_ALIASES[rawVerb] ?? rawVerb;
+    const verb = this.verbAliases[rawVerb] ?? rawVerb;
     const directDirection = verb === 'go' ? normalizeDirection(tokens[0]) : null;
     if (directDirection) {
       return {
@@ -86,7 +98,7 @@ export class CommandParser {
       directObject = stripArticles(tokens.join(' '));
     }
 
-    if (verb === 'look' && preposition === 'at' && !directObject && indirectObject) {
+    if (this.prepositionObjectVerbs.has(verb) && !directObject && indirectObject) {
       directObject = indirectObject;
       preposition = null;
       indirectObject = null;

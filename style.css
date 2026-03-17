@@ -1,7 +1,7 @@
 :root {
   --cga-amber: #ffbf00;
   --cga-background: #000000;
-  --terminal-font-size: clamp(10px, 1.22vh, 14px);
+  --terminal-font-size: clamp(11px, 1.34vh, 16px);
   --screen-shell-padding: clamp(8px, 1.5vh, 24px);
   --terminal-frame-padding: clamp(8px, 1.2vh, 14px);
 }

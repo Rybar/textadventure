@@ -1,5 +1,6 @@
 import { createInvitation } from './items/invitation.js';
 import { createMetaGameContent } from './meta game/messages.js';
+import { createGameParserOptions, createGameVerbs } from './rules/verbs.js';
 import { createCavernRoom } from './rooms/cavern.js';
 import { createFeastHall } from './rooms/feastHall.js';
 import { createFernGardenRoom } from './rooms/fernGarden.js';
@@ -29,6 +30,8 @@ export function createGameManifest() {
     title: 'The Meal of Oshregaal',
     startingRoomId: 'cavern',
     startingInventory: [createInvitation()],
+    parserOptions: createGameParserOptions(),
+    verbs: createGameVerbs(),
     metaGame,
     flags: {
       hasInvitation: true,

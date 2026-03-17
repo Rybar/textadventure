@@ -61,12 +61,79 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       west: 'secretCircle',
       north: 'kelagoRoom',
     },
+    verbs: {
+      shake({ command }) {
+        const target = command.directObject;
+        if (!target) {
+          return 'Shake what?';
+        }
+
+        if (target.includes('hand') || target.includes('oshregaal') || target.includes('grandfather')) {
+          return 'You approach just near enough to make the gesture imaginable. Oshregaal smiles without rising. "Later," he says, as though postponing either intimacy or dismemberment.';
+        }
+
+        return `The ${target} does not appear eager for a handshake.`;
+      },
+    },
     items: [wine, bloodCup, roast],
     objects: {
-      oshregaal: 'Grandfather Oshregaal looks like a collapsed king upholstered in silk and appetite. His eyes, however, are quick, bright, and unforgettably awake.',
-      grandfather: 'Grandfather Oshregaal watches the room as if every guest were a course that had not yet decided how to behave on the plate.',
-      imp: 'The imp is small, furious, and visibly bound to service by old magical spite. He looks like the sort of creature who would offer help only if it could become revenge later.',
-      pazuzu: 'Pazuzu gives every surface the same glare he would reserve for a beloved enemy.',
+      oshregaal: {
+        name: 'Grandfather Oshregaal',
+        aliases: ['grandfather', 'host', 'oshregaal'],
+        description: 'Grandfather Oshregaal looks like a collapsed king upholstered in silk and appetite. His eyes, however, are quick, bright, and unforgettably awake.',
+        actions: {
+          ask({ topic }) {
+            if (topic.includes('dinner') || topic.includes('feast')) {
+              return 'Oshregaal beams. "At last, a sensible subject. Eat well, praise sincerely, and try not to die of nerves before the better courses arrive."';
+            }
+
+            if (topic.includes('escape') || topic.includes('leave') || topic.includes('outside')) {
+              return 'Oshregaal laughs until he has to dab at one eye. "My dear guest, departure is a vulgar obsession in the middle of a meal."';
+            }
+
+            return 'Oshregaal answers with theatrical warmth and exactly as much truth as flatters him.';
+          },
+          tell({ topic }) {
+            if (topic.includes('name')) {
+              return '"A pleasure," Oshregaal says, in the tone of a man reserving judgment until dessert.';
+            }
+
+            return 'Oshregaal receives your words as though deciding whether they are worth keeping.';
+          },
+          give({ item }) {
+            if (item.id === 'invitation') {
+              return 'Oshregaal glances at the invitation and waves it away. "If you are here, little paper has already done its work."';
+            }
+
+            return `Oshregaal considers the ${item.name}, amused, but makes no move to accept it.`;
+          },
+        },
+      },
+      imp: {
+        name: 'imp',
+        aliases: ['pazuzu', 'servant'],
+        description: 'The imp is small, furious, and visibly bound to service by old magical spite. He looks like the sort of creature who would offer help only if it could become revenge later.',
+        actions: {
+          ask({ topic }) {
+            if (topic.includes('escape') || topic.includes('leave')) {
+              return 'The imp bares his teeth in something too sharp to be a smile. "Everything leaves eventually. Some routes are merely less educational than others."';
+            }
+
+            if (topic.includes('oshregaal') || topic.includes('grandfather')) {
+              return '"He dines, he gloats, he expands," the imp mutters. "A fungus with table manners."';
+            }
+
+            return 'The imp answers in fragments sharp enough to draw blood if handled carelessly.';
+          },
+          tell({ topic }) {
+            if (topic.includes('help') || topic.includes('escape')) {
+              return 'The imp’s eyes narrow. "You should want better things than help. Better things are less expensive."';
+            }
+
+            return 'The imp flicks his tail and pretends not to care, which is not the same as not caring.';
+          },
+        },
+      },
       guests: 'Most of the tusk guests look dazed, overfed, or partially trapped inside commands they are still obeying hours too late.',
       curtains: 'Heavy red curtains hide a side chamber from casual view. They do a poor job of hiding the fact that the room behind them matters.',
       tuskpeople: 'Tusks, mutations, jewelry, scars, and ceremonial exhaustion. Whatever else Oshregaal made, he made followers who survived it.',

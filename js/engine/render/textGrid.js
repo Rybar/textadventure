@@ -1,8 +1,8 @@
 export class TextGrid {
   constructor(options = {}) {
     this.gridContainer = document.getElementById('text-grid');
-    this.gridWidth = options.columns ?? 100;
-    this.gridHeight = options.rows ?? 60;
+    this.gridWidth = options.columns ?? 96;
+    this.gridHeight = options.rows ?? 54;
     this.promptRow = options.promptRow ?? this.gridHeight - 1;
     this.transcriptHeight = options.transcriptHeight ?? this.gridHeight - 2;
     this.gridCenter = {

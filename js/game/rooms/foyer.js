@@ -52,12 +52,99 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
       north: 'feastHall',
       up: 'guestRoom',
     },
+    verbs: {
+      shake({ command }) {
+        const target = command.directObject;
+        if (!target) {
+          return 'Shake what?';
+        }
+
+        if (target.includes('hand') || target.includes('oggaf') || target.includes('zamzam') || target.includes('ogre')) {
+          return 'You offer a cautious handshake. Oggaf accepts with one gloved hand while Zamzam watches with both heads. The exchange is impeccably formal and leaves you feeling very slightly inspected.';
+        }
+
+        return `Shaking the ${target} would improve very little.`;
+      },
+    },
     items: [blackCloak, piano, coatRack],
     objects: {
-      ogres: 'The ogre butlers bow with alarming grace. One has three arms and the other two heads. Both radiate the polite confidence of men who can remove a guest in pieces.',
-      'ogre butlers': 'The butlers have impeccable posture, white gloves stretched across enormous hands, and the expression of staff who have seen every possible impropriety.',
-      oggaf: 'Oggaf has three arms and the air of a servant who takes correct introductions personally.',
-      zamzam: 'Zamzam wears two hats because he has two heads and no patience for compromise.',
+      ogres: {
+        name: 'ogre butlers',
+        aliases: ['ogre butlers', 'butlers', 'ogres'],
+        description: 'The ogre butlers bow with alarming grace. One has three arms and the other two heads. Both radiate the polite confidence of men who can remove a guest in pieces.',
+        actions: {
+          ask({ topic }) {
+            if (topic.includes('oshregaal') || topic.includes('grandfather')) {
+              return 'The butlers answer in perfect unison: "Grandfather receives all worthy guests in due order." The wording suggests that worthiness and order are both actively supervised.';
+            }
+
+            if (topic.includes('guest') || topic.includes('room')) {
+              return '"Your comforts have been prepared," says Oggaf. "Your conduct remains your own responsibility," adds Zamzam.';
+            }
+
+            if (topic.includes('leave') || topic.includes('leav') || topic.includes('exit') || topic.includes('outside')) {
+              return 'Both butlers smile with professional regret. "Departures are a later course," says Zamzam.';
+            }
+
+            return 'The butlers provide the sort of courteous non-answer that has ended duels and started them.';
+          },
+          tell({ topic }) {
+            if (topic.includes('name') || topic.includes('invitation')) {
+              return 'Oggaf inclines his head. "Your presence is noted." Zamzam adds, "Impropriety, if any, will also be noted."';
+            }
+
+            return 'The butlers acknowledge your statement with unsettling hospitality.';
+          },
+          give({ item, setFlag }) {
+            if (item.id === 'invitation') {
+              setFlag('foyerAdmitted', true);
+              return 'Oggaf takes the invitation delicately, inspects the seal, and returns it with a small bow. "Accepted," he says. Zamzam opens his smile a fraction wider, as if a test has been passed.';
+            }
+
+            return `The butlers decline the ${item.name} with grave courtesy.`;
+          },
+        },
+      },
+      oggaf: {
+        aliases: ['butler'],
+        description: 'Oggaf has three arms and the air of a servant who takes correct introductions personally.',
+        actions: {
+          ask({ topic }) {
+            if (topic.includes('name')) {
+              return '"Oggaf," he says, as though the answer should already have been engraved somewhere official.';
+            }
+
+            return 'Oggaf answers only what etiquette requires and nothing beyond it.';
+          },
+          give({ item, setFlag }) {
+            if (item.id === 'invitation') {
+              setFlag('foyerAdmitted', true);
+              return 'Oggaf verifies the invitation with solemn concentration, then hands it back. "You may proceed as a guest," he says.';
+            }
+
+            return `Oggaf declines the ${item.name} without breaking posture.`;
+          },
+        },
+      },
+      zamzam: {
+        description: 'Zamzam wears two hats because he has two heads and no patience for compromise.',
+        actions: {
+          ask({ topic }) {
+            if (topic.includes('name')) {
+              return '"Zamzam," says the left head. "Still Zamzam," says the right, preemptively annoyed.';
+            }
+
+            return 'Zamzam gives you the look of a servant forced to entertain elective questions.';
+          },
+          tell({ topic }) {
+            if (topic.includes('name')) {
+              return '"Then try to keep it attached to acceptable behavior," mutters one of Zamzam’s heads.';
+            }
+
+            return 'Zamzam receives the information as though filing it for later disapproval.';
+          },
+        },
+      },
       chandelier: 'The chandelier is large enough to bankrupt a lesser noble house and bright enough to make every stain elsewhere feel intentional.',
     },
   });

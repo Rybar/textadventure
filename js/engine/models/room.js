@@ -16,11 +16,35 @@ export class Room {
     this.description = description;
     this.exits = exits;
     this.items = items;
-    this.objects = objects;
+    this.objects = this.normalizeObjects(objects);
     this.verbs = verbs;
     this.onEnter = Array.isArray(onEnter) ? onEnter : [onEnter];
     this.onLook = Array.isArray(onLook) ? onLook : [onLook];
     this.conditionalDescriptions = conditionalDescriptions;
+  }
+
+  normalizeObjects(objects = {}) {
+    return Object.fromEntries(
+      Object.entries(objects).map(([key, value]) => {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          return [key, {
+            id: value.id ?? key,
+            name: value.name ?? key,
+            aliases: [key, ...(value.aliases ?? [])].map(alias => alias.toLowerCase()),
+            description: value.description ?? '',
+            actions: value.actions ?? {},
+          }];
+        }
+
+        return [key, {
+          id: key,
+          name: key,
+          aliases: [key.toLowerCase()],
+          description: value,
+          actions: {},
+        }];
+      }),
+    );
   }
 
   describe(context = {}) {
@@ -87,6 +111,14 @@ export class Room {
     }
 
     return String(handler);
+  }
+
+  findObject(objectName) {
+    const normalizedName = String(objectName).toLowerCase();
+
+    return Object.values(this.objects).find(object => {
+      return object.name.toLowerCase() === normalizedName || object.aliases.includes(normalizedName);
+    }) ?? null;
   }
 
   listExits() {

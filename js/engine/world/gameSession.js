@@ -10,7 +10,7 @@ export class GameSession {
     this.manifest = typeof manifestSource === 'function'
       ? manifestSource()
       : manifestSource;
-    this.commandParser = options.commandParser ?? new CommandParser();
+    this.commandParser = options.commandParser ?? new CommandParser(this.manifest.parserOptions ?? {});
     this.transcript = options.transcript ?? new Transcript();
     this.actionRegistry = options.actionRegistry ?? new ActionRegistry();
     this.worldState = new WorldState(this.manifest);
@@ -45,18 +45,19 @@ export class GameSession {
 
     this.worldState.incrementTurn();
 
-    const actionContext = this.createActionContext(command);
-    const globalVerbHandler = this.actionRegistry.getGlobalVerbHandler(command.verb);
+    const normalizedCommand = this.normalizeCommand(command);
+    const actionContext = this.createActionContext(normalizedCommand);
+    const globalVerbHandler = this.actionRegistry.getGlobalVerbHandler(normalizedCommand.verb);
     if (globalVerbHandler) {
       return this.finalizeResponse(globalVerbHandler(actionContext));
     }
 
     const currentRoom = this.worldState.getCurrentRoom();
-    if (currentRoom.hasVerb(command.verb)) {
-      return this.finalizeResponse(currentRoom.performVerb(command.verb, actionContext));
+    if (currentRoom.hasVerb(normalizedCommand.verb)) {
+      return this.finalizeResponse(currentRoom.performVerb(normalizedCommand.verb, actionContext));
     }
 
-    return this.finalizeResponse(this.handleItemAction(command.directObject, command.verb, actionContext));
+    return this.finalizeResponse(this.handleItemAction(normalizedCommand.directObject, normalizedCommand.verb, actionContext));
   }
 
   initializeActionRegistry() {
@@ -67,7 +68,10 @@ export class GameSession {
       take: context => this.worldState.takeItem(context.command.directObject),
       drop: context => this.worldState.dropItem(context.command.directObject),
       inventory: () => this.worldState.listInventory(),
-      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, GO SOUTH, INVENTORY, EXITS, SAVE, or LOAD.',
+      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, READ INVITATION, LISTEN TO FOUNTAIN, SIT ON COUCH, GO SOUTH, INVENTORY, SAVE, or LOAD.',
+      give: context => this.handleGive(context.command, context),
+      ask: context => this.handleAsk(context.command, context),
+      tell: context => this.handleTell(context.command, context),
       save: context => this.saveGame(context.command.directObject),
       load: context => this.loadGame(context.command.directObject),
       map: () => 'No map is available yet.',
@@ -82,6 +86,27 @@ export class GameSession {
       command,
       ...additionalContext,
     });
+  }
+
+  normalizeCommand(command) {
+    if (!['ask', 'tell'].includes(command.verb) || command.indirectObject || !command.directObject.includes(' ')) {
+      return command;
+    }
+
+    const tokens = command.directObject.split(' ');
+    for (let index = tokens.length - 1; index > 0; index -= 1) {
+      const candidateTarget = tokens.slice(0, index).join(' ');
+      const candidateTopic = tokens.slice(index).join(' ');
+      if (this.worldState.findInteractiveTarget(candidateTarget)) {
+        return {
+          ...command,
+          directObject: candidateTarget,
+          indirectObject: candidateTopic,
+        };
+      }
+    }
+
+    return command;
   }
 
   finalizeResponse(primaryResponse) {
@@ -108,6 +133,81 @@ export class GameSession {
     }
 
     return `\n${this.worldState.enterCurrentRoom()}`;
+  }
+
+  performTargetAction(actionName, targetName, actionContext, fallbackText) {
+    const resolvedTarget = this.worldState.findInteractiveTarget(targetName);
+    if (!resolvedTarget) {
+      return `You don't see ${targetName} here.`;
+    }
+
+    if (resolvedTarget.type === 'item') {
+      return this.handleItemAction(targetName, actionName, actionContext);
+    }
+
+    const handler = resolvedTarget.target.actions?.[actionName];
+    if (!handler) {
+      return fallbackText;
+    }
+
+    if (typeof handler === 'function') {
+      return handler({
+        ...actionContext,
+        target: resolvedTarget.target,
+      });
+    }
+
+    return String(handler);
+  }
+
+  handleGive(command, actionContext) {
+    if (!command.directObject) {
+      return 'Give what?';
+    }
+
+    if (!command.indirectObject) {
+      return `Give ${command.directObject} to whom?`;
+    }
+
+    const item = this.worldState.findInventoryItem(command.directObject);
+    if (!item) {
+      return `You don't have a ${command.directObject}.`;
+    }
+
+    return this.performTargetAction('give', command.indirectObject, {
+      ...actionContext,
+      item,
+    }, `No one here seems interested in the ${item.name}.`);
+  }
+
+  handleAsk(command, actionContext) {
+    if (!command.directObject) {
+      return 'Ask whom?';
+    }
+
+    if (!command.indirectObject) {
+      return `Ask ${command.directObject} about what?`;
+    }
+
+    return this.performTargetAction('ask', command.directObject, {
+      ...actionContext,
+      topic: command.indirectObject,
+    }, `${command.directObject} offers no useful answer.`);
+  }
+
+  handleTell(command, actionContext) {
+    if (!command.directObject) {
+      return 'Tell whom?';
+    }
+
+    if (!command.indirectObject) {
+      return `Tell ${command.directObject} what?`;
+    }
+
+    return this.performTargetAction('tell', command.directObject, {
+      ...actionContext,
+      topic: command.indirectObject,
+    }, `${command.directObject} does not seem interested.`);
   }
 
   handleItemAction(itemName, actionName, actionContext = this.createActionContext({

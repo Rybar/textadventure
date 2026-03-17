@@ -211,6 +211,30 @@ export class WorldState {
     return this.getCurrentRoom().findItem(itemName) ?? this.findInventoryItem(itemName);
   }
 
+  findVisibleObject(objectName) {
+    return this.getCurrentRoom().findObject(objectName);
+  }
+
+  findInteractiveTarget(targetName) {
+    const objectTarget = this.findVisibleObject(targetName);
+    if (objectTarget) {
+      return {
+        type: 'object',
+        target: objectTarget,
+      };
+    }
+
+    const itemTarget = this.findVisibleItem(targetName);
+    if (itemTarget) {
+      return {
+        type: 'item',
+        target: itemTarget,
+      };
+    }
+
+    return null;
+  }
+
   takeItem(itemName) {
     const currentRoom = this.getCurrentRoom();
     const item = currentRoom.findItem(itemName);
@@ -321,11 +345,11 @@ export class WorldState {
     const currentRoom = this.getCurrentRoom();
     const context = this.createContext({ currentRoom });
 
-    if (currentRoom.objects?.[itemName]) {
-      const objectDescription = currentRoom.objects[itemName];
-      return typeof objectDescription === 'function'
-        ? objectDescription(context)
-        : objectDescription;
+    const visibleObject = currentRoom.findObject(itemName);
+    if (visibleObject) {
+      return typeof visibleObject.description === 'function'
+        ? visibleObject.description(context)
+        : visibleObject.description;
     }
 
     const item = this.findVisibleItem(itemName);
