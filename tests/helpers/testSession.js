@@ -78,6 +78,13 @@ export function moveToAlchemyStockroom(session) {
   session.submitCommand('east');
 }
 
+export function moveToBlackWindTreeChamber(session) {
+  moveToAlchemyStockroom(session);
+  session.submitCommand('read ledger');
+  session.submitCommand('search drain');
+  session.submitCommand('down');
+}
+
 export function moveToGrandfatherRoom(session) {
   moveToFeastHall(session);
   session.submitCommand('north');

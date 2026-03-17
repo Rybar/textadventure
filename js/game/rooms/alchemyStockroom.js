@@ -8,6 +8,7 @@ export function createAlchemyStockroom() {
   const fruit = createBlackWindFruit();
   const elixir = createBlackWindElixir();
   const ledger = createBlackWindLedger();
+  const canRevealTreePassage = getFlag => getFlag('blackWindSourceLeadKnown') || getFlag('blackWindEvidenceCollected');
 
   const describeStockroomSearch = ({ getFlag, setFlag }) => {
     if (!getFlag('blackWindStockroomSearched')) {
@@ -38,6 +39,18 @@ export function createAlchemyStockroom() {
     ? 'The ledger has already told you enough to ruin several powerful dinners.'
     : 'The ledger is the least occult object in the room and therefore the most dangerous: plain columns of proof with nowhere for the truth to hide.';
 
+  const describeDrainSearch = ({ getFlag, emitEvent }) => {
+    if (getFlag('blackWindTreePassageFound')) {
+      return 'The iron drain grate now stands ajar, exposing the narrow stair that drops below the stockroom into the chamber feeding Oshregaal\'s private orchard.';
+    }
+
+    if (canRevealTreePassage(getFlag)) {
+      return emitEvent('discoverBlackWindTreePassage');
+    }
+
+    return 'The drain smells colder than the rest of the room, all bitter resin and root rot. Something moves beneath the stockroom, but you do not yet have enough context to turn suspicion into a route.';
+  };
+
   return new Room({
     id: 'alchemyStockroom',
     title: 'Alchemical Stockroom',
@@ -47,13 +60,27 @@ The air smells of bitter resin, old sugar, and medicinal rot. West lies the kitc
 `.trim(),
     exits: {
       west: 'kitchen',
+      down: 'blackWindTreeChamber',
+    },
+    exitGuards: {
+      down({ getFlag }) {
+        if (getFlag('blackWindTreePassageFound')) {
+          return null;
+        }
+
+        return 'You find no obvious way down from the stockroom.';
+      },
     },
     verbs: {
-      search({ command, getFlag, setFlag }) {
+      search({ command, getFlag, setFlag, emitEvent }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('racks') || target.includes('stock')) {
           return describeStockroomSearch({ getFlag, setFlag });
+        }
+
+        if (target.includes('drain') || target.includes('floor') || target.includes('grate') || target.includes('roots') || target.includes('residue')) {
+          return describeDrainSearch({ getFlag, emitEvent });
         }
 
         if (target.includes('fruit') || target.includes('jar') || target.includes('phial') || target.includes('elixir')) {
@@ -77,12 +104,25 @@ The air smells of bitter resin, old sugar, and medicinal rot. West lies the kitc
         when: ({ getFlag }) => getFlag('blackWindFruitConsumed') || getFlag('blackWindElixirConsumed'),
         text: 'One section of the stock now carries the small but obvious violence of private tampering: someone has not merely discovered the contraband here, but participated in it.',
       },
+      {
+        when: ({ getFlag }) => getFlag('blackWindTreePassageFound'),
+        text: 'A lifted iron drain grate now exposes a narrow service stair descending beneath the stockroom toward the roots feeding the whole trade.',
+      },
     ],
     objects: {
       racks: 'Iron racks climb the walls, packed with jars, phials, wrapped trays, and coded storage slips meant for private commerce rather than household use.',
       jars: 'Opaque jars sit in chilled rows, each marked with batch codes and discreet tusk-house sigils instead of honest names.',
       phials: 'The phials are sealed in black wax and numbered for transport. None of this was prepared for local use alone.',
       fruit: 'In the padded trays lie several black-wind fruits, each with a skin that absorbs the light around it rather than merely reflecting none.',
+      drain: {
+        description({ getFlag }) {
+          if (getFlag('blackWindTreePassageFound')) {
+            return 'The iron drain grate has been pulled aside, revealing a cramped maintenance stair dropping below the stockroom into the chamber where the black-wind roots are kept productive.';
+          }
+
+          return 'An iron floor drain gathers dark sticky runoff from the chilled room. The smell around it is more botanical than mercantile.';
+        },
+      },
       door: 'From this side the hidden pantry door is obvious, a panel disguised to read as shelving from the kitchen side.',
     },
   });

@@ -72,6 +72,15 @@ In this game, items should usually do at least one of the following:
 - Strong evidence item because it transforms the branch from rumor into leverage.
 - Should support `read` and portable theft even if later branches decide whether it is traded, exposed, or merely used as insurance.
 
+### Black Wind Root Sample
+
+- Physical proof taken from the source chamber itself rather than from the trade layer above it.
+- Useful because it proves the orchard is active under the house right now, not merely inherited or historical.
+- Best use in adaptation:
+  - source-proof item for bargaining;
+  - clue that the stockroom is only the commercial face of a deeper system;
+  - future ingredient for sabotage, poisoning, or ritual counterplay.
+
 ### Crystal Sword
 
 - Plum's escape-grade weapon.

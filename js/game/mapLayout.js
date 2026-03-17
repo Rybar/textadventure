@@ -10,6 +10,7 @@ export function createGameMapDefinition() {
       secretCircle: { x: -1, y: -1, region: 'hidden' },
       kitchen: { x: 1, y: -1, region: 'service' },
       alchemyStockroom: { x: 2, y: -1, region: 'hidden' },
+      blackWindTreeChamber: { x: 3, y: -1, region: 'hidden' },
       ogreBeds: { x: 1, y: -2, region: 'service' },
       kelagoRoom: { x: 0, y: -2, region: 'family' },
       grandfatherRoom: { x: 1, y: -2, region: 'family' },

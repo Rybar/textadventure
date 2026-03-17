@@ -4,6 +4,7 @@ import { createInvitation } from './items/invitation.js';
 import { createMetaGameContent } from './meta game/messages.js';
 import { createGameParserOptions, createGameVerbs } from './rules/verbs.js';
 import { createAlchemyStockroom } from './rooms/alchemyStockroom.js';
+import { createBlackWindTreeChamber } from './rooms/blackWindTreeChamber.js';
 import { createCavernRoom } from './rooms/cavern.js';
 import { createFeastHall } from './rooms/feastHall.js';
 import { createFernGardenRoom } from './rooms/fernGarden.js';
@@ -36,6 +37,7 @@ export function createGameManifest() {
   const kelagoRoom = createKelagoRoom();
   const kitchen = createKitchenRoom();
   const alchemyStockroom = createAlchemyStockroom();
+  const blackWindTreeChamber = createBlackWindTreeChamber();
   const library = createLibraryRoom();
   const ogreBeds = createOgreBedsRoom();
   const plumRoom = createPlumRoom();
@@ -127,10 +129,13 @@ export function createGameManifest() {
       plumEscapeAlarmed: false,
       plumAllianceSecured: false,
       blackWindEvidenceLeadKnown: false,
+      blackWindSourceLeadKnown: false,
       alchemyStockroomFound: false,
       blackWindStockroomSearched: false,
       blackWindLedgerRead: false,
       blackWindEvidenceCollected: false,
+      blackWindTreePassageFound: false,
+      blackWindTreeFound: false,
       blackWindFruitConsumed: false,
       blackWindElixirConsumed: false,
     },
@@ -147,6 +152,7 @@ export function createGameManifest() {
       grandfatherRoom,
       kitchen,
       alchemyStockroom,
+      blackWindTreeChamber,
       library,
       ogreBeds,
       plumRoom,

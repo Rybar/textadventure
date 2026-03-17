@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   createTestSession,
   moveToAlchemyStockroom,
+  moveToBlackWindTreeChamber,
   moveToFeastHall,
   moveToFoyer,
   moveToGrandfatherRoom,
@@ -424,6 +425,28 @@ test('Nathema turns black-wind evidence or contraband into immediate leverage', 
   const thirdSession = createTestSession();
   moveToNathemaRoom(thirdSession);
   assert.match(thirdSession.submitCommand('tell nathema i have evidence'), /show me something i can sell/i);
+});
+
+test('the deeper black-wind source branch reveals the tree chamber and yields source proof', () => {
+  const session = createTestSession();
+
+  moveToBlackWindTreeChamber(session);
+  assert.equal(session.worldState.currentRoomId, 'blackWindTreeChamber');
+  assert.equal(session.worldState.getFlag('blackWindTreePassageFound'), true);
+  assert.equal(session.worldState.getFlag('blackWindTreeFound'), true);
+  assert.match(session.submitCommand('search tree'), /cut free a sample|cuttable sample/i);
+  assert.match(session.submitCommand('take black wind root sample'), /you take the black wind root sample/i);
+  assert.match(session.submitCommand('smell sample'), /wet bark, ink, and medicine/i);
+
+  assert.match(session.submitCommand('up'), /hidden stockroom crouches behind the kitchen wall/i);
+  assert.match(session.submitCommand('west'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(session.submitCommand('give black wind root sample to nathema'), /source tissue|active sin/i);
+  assert.equal(session.worldState.getFlag('nathemaBlackWindSampleDelivered'), true);
+  assert.equal(session.worldState.getItemLocation('black-wind-root-sample'), null);
 });
 
 test('Nathema leverage can open the Grey Grin route through the library trophy room', () => {

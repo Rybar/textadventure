@@ -35,6 +35,10 @@ export function createNathemaRoom() {
     setFlag('nathemaBlackWindSampleDelivered', true);
     worldState.removeItemById(item.id);
 
+    if (item.id === 'black-wind-root-sample') {
+      return 'Nathema takes the root sample between two fingers and goes very still. "Source tissue," she says. "Not product. Not rumor. Good. That means the orchard is still alive under the house, which means everyone buying from Oshregaal is still buying from an active sin. You have improved our bargaining position considerably."';
+    }
+
     if (item.id === 'black-wind-fruit') {
       return 'Nathema accepts the fruit with immediate, disciplined hunger, wrapping it in cloth before the room can fully witness the exchange. "Now we are speaking in quantities that alter decisions," she says. "Good. Do not ask for trust. Ask what this buys."';
     }
@@ -77,6 +81,18 @@ export function createNathemaRoom() {
         reply: ({ getFlag }) => hasNathemaLeverage(getFlag)
           ? 'Nathema smiles with all the warmth of a sharpened treaty. "Now you understand the scale of the thing," she says. "Fruit buys appetites. Elixir buys armies. Documents buy fear. Any of them can open a road if used at the correct angle."'
           : 'Nathema studies you with sudden professional interest. "So you have heard useful words," she says. "Bring me anything from the black wind line and I may decide your survival has become strategically attractive."',
+      },
+      {
+        match: ['source', 'tree', 'orchard', 'roots'],
+        reply: ({ getFlag }) => {
+          if (!hasNathemaLeverage(getFlag)) {
+            return 'Nathema watches you coolly. "If you want source-level truths, stop arriving with guest-level offerings," she says.';
+          }
+
+          return getFlag('blackWindTreeFound')
+            ? 'Nathema leans forward a fraction. "Then you have seen the house beneath the house," she says. "Good. That kind of truth can still destabilize people who think themselves too powerful for scandal."'
+            : 'Nathema taps one fingernail against the chair arm. "If you mean to go deeper, follow the stock downward," she says. "Rooms like that always hide their theology under their accounting."';
+        },
       },
       {
         match: ['escape', 'leave', 'outside'],
@@ -235,7 +251,7 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
               return handleNathemaGreyGrinReview({ setFlag });
             }
 
-            if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir') {
+            if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir' || item.id === 'black-wind-root-sample') {
               setFlag('nathemaBargained', true);
               return `Nathema studies the ${item.name} without touching it. "Good," she says. "Now either keep it as leverage or give it to me and turn leverage into alignment."`;
             }
@@ -251,7 +267,7 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
               return handleNathemaGreyGrinDelivery({ item, setFlag, worldState });
             }
 
-            if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir') {
+            if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir' || item.id === 'black-wind-root-sample') {
               return handleNathemaBlackWindSample({ item, setFlag, worldState });
             }
 

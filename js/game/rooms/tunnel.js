@@ -71,10 +71,18 @@ The passage narrows farther on beneath a cracked arch and a spill of roots, prom
         when: ({ getFlag }) => getFlag('plumTunnelRouteReady'),
         text: 'Incense now thins through the draft in pale disciplined strands. The roots have eased back just enough to turn desperation into an actual plan.',
       },
+      {
+        when: ({ getFlag }) => getFlag('blackWindTreeFound'),
+        text: 'Having seen the source chamber, the roots here no longer read as generic overgrowth. They read as infrastructure.',
+      },
     ],
     objects: {
       roots: {
         description({ getFlag }) {
+          if (getFlag('blackWindTreeFound')) {
+            return 'Now that you have seen the tree itself, the tunnel roots look like feeder lines escaped from the chamber below the house rather than mere plant intrusion.';
+          }
+
           if (getFlag('plumTunnelRouteReady')) {
             return 'The roots still crowd the tunnel, but incense smoke has coaxed them back from a strangling choke into something two frightened people could negotiate.';
           }

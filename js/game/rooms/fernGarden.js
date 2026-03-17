@@ -21,6 +21,13 @@ export function createFernGardenRoom() {
         reply: 'Plum wipes dirt from one palm with scholarly irritation. "Oshregaal hides embarrassment more carefully than sorcery," she says. "The black-wind trade records are kept near the alchemical stock, wherever he stores fruit, elixir, or accounts that prove how much of the world still eats from his orchard. If you can steal those, you leave with leverage rather than a story nobody powerful needs to believe."',
       },
       {
+        match: ['source', 'tree', 'orchard', 'roots'],
+        effect: ({ setFlag }) => {
+          setFlag('blackWindSourceLeadKnown', true);
+        },
+        reply: 'Plum glances toward the house with visible disgust. "The orchard is not outside," she says. "It is grown downward. Follow the stock, the runoff, or the roots beneath the service rooms and you will eventually reach the place where the fruit stops pretending to be produce and starts confessing."',
+      },
+      {
         match: ['grey grin', 'blade', 'sword', 'weapon'],
         reply: '"The Grey Grin Blade is real," Plum says, "but it is a trophy before it is a tool. If you chase it, do so because you mean to use what it means, not because you want a prettier escape."',
       },
@@ -113,7 +120,7 @@ The safer path leads back southeast toward the cavern and the stairs.
       },
       {
         when: ({ getFlag }) => getFlag('plumAllianceSecured'),
-        text: 'Plum is gone from the open garden now, folded into fern-shadow and culvert-dark with the deliberate skill of someone protecting a future by withholding her location. Her last advice leaves the house feeling larger and more indictable: somewhere deeper in, Oshregaal keeps records worth stealing.',
+        text: 'Plum is gone from the open garden now, folded into fern-shadow and culvert-dark with the deliberate skill of someone protecting a future by withholding her location. Her last advice leaves the house feeling larger and more indictable: somewhere deeper in, Oshregaal keeps records worth stealing and a source worth finding.',
       },
       {
         when: ({ getFlag }) => getFlag('fernCulvertNoticed'),

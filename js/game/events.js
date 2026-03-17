@@ -105,6 +105,24 @@ export function createGameEventDefinitions() {
       ],
       text: 'Behind the bowing pantry shelf you find a lacquered service panel cut too cleanly into the wall to be accidental. It yields to pressure and exposes a narrow hidden stockroom where Oshregaal keeps the black-wind trade near the kitchen but safely out of polite sight.',
     },
+    discoverBlackWindTreePassage: {
+      once: true,
+      when: ({ getFlag }) => !getFlag('blackWindTreePassageFound'),
+      actions: [
+        {
+          type: 'setFlag',
+          flag: 'blackWindTreePassageFound',
+          value: true,
+        },
+        {
+          type: 'unlockExit',
+          roomId: 'alchemyStockroom',
+          direction: 'down',
+          targetRoomId: 'blackWindTreeChamber',
+        },
+      ],
+      text: 'Behind the lowest rack you find an iron drain choked with lacquer-dark residue and fine root hair. The runoff is too regular to be accidental. Following the draft around it reveals a service hatch and a narrow stair descending below the stockroom into the colder dark where the trade is actually grown.',
+    },
     unlockTrophyRoom: {
       once: true,
       when: ({ getFlag }) => getFlag('greyGrinLeadKnown') && !getFlag('trophyRoomUnlocked'),
