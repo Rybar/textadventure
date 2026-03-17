@@ -7,11 +7,12 @@
   --terminal-frame-padding: clamp(8px, 1.2vh, 14px);
   --panel-width: clamp(220px, 24vw, 320px);
   --panel-gap: clamp(10px, 1.5vw, 18px);
+  --mobile-command-bar-height: 52px;
 }
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -30,7 +31,8 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
   padding: var(--screen-shell-padding);
   box-sizing: border-box;
 }
@@ -161,6 +163,7 @@ body {
   box-shadow: 0 0 24px rgba(255, 191, 0, 0.15);
   min-width: 0;
   box-sizing: border-box;
+  overflow: hidden;
   transform: translateX(0);
   transition: transform 420ms ease, box-shadow 420ms ease;
 }
@@ -170,6 +173,7 @@ body {
 }
 
 #text-grid {
+  display: block;
   margin: 0;
   color: var(--cga-amber);
   background-color: var(--cga-background);
@@ -179,6 +183,7 @@ body {
   white-space: pre;
   letter-spacing: 0;
   user-select: none;
+  min-width: max-content;
 }
 
 #panel-stack {
@@ -290,15 +295,44 @@ body {
 }
 
 @media (max-width: 1180px) {
+  html,
+  body {
+    overflow: auto;
+  }
+
+  body {
+    display: block;
+  }
+
   #terminal-stage[data-layout="transcript-only"] #status-bar,
   #terminal-stage[data-layout="with-panels"] #status-bar {
     width: 100%;
     align-self: stretch;
   }
 
+  #screen-shell {
+    align-items: flex-start;
+    min-height: 100dvh;
+    height: auto;
+  }
+
+  #terminal-stage {
+    width: 100%;
+    max-height: none;
+  }
+
   #terminal-content {
     flex-direction: column;
     gap: var(--panel-gap);
+  }
+
+  #text-grid-container {
+    width: 100%;
+    max-width: 100%;
+    justify-content: flex-start;
+    align-items: flex-start;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   #panel-stack {
@@ -320,15 +354,45 @@ body {
     transform: none;
   }
 
+  .meta-column {
+    display: none;
+  }
+
+  .ui-panel {
+    max-height: none;
+  }
+
   .panel-body {
     min-height: 8lh;
+    max-height: 18lh;
+    overflow: auto;
   }
 }
 
 @media (max-width: 760px) {
+  :root {
+    --screen-shell-padding: max(8px, env(safe-area-inset-left));
+    --terminal-frame-padding: 8px;
+    --panel-gap: 8px;
+    --terminal-font-size: clamp(8px, 1.8vw + 0.1rem, 10px);
+  }
+
+  #screen-shell {
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-bottom: calc(var(--mobile-command-bar-height) + 16px + env(safe-area-inset-bottom));
+    padding-left: max(8px, env(safe-area-inset-left));
+  }
+
+  #terminal-stage {
+    gap: 8px;
+  }
+
   #status-bar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
   }
 
   #status-title-group,
@@ -337,8 +401,92 @@ body {
     justify-content: space-between;
   }
 
+  #status-title-group {
+    gap: 6px;
+  }
+
+  #game-title,
+  #current-location,
+  #turn-counter,
+  #score-counter {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-divider {
+    display: none;
+  }
+
+  #text-grid-container {
+    min-height: min(62dvh, 520px);
+    border-width: 1px;
+    box-shadow: 0 0 18px rgba(255, 191, 0, 0.12);
+  }
+
+  #text-grid {
+    min-width: max-content;
+    padding-bottom: 2px;
+  }
+
   #panel-stack {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ui-panel {
+    padding: 8px 10px;
+  }
+
+  .panel-heading {
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+  }
+
+  .panel-body {
+    min-height: 0;
+    max-height: 16lh;
+  }
+
+  #cli-input {
+    position: fixed;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: auto;
+    height: var(--mobile-command-bar-height);
+    padding: 0 14px;
+    border: 1px solid var(--cga-amber);
+    background-color: rgba(0, 0, 0, 0.96);
+    box-shadow: 0 0 18px rgba(255, 191, 0, 0.12);
+    color: var(--cga-amber);
+    font-family: 'Perfect-DOS-VGA-437-Win', monospace;
+    font-size: 16px;
+    line-height: 1;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 4;
+    box-sizing: border-box;
+    border-radius: 0;
+    caret-color: var(--cga-amber);
+  }
+
+  #cli-input::placeholder {
+    color: rgba(255, 191, 0, 0.5);
+  }
+}
+
+@media (max-width: 420px) {
+  :root {
+    --terminal-font-size: clamp(8px, 2vw + 0.08rem, 9px);
+  }
+
+  #status-bar {
+    padding: 7px 9px;
+  }
+
+  #status-title-group,
+  #status-stats {
+    gap: 8px;
   }
 }
 
