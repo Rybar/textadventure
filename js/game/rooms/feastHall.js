@@ -1,3 +1,4 @@
+import { createTopicResponder } from '../../engine/authoring/conversation.js';
 import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
@@ -47,6 +48,205 @@ export function createFeastHall() {
     portable: false,
   });
 
+  const markOshregaalMet = ({ setFlag }) => {
+    setFlag('metOshregaal', true);
+  };
+
+  const oshregaalAsk = createTopicResponder({
+    before: markOshregaalMet,
+    rules: [
+      {
+        match: ['dinner', 'feast'],
+        reply: 'Oshregaal beams. "At last, a sensible subject. Eat well, praise sincerely, and try not to die of nerves before the better courses arrive."',
+      },
+      {
+        match: ['house', 'mansion', 'home'],
+        reply: 'Oshregaal spreads his fingers proudly. "A house should flatter its owner, intimidate its rivals, and confuse its guests just enough to make them memorable."',
+      },
+      {
+        match: ['invitation', 'paper'],
+        reply: '"Invitations are how a house teaches strangers the first useful lie," Oshregaal says. "Once someone arrives, parchment has done its little job."',
+      },
+      {
+        match: 'wine',
+        reply: 'Oshregaal eyes the goblet approvingly. "Medicinal, theatrical, and only mildly treacherous," he says. "A respectable table wine."',
+      },
+      {
+        match: ['escape', 'leave', 'outside'],
+        reply: 'Oshregaal laughs until he has to dab at one eye. "My dear guest, departure is a vulgar obsession in the middle of a meal."',
+      },
+      {
+        match: ['kelago', 'sister'],
+        reply: ({ getFlag }) => getFlag('gaveBlood')
+          ? '"My sister improves everything she touches," Oshregaal says fondly. "Compliment her work and she may even explain which doors in this house still possess manners."'
+          : '"Kelago is an artist," Oshregaal says. "Try not to look at her with the face of a peasant confronting genius."',
+      },
+      {
+        match: ['curtain', 'west'],
+        reply: 'Oshregaal smiles too broadly. "Private family business, little guest. If the house wants you there, it will extend a hand."',
+      },
+      {
+        match: ['blood', 'cup'],
+        reply: ({ getFlag }) => getFlag('gaveBlood')
+          ? '"And a generous guest besides," Oshregaal says. "A meal improves when everyone contributes something of themselves."'
+          : 'Oshregaal lifts his brows. "A drop is only manners," he says. "If one cannot share blood at table, civilization has truly withered."',
+      },
+      {
+        match: ['guest', 'tusk'],
+        reply: '"Companions, creditors, dependents, admirers," Oshregaal says, waving a jeweled hand down the table. "Labels are a poor substitute for seating arrangements."',
+      },
+      {
+        match: ['story', 'stories', 'entertainment'],
+        reply: 'Oshregaal leans forward in his chair, delighted. "A guest who can tell a story may leave with all sorts of organs I had not planned to spare," he says. "This is what passes for generosity in cultivated houses."',
+      },
+    ],
+    fallback: 'Oshregaal answers with theatrical warmth and exactly as much truth as flatters him.',
+  });
+
+  const oshregaalTell = createTopicResponder({
+    before: markOshregaalMet,
+    rules: [
+      {
+        match: 'name',
+        reply: '"A pleasure," Oshregaal says, in the tone of a man reserving judgment until dessert.',
+      },
+      {
+        match: ['praise', 'dinner', 'magnificent'],
+        reply: 'Oshregaal preens openly. "At last, literacy of the palate," he says. His attention warms just enough to become more dangerous.',
+      },
+      {
+        match: ['your house is beautiful', 'beautiful house', 'magnificent house'],
+        reply: 'Oshregaal places one hand over his heart and looks briefly sincere. "At last," he says, "someone with architectural gratitude."',
+      },
+      {
+        match: ['leave', 'escape'],
+        reply: 'Oshregaal rests one jeweled finger against his goblet and smiles at you like a patient executioner. "You persist in treating chronology as a personal right," he says.',
+      },
+    ],
+    fallback: 'Oshregaal receives your words as though deciding whether they are worth keeping.',
+  });
+
+  const impAsk = createTopicResponder({
+    rules: [
+      {
+        match: ['escape', 'leave'],
+        reply: ({ getFlag }) => {
+          if (getFlag('impHelpOffered')) {
+            return 'The imp bares his teeth in satisfaction. "Behind the red curtains there is a hidden brass hand. Shake it like you mean an introduction. The house respects etiquette almost as much as it enjoys traps."';
+          }
+
+          return 'The imp bares his teeth in something too sharp to be a smile. "Everything leaves eventually. Some routes are merely less educational than others. If you want specifics, risk sounding serious."';
+        },
+        effect: ({ getFlag, setFlag }) => {
+          if (getFlag('impHelpOffered')) {
+            setFlag('impHandshakeHintKnown', true);
+          }
+        },
+      },
+      {
+        match: ['oshregaal', 'grandfather'],
+        reply: '"He dines, he gloats, he expands," the imp mutters. "A fungus with table manners."',
+      },
+      {
+        match: ['chain', 'binding'],
+        reply: 'The imp rattles the chain with professional bitterness. "Decorative slavery," he says. "He likes his humiliations polished."',
+      },
+      {
+        match: ['wrongus', 'cook', 'kitchen'],
+        reply: '"Wrongus would marry the stew if ceremony allowed it," the imp says. "Useful creature. Disturbingly sincere about reductions."',
+      },
+      {
+        match: ['curtain', 'west'],
+        reply: ({ getFlag }) => getFlag('impHelpOffered')
+          ? 'The imp looks delighted by your interest. "Yes, yes, the curtains. There is a hidden brass hand in there. Shake it. The old idiot loves doors that can be flirted with."'
+          : '"The curtains matter," the imp says. "That is all the charity you get for free."',
+        effect: ({ getFlag, setFlag }) => {
+          if (getFlag('impHelpOffered')) {
+            setFlag('impHandshakeHintKnown', true);
+          }
+        },
+      },
+      {
+        match: ['guest', 'tusk'],
+        reply: 'The imp glances down the table and lowers his voice. "Some are loyal, some are trapped, some forgot the difference years ago. Dinner is very educational that way."',
+      },
+      {
+        match: ['blood', 'cup'],
+        reply: ({ getFlag }) => getFlag('gaveBlood')
+          ? 'The imp winces theatrically. "Congratulations. You have participated in custom. Try not to volunteer for any more traditions tonight."'
+          : '"The silver cup comes around sooner or later," the imp mutters. "Everything in this room wants a sample."',
+      },
+      {
+        match: 'kelago',
+        reply: '"Artistic," the imp says darkly. "Which in this family means the screaming is usually very well curated."',
+      },
+    ],
+    fallback: 'The imp answers in fragments sharp enough to draw blood if handled carelessly.',
+  });
+
+  const impTell = createTopicResponder({
+    rules: [
+      {
+        match: ['help', 'escape'],
+        effect: ({ setFlag }) => {
+          setFlag('impHelpOffered', true);
+          setFlag('impSuspicious', true);
+        },
+        reply: 'The imp’s eyes narrow with sudden interest. "There. Honesty at last. Keep asking like that and I may tell you which piece of this room still remembers how to open."',
+      },
+      {
+        match: ['oshregaal is awful', 'grandfather is awful', 'he is awful'],
+        effect: ({ setFlag }) => {
+          setFlag('impHelpOffered', true);
+        },
+        reply: 'The imp grins so hard it almost counts as pain. "You are learning," he says. "Careful. That sort of clarity attracts chores."',
+      },
+    ],
+    fallback: 'The imp flicks his tail and pretends not to care, which is not the same as not caring.',
+  });
+
+  const guestsAsk = createTopicResponder({
+    rules: [
+      {
+        match: ['dinner', 'feast', 'meal'],
+        reply: 'One tusked guest blinks at you with watery concentration. "Still in progress," he says, as if the sentence has answered every meal for years.',
+      },
+      {
+        match: ['oshregaal', 'grandfather'],
+        reply: 'A jeweled tusk-woman smiles without showing relief. "He is generous," she says automatically, then much quieter: "and extremely difficult to finish with."',
+      },
+      {
+        match: ['leave', 'leav', 'outside', 'escape'],
+        reply: 'Several guests go very still. At last one mutters into his goblet, "If you discover the polite method, do share it before dessert."',
+      },
+    ],
+    fallback: 'The guests exchange looks of practiced caution. One gives you a tiny shrug that might be sympathy or hunger.',
+  });
+
+  const guestsTell = createTopicResponder({
+    rules: [
+      {
+        match: ['i want to leave', 'leave', 'escape'],
+        reply: 'A guest with silver rings refuses to look at you directly. "Then do not let him seat you twice," she says, as if quoting a rule she learned too late.',
+      },
+      {
+        match: ['oshregaal is awful', 'grandfather is awful'],
+        reply: 'A few guests pretend not to hear. One chokes on a laugh and converts it into a cough with veteran speed.',
+      },
+    ],
+    fallback: 'The guests receive your words like contraband passed under the table: briefly, nervously, and without wanting witnesses.',
+  });
+
+  const tuskpeopleAsk = createTopicResponder({
+    rules: [
+      {
+        match: ['mutation', 'tusks'],
+        reply: 'A nearby guest touches one ivory tusk with visible old habit. "Inheritance, industry, accident," she says. "In this house the categories mingle."',
+      },
+    ],
+    fallback: 'The tusk folk regard you with the deep caution of people who know observation can become obligation.',
+  });
+
   return new Room({
     id: 'feastHall',
     title: 'Feast Hall',
@@ -61,16 +261,16 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       west: 'secretCircle',
       north: 'kelagoRoom',
     },
-    onEnter: [
-      ({ getFlag, setFlag }) => {
-        if (!getFlag('feastStarted')) {
-          setFlag('feastStarted', true);
-          return 'The room seems to register your arrival as a social fact. Several tusk guests glance up only long enough to decide whether you belong to the menu, the audience, or both.';
-        }
-
-        return null;
-      },
-    ],
+    triggers: {
+      enter: [
+        {
+          id: 'feastHall:first-arrival',
+          run: ({ emitEvent }) => {
+            return emitEvent('startFeastService');
+          },
+        },
+      ],
+    },
     exitGuards: {
       west({ getFlag }) {
         if (getFlag('secretCircleUnlocked')) {
@@ -109,7 +309,7 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
 
         return `You search the ${target} and gain only grease, perfume, and more reasons not to trust the hospitality.`;
       },
-      shake({ command, getFlag, setFlag, unlockExit }) {
+      shake({ command, getFlag, emitEvent }) {
         const target = command.directObject;
         if (!target) {
           return 'Shake what?';
@@ -128,10 +328,7 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
             return 'You find no obvious handhold to shake until your fingers brush something metallic in the curtain folds. It feels absurdly specific, but without a better reason to trust it, you let go.';
           }
 
-          setFlag('secretCircleUnlocked', true);
-          setFlag('foundTeleportCircle', true);
-          unlockExit('feastHall', 'west', 'secretCircle');
-          return 'Your hand closes around a hidden brass hand sewn into the curtain folds. You shake it once. Somewhere inside the wall, a lock answers with genteel satisfaction, and the curtained passage to the west yields at last.';
+          return emitEvent('unlockSecretCirclePassage');
         }
 
         return `The ${target} does not appear eager for a handshake.`;
@@ -158,58 +355,8 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         aliases: ['grandfather', 'host', 'oshregaal'],
         description: 'Grandfather Oshregaal looks like a collapsed king upholstered in silk and appetite. His eyes, however, are quick, bright, and unforgettably awake.',
         actions: {
-          ask({ topic, getFlag, setFlag }) {
-            setFlag('metOshregaal', true);
-
-            if (topic.includes('dinner') || topic.includes('feast')) {
-              return 'Oshregaal beams. "At last, a sensible subject. Eat well, praise sincerely, and try not to die of nerves before the better courses arrive."';
-            }
-
-            if (topic.includes('escape') || topic.includes('leave') || topic.includes('outside')) {
-              return 'Oshregaal laughs until he has to dab at one eye. "My dear guest, departure is a vulgar obsession in the middle of a meal."';
-            }
-
-            if (topic.includes('kelago') || topic.includes('sister')) {
-              if (getFlag('gaveBlood')) {
-                return '"My sister improves everything she touches," Oshregaal says fondly. "Compliment her work and she may even explain which doors in this house still possess manners."';
-              }
-
-              return '"Kelago is an artist," Oshregaal says. "Try not to look at her with the face of a peasant confronting genius."';
-            }
-
-            if (topic.includes('curtain') || topic.includes('west')) {
-              return 'Oshregaal smiles too broadly. "Private family business, little guest. If the house wants you there, it will extend a hand."';
-            }
-
-            if (topic.includes('blood') || topic.includes('cup')) {
-              return getFlag('gaveBlood')
-                ? '"And a generous guest besides," Oshregaal says. "A meal improves when everyone contributes something of themselves."'
-                : 'Oshregaal lifts his brows. "A drop is only manners," he says. "If one cannot share blood at table, civilization has truly withered."';
-            }
-
-            if (topic.includes('guest') || topic.includes('tusk')) {
-              return '"Companions, creditors, dependents, admirers," Oshregaal says, waving a jeweled hand down the table. "Labels are a poor substitute for seating arrangements."';
-            }
-
-            return 'Oshregaal answers with theatrical warmth and exactly as much truth as flatters him.';
-          },
-          tell({ topic, setFlag }) {
-            setFlag('metOshregaal', true);
-
-            if (topic.includes('name')) {
-              return '"A pleasure," Oshregaal says, in the tone of a man reserving judgment until dessert.';
-            }
-
-            if (topic.includes('praise') || topic.includes('dinner') || topic.includes('magnificent')) {
-              return 'Oshregaal preens openly. "At last, literacy of the palate," he says. His attention warms just enough to become more dangerous.';
-            }
-
-            if (topic.includes('leave') || topic.includes('escape')) {
-              return 'Oshregaal rests one jeweled finger against his goblet and smiles at you like a patient executioner. "You persist in treating chronology as a personal right," he says.';
-            }
-
-            return 'Oshregaal receives your words as though deciding whether they are worth keeping.';
-          },
+          ask: oshregaalAsk,
+          tell: oshregaalTell,
           give({ item, setFlag }) {
             setFlag('metOshregaal', true);
 
@@ -230,50 +377,8 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         aliases: ['pazuzu', 'servant'],
         description: 'The imp is small, furious, and visibly bound to service by old magical spite. He looks like the sort of creature who would offer help only if it could become revenge later.',
         actions: {
-          ask({ topic, getFlag, setFlag }) {
-            if (topic.includes('escape') || topic.includes('leave')) {
-              if (getFlag('impHelpOffered')) {
-                setFlag('impHandshakeHintKnown', true);
-                return 'The imp bares his teeth in satisfaction. "Behind the red curtains there is a hidden brass hand. Shake it like you mean an introduction. The house respects etiquette almost as much as it enjoys traps."';
-              }
-
-              return 'The imp bares his teeth in something too sharp to be a smile. "Everything leaves eventually. Some routes are merely less educational than others. If you want specifics, risk sounding serious."';
-            }
-
-            if (topic.includes('oshregaal') || topic.includes('grandfather')) {
-              return '"He dines, he gloats, he expands," the imp mutters. "A fungus with table manners."';
-            }
-
-            if (topic.includes('curtain') || topic.includes('west')) {
-              if (getFlag('impHelpOffered')) {
-                setFlag('impHandshakeHintKnown', true);
-                return 'The imp looks delighted by your interest. "Yes, yes, the curtains. There is a hidden brass hand in there. Shake it. The old idiot loves doors that can be flirted with."';
-              }
-
-              return '"The curtains matter," the imp says. "That is all the charity you get for free."';
-            }
-
-            if (topic.includes('guest') || topic.includes('tusk')) {
-              return 'The imp glances down the table and lowers his voice. "Some are loyal, some are trapped, some forgot the difference years ago. Dinner is very educational that way."';
-            }
-
-            if (topic.includes('blood') || topic.includes('cup')) {
-              return getFlag('gaveBlood')
-                ? 'The imp winces theatrically. "Congratulations. You have participated in custom. Try not to volunteer for any more traditions tonight."'
-                : '"The silver cup comes around sooner or later," the imp mutters. "Everything in this room wants a sample."';
-            }
-
-            return 'The imp answers in fragments sharp enough to draw blood if handled carelessly.';
-          },
-          tell({ topic, setFlag }) {
-            if (topic.includes('help') || topic.includes('escape')) {
-              setFlag('impHelpOffered', true);
-              setFlag('impSuspicious', true);
-              return 'The imp’s eyes narrow with sudden interest. "There. Honesty at last. Keep asking like that and I may tell you which piece of this room still remembers how to open."';
-            }
-
-            return 'The imp flicks his tail and pretends not to care, which is not the same as not caring.';
-          },
+          ask: impAsk,
+          tell: impTell,
           give({ item, setFlag }) {
             if (item.id === 'wine') {
               setFlag('impHelpOffered', true);
@@ -284,7 +389,15 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
           },
         },
       },
-      guests: 'Most of the tusk guests look dazed, overfed, or partially trapped inside commands they are still obeying hours too late.',
+      guests: {
+        name: 'tusk guests',
+        aliases: ['guests', 'tusk guests', 'tuskpeople', 'tusk people'],
+        description: 'Most of the tusk guests look dazed, overfed, or partially trapped inside commands they are still obeying hours too late.',
+        actions: {
+          ask: guestsAsk,
+          tell: guestsTell,
+        },
+      },
       chain: 'The imp\'s chain is old magic disguised as household hardware. It gives him enough slack to serve and not enough to forget who profits from it.',
       butter: 'The butter dish on the imp\'s hands gleams absurdly under the chandelier, a domestic humiliation polished into ritual.',
       curtains: {
@@ -296,7 +409,13 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
           return 'Heavy red curtains hide a side chamber from casual view. Their folds are unusually thick, as though hiding more hardware than cloth ought to require.';
         },
       },
-      tuskpeople: 'Tusks, mutations, jewelry, scars, and ceremonial exhaustion. Whatever else Oshregaal made, he made followers who survived it.',
+      tuskpeople: {
+        aliases: ['tusks', 'mutants'],
+        description: 'Tusks, mutations, jewelry, scars, and ceremonial exhaustion. Whatever else Oshregaal made, he made followers who survived it.',
+        actions: {
+          ask: tuskpeopleAsk,
+        },
+      },
     },
   });
 }

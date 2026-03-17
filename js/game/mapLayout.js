@@ -1,0 +1,20 @@
+export function createGameMapDefinition() {
+  return {
+    rooms: {
+      cavern: { x: 0, y: 2, region: 'approach' },
+      fernGarden: { x: -1, y: 1, region: 'approach' },
+      grandStairs: { x: 0, y: 1, region: 'approach' },
+      foyer: { x: 0, y: 0, region: 'public' },
+      sittingRoom: { x: -1, y: 0, region: 'public' },
+      feastHall: { x: 0, y: -1, region: 'public' },
+      secretCircle: { x: -1, y: -1, region: 'hidden' },
+      kitchen: { x: 1, y: -1, region: 'service' },
+      ogreBeds: { x: 1, y: -2, region: 'service' },
+      kelagoRoom: { x: 0, y: -2, region: 'family' },
+      guestRoom: { x: 1, y: 1, region: 'guest' },
+      nathemaRoom: { x: 2, y: 1, region: 'guest' },
+    },
+  };
+}
+
+export default createGameMapDefinition;

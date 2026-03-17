@@ -1,3 +1,4 @@
+import { createTopicResponder } from '../../engine/authoring/conversation.js';
 import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
@@ -49,6 +50,61 @@ export function createKitchenRoom() {
     },
   });
 
+  const wrongusAsk = createTopicResponder({
+    rules: [
+      {
+        match: ['stew', 'meal', 'dinner'],
+        reply: 'Wrongus bares his teeth proudly. "Main reduction there, sweet finish there, objections nowhere," he says, waving his ladle over the bubbling cauldron like a conducting baton.',
+      },
+      {
+        match: ['fish', 'ingredient', 'ingredients'],
+        reply: 'Wrongus sweeps one hand toward the prep tables. "Cave fish, sugar, spice, fungus, blood, texture, timing," he says. "People always think ingredients matter separately. Coward logic."',
+      },
+      {
+        match: ['ooze', 'jar', 'dessert'],
+        reply: '"Dessert should resist slightly," Wrongus says. "Otherwise guest learns nothing." The candy ooze in the jar seems insulted by being discussed as a principle.',
+      },
+      {
+        match: ['spice', 'spices'],
+        reply: 'Wrongus inhales through his teeth in appreciation. "Spice is argument," he says. "You use enough and the mouth agrees with anything."',
+      },
+      {
+        match: ['blood', 'cup', 'homunculus'],
+        effect: ({ triggerEvent }) => {
+          triggerEvent('discoverKitchenBloodRitual');
+        },
+        reply: 'Wrongus snorts. "Little silver cups come back here, yes? Scrape them into the reduction, coax the proteins proper, let the tiny red gentleman stand up in the pot. Good body. Good color. Grandfather likes tradition."',
+      },
+      {
+        match: ['oshregaal', 'grandfather'],
+        reply: '"Grandfather eats praise first, then stew, then consequences," Wrongus says. "Schedule depends on guests."',
+      },
+      {
+        match: ['leave', 'exit', 'outside'],
+        reply: 'Wrongus gives you a pitying look usually reserved for cracked platters. "Kitchen sends dishes out," he says. "Does not send guests out. Different service."',
+      },
+    ],
+    fallback: 'Wrongus answers with the attention span of a man reducing six disasters at once.',
+  });
+
+  const wrongusTell = createTopicResponder({
+    rules: [
+      {
+        match: ['meal', 'smells good', 'delicious'],
+        reply: 'Wrongus puffs up visibly. "Correct," he says. "At last, nose with manners."',
+      },
+      {
+        match: ['i can help', 'need help'],
+        reply: 'Wrongus looks you up and down like a dubious chopping board. "Can you stir, lift, or keep secrets at a boil?" he asks. Before you can answer, he has already resumed stirring.',
+      },
+      {
+        match: ['help', 'escape'],
+        reply: 'Wrongus stares at you over the rim of the cauldron. "If I helped every guest leave, dinner would get thin," he says, not entirely joking.',
+      },
+    ],
+    fallback: 'Wrongus grunts and keeps stirring.',
+  });
+
   return new Room({
     id: 'kitchen',
     title: 'Kitchen',
@@ -58,6 +114,7 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
 `.trim(),
     exits: {
       west: 'feastHall',
+      north: 'ogreBeds',
     },
     items: [spiceBundle, brandyPudding, cauldron, candyOozeJar],
     conditionalDescriptions: [
@@ -70,37 +127,8 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
       wrongus: {
         description: 'Wrongus is a mutant ogre cook with a chef\'s hat balanced over the stunted leg growing from the crown of his head. He looks at food the way generals look at maps.',
         actions: {
-          ask({ topic, setFlag }) {
-            if (topic.includes('stew') || topic.includes('meal') || topic.includes('dinner')) {
-              return 'Wrongus bares his teeth proudly. "Main reduction there, sweet finish there, objections nowhere," he says, waving his ladle over the bubbling cauldron like a conducting baton.';
-            }
-
-            if (topic.includes('blood') || topic.includes('cup') || topic.includes('homunculus')) {
-              setFlag('kitchenBloodHintKnown', true);
-              return 'Wrongus snorts. "Little silver cups come back here, yes? Scrape them into the reduction, coax the proteins proper, let the tiny red gentleman stand up in the pot. Good body. Good color. Grandfather likes tradition."';
-            }
-
-            if (topic.includes('oshregaal') || topic.includes('grandfather')) {
-              return '"Grandfather eats praise first, then stew, then consequences," Wrongus says. "Schedule depends on guests."';
-            }
-
-            if (topic.includes('leave') || topic.includes('exit') || topic.includes('outside')) {
-              return 'Wrongus gives you a pitying look usually reserved for cracked platters. "Kitchen sends dishes out," he says. "Does not send guests out. Different service."';
-            }
-
-            return 'Wrongus answers with the attention span of a man reducing six disasters at once.';
-          },
-          tell({ topic }) {
-            if (topic.includes('meal') || topic.includes('smells good') || topic.includes('delicious')) {
-              return 'Wrongus puffs up visibly. "Correct," he says. "At last, nose with manners."';
-            }
-
-            if (topic.includes('help') || topic.includes('escape')) {
-              return 'Wrongus stares at you over the rim of the cauldron. "If I helped every guest leave, dinner would get thin," he says, not entirely joking.';
-            }
-
-            return 'Wrongus grunts and keeps stirring.';
-          },
+          ask: wrongusAsk,
+          tell: wrongusTell,
           give({ item }) {
             if (item.id === 'spice-bundle') {
               return 'Wrongus accepts the spice bundle with instant professional respect. "Useful," he says. "You may continue existing in my kitchen for another minute."';

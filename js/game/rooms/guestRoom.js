@@ -82,6 +82,7 @@ It is the sort of room designed to calm a person who has not yet understood how 
 The stair leads back down to the foyer.
 `.trim(),
     exits: {
+      north: 'nathemaRoom',
       down: 'foyer',
     },
     items: [lamp, bed, chest, bellPull, guestCard],

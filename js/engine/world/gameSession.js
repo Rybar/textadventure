@@ -83,7 +83,7 @@ export class GameSession {
       return this.finalizeResponse(currentRoom.performVerb(normalizedCommand.verb, actionContext));
     }
 
-    return this.finalizeResponse(this.handleItemAction(normalizedCommand.directObject, normalizedCommand.verb, actionContext));
+    return this.finalizeResponse(this.handleGenericAction(normalizedCommand, actionContext));
   }
 
   initializeActionRegistry() {
@@ -94,10 +94,21 @@ export class GameSession {
       take: context => this.worldState.takeItem(context.command.directObject),
       drop: context => this.worldState.dropItem(context.command.directObject),
       inventory: () => this.worldState.listInventory(),
-      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, READ INVITATION, LISTEN TO FOUNTAIN, SIT ON COUCH, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
+      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
       give: context => this.handleGive(context.command, context),
+      show: context => this.handleShow(context.command, context),
       ask: context => this.handleAsk(context.command, context),
       tell: context => this.handleTell(context.command, context),
+      open: context => this.handleGenericAction(context.command, context),
+      close: context => this.handleGenericAction(context.command, context),
+      push: context => this.handleGenericAction(context.command, context),
+      pull: context => this.handleGenericAction(context.command, context),
+      use: context => this.handleGenericAction(context.command, context),
+      eat: context => this.handleGenericAction(context.command, context),
+      smell: context => this.handleGenericAction(context.command, context),
+      taste: context => this.handleGenericAction(context.command, context),
+      greet: context => this.handleGenericAction(context.command, context),
+      wait: () => 'You wait for a moment. Nothing obliging happens yet.',
       debugmeta: context => this.toggleMetaDebug(context.command.directObject),
       debugpanel: context => this.debugPanel(context.command.directObject),
       nextmeta: () => this.forceNextMetaEvent(),
@@ -278,6 +289,85 @@ export class GameSession {
     return `\n${this.worldState.enterCurrentRoom()}`;
   }
 
+  capitalizeVerb(verb = '') {
+    return `${verb.charAt(0).toUpperCase()}${verb.slice(1)}`;
+  }
+
+  getResolvedTargetName(resolvedTarget, fallbackName = '') {
+    if (!resolvedTarget?.target) {
+      return fallbackName;
+    }
+
+    return resolvedTarget.target.name ?? fallbackName;
+  }
+
+  invokeResolvedAction(resolvedTarget, actionName, actionContext, extraContext = {}) {
+    if (!resolvedTarget) {
+      return {
+        handled: false,
+        result: null,
+      };
+    }
+
+    if (resolvedTarget.type === 'item') {
+      if (!resolvedTarget.target.hasAction(actionName)) {
+        return {
+          handled: false,
+          result: null,
+        };
+      }
+
+      return {
+        handled: true,
+        result: resolvedTarget.target.performAction(actionName, {
+          ...actionContext,
+          ...extraContext,
+          item: extraContext.item ?? resolvedTarget.target,
+          target: resolvedTarget.target,
+          targetItem: resolvedTarget.target,
+        }),
+      };
+    }
+
+    const handler = resolvedTarget.target.actions?.[actionName];
+    if (!handler) {
+      return {
+        handled: false,
+        result: null,
+      };
+    }
+
+    if (typeof handler === 'function') {
+      return {
+        handled: true,
+        result: handler({
+          ...actionContext,
+          ...extraContext,
+          target: resolvedTarget.target,
+        }),
+      };
+    }
+
+    return {
+      handled: true,
+      result: String(handler),
+    };
+  }
+
+  finalizeConsumableActionResult(result, item, actionName) {
+    if (!item || !['eat', 'use'].includes(actionName)) {
+      return result;
+    }
+
+    const depleted = item.decreaseUses();
+    if (!depleted) {
+      return result;
+    }
+
+    this.worldState.removeVisibleItem(item.name);
+    return `${result} The ${item.name} is now used up.`;
+  }
+
   performTargetAction(actionName, targetName, actionContext, fallbackText) {
     const resolvedTarget = this.worldState.findInteractiveTarget(targetName);
     if (!resolvedTarget) {
@@ -301,6 +391,49 @@ export class GameSession {
     }
 
     return String(handler);
+  }
+
+  handleShow(command, actionContext) {
+    if (!command.directObject) {
+      return 'Show what?';
+    }
+
+    if (!command.indirectObject) {
+      return `Show ${command.directObject} to whom?`;
+    }
+
+    const item = this.worldState.findVisibleItem(command.directObject);
+    if (!item) {
+      return `You don't see a ${command.directObject} here.`;
+    }
+
+    const resolvedTarget = this.worldState.findInteractiveTarget(command.indirectObject);
+    if (!resolvedTarget) {
+      return `You don't see ${command.indirectObject} here.`;
+    }
+
+    const showContext = {
+      ...actionContext,
+      item,
+      sourceItem: item,
+      shownItem: item,
+      directTarget: item,
+      directTargetType: 'item',
+      indirectTarget: resolvedTarget.target,
+      indirectTargetType: resolvedTarget.type,
+    };
+
+    const showResult = this.invokeResolvedAction(resolvedTarget, 'show', actionContext, showContext);
+    if (showResult.handled) {
+      return showResult.result;
+    }
+
+    const giveResult = this.invokeResolvedAction(resolvedTarget, 'give', actionContext, showContext);
+    if (giveResult.handled) {
+      return giveResult.result;
+    }
+
+    return `${command.indirectObject} shows no interest in the ${item.name}.`;
   }
 
   handleGive(command, actionContext) {
@@ -353,6 +486,65 @@ export class GameSession {
     }, `${command.directObject} does not seem interested.`);
   }
 
+  handleGenericAction(command, actionContext = this.createActionContext(command)) {
+    const actionName = command.verb;
+
+    if (!command.directObject) {
+      return `${this.capitalizeVerb(actionName)} what?`;
+    }
+
+    const directTarget = this.worldState.findInteractiveTarget(command.directObject);
+    if (!directTarget) {
+      return `You don't see ${command.directObject} here.`;
+    }
+
+    let indirectTarget = null;
+    if (command.indirectObject) {
+      indirectTarget = this.worldState.findInteractiveTarget(command.indirectObject);
+      if (!indirectTarget) {
+        return `You don't see ${command.indirectObject} here.`;
+      }
+    }
+
+    const directResult = this.invokeResolvedAction(directTarget, actionName, actionContext, {
+      directTarget: directTarget.target,
+      directTargetType: directTarget.type,
+      indirectTarget: indirectTarget?.target ?? null,
+      indirectTargetType: indirectTarget?.type ?? null,
+      tool: indirectTarget?.type === 'item' ? indirectTarget.target : null,
+    });
+
+    if (directResult.handled) {
+      return this.finalizeConsumableActionResult(
+        directResult.result,
+        directTarget.type === 'item' ? directTarget.target : null,
+        actionName,
+      );
+    }
+
+    if (indirectTarget && directTarget.type === 'item') {
+      const indirectResult = this.invokeResolvedAction(indirectTarget, actionName, actionContext, {
+        item: directTarget.target,
+        sourceItem: directTarget.target,
+        directTarget: directTarget.target,
+        directTargetType: directTarget.type,
+        indirectTarget: indirectTarget.target,
+        indirectTargetType: indirectTarget.type,
+        tool: directTarget.target,
+      });
+
+      if (indirectResult.handled) {
+        return this.finalizeConsumableActionResult(indirectResult.result, directTarget.target, actionName);
+      }
+    }
+
+    if (command.indirectObject) {
+      return `You can't ${actionName} ${command.directObject} ${command.preposition ?? 'with'} ${command.indirectObject}.`;
+    }
+
+    return `You can't ${actionName} the ${this.getResolvedTargetName(directTarget, command.directObject)}.`;
+  }
+
   handleItemAction(itemName, actionName, actionContext = this.createActionContext({
     type: 'command',
     verb: actionName,
@@ -376,15 +568,7 @@ export class GameSession {
       item,
     });
 
-    if (actionName === 'eat' || actionName === 'use') {
-      const depleted = item.decreaseUses();
-      if (depleted) {
-        this.worldState.removeVisibleItem(item.name);
-        return `${result} The ${item.name} is now used up.`;
-      }
-    }
-
-    return result;
+    return this.finalizeConsumableActionResult(result, item, actionName);
   }
 
   getStorage() {

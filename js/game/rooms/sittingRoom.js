@@ -1,7 +1,32 @@
+import { createTopicResponder } from '../../engine/authoring/conversation.js';
 import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createSittingRoom() {
+  const couchAsk = createTopicResponder({
+    rules: [
+      {
+        match: ['guest', 'guests'],
+        reply: 'The couches rustle among themselves. "Guests come in stiff," one whispers. "They leave softer or not at all," murmurs another.',
+      },
+      {
+        match: ['butler', 'ogre'],
+        reply: 'A leather couch exhales impatiently. "The butlers hear everything," it whispers. "That is why they never need to raise their voices."',
+      },
+    ],
+    fallback: 'The couches confer in upholstery tones and decide you have not yet earned their better gossip.',
+  });
+
+  const couchTell = createTopicResponder({
+    rules: [
+      {
+        match: ['i am tired', 'i am exhausted', 'tired'],
+        reply: 'The couch beneath you swells in smug sympathy. "So sit," it seems to whisper. "That is how houses begin to keep people."',
+      },
+    ],
+    fallback: 'The couches receive your confidence with the delighted discretion of furniture that already knows worse.',
+  });
+
   const fountain = new Item({
     id: 'fountain',
     name: 'fountain',
@@ -52,6 +77,14 @@ export function createSittingRoom() {
       sit(context) {
         context?.setFlag?.('sittingRoomGossipKnown', true);
         return 'The couch yields under you like a living thing considering whether to tolerate your presence.';
+      },
+      ask(context) {
+        context?.setFlag?.('sittingRoomGossipKnown', true);
+        return couchAsk(context);
+      },
+      tell(context) {
+        context?.setFlag?.('sittingRoomGossipKnown', true);
+        return couchTell(context);
       },
     },
     portable: false,

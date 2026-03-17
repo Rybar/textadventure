@@ -1,3 +1,4 @@
+import { createTopicResponder } from '../../engine/authoring/conversation.js';
 import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
@@ -46,6 +47,34 @@ export function createSecretCircleRoom() {
     portable: false,
   });
 
+  const skullsAsk = createTopicResponder({
+    rules: [
+      {
+        match: ['circle', 'rune', 'portal'],
+        reply: 'The skulls drift in a slow shared arc. One clicks its teeth and emits a whisper thin as chalk: "ROAD, NOT SUMMONING."',
+      },
+      {
+        match: ['oshregaal', 'grandfather'],
+        reply: 'The skulls do not answer directly, but their light gutters for a moment as though the name has been handled too often.',
+      },
+      {
+        match: ['leave', 'escape'],
+        reply: 'A skull rotates until its empty sockets face east, then back to the circle. The gesture is not hope, but it is information.',
+      },
+    ],
+    fallback: 'The skulls respond with a faint clatter of teeth, as if discussing whether speech would be worth the effort.',
+  });
+
+  const skullsTell = createTopicResponder({
+    rules: [
+      {
+        match: 'thank you',
+        reply: 'The skulls brighten by a hair. In a room like this, that almost counts as warmth.',
+      },
+    ],
+    fallback: 'The skulls absorb your words into their glow and return only patient silence.',
+  });
+
   return new Room({
     id: 'secretCircle',
     title: 'Secret Circle',
@@ -56,15 +85,19 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
     exits: {
       east: 'feastHall',
     },
-    onEnter: [
-      ({ getFlag, setFlag }) => {
-        if (!getFlag('foundTeleportCircle')) {
-          setFlag('foundTeleportCircle', true);
-        }
-
-        return null;
-      },
-    ],
+    triggers: {
+      enter: [
+        {
+          id: 'secretCircle:discover-circle',
+          once: true,
+          when: ({ getFlag }) => !getFlag('foundTeleportCircle'),
+          run: ({ setFlag }) => {
+            setFlag('foundTeleportCircle', true);
+            return null;
+          },
+        },
+      ],
+    },
     verbs: {
       search({ command }) {
         const target = command.directObject;
@@ -96,7 +129,13 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
       },
     ],
     objects: {
-      skulls: 'The floating skulls glow with steady obedience. Whatever animates them is not interested in being theatrical twice.',
+      skulls: {
+        description: 'The floating skulls glow with steady obedience. Whatever animates them is not interested in being theatrical twice.',
+        actions: {
+          ask: skullsAsk,
+          tell: skullsTell,
+        },
+      },
       bookshelf: 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader.',
       cabinet: 'The cabinet contains reagents, vials, and the sort of practical magic a man keeps near an emergency exit.',
       runes: 'The runes are for travel, not summoning. They are patient, old, and absolutely real.',

@@ -1,3 +1,5 @@
+import { normalizeTriggerMap, runTriggerEntries } from '../authoring/triggers.js';
+
 export class Room {
   constructor({
     id,
@@ -10,6 +12,7 @@ export class Room {
     verbs = {},
     onEnter = [],
     onLook = [],
+    triggers = {},
     conditionalDescriptions = [],
   }) {
     this.id = id;
@@ -20,9 +23,34 @@ export class Room {
     this.items = items;
     this.objects = this.normalizeObjects(objects);
     this.verbs = verbs;
-    this.onEnter = Array.isArray(onEnter) ? onEnter : [onEnter];
-    this.onLook = Array.isArray(onLook) ? onLook : [onLook];
+    this.triggers = this.normalizeTriggers({ onEnter, onLook, triggers });
+    this.onEnter = this.triggers.enter;
+    this.onLook = this.triggers.look;
     this.conditionalDescriptions = conditionalDescriptions;
+  }
+
+  normalizeTriggers({ onEnter = [], onLook = [], triggers = {} } = {}) {
+    const normalizedTriggers = normalizeTriggerMap({ onEnter, onLook, triggers });
+
+    return Object.fromEntries(
+      Object.entries(normalizedTriggers).map(([triggerName, entries]) => [
+        triggerName,
+        entries.map((entry, index) => {
+          if (!entry || typeof entry === 'function' || typeof entry === 'string') {
+            return entry;
+          }
+
+          if (entry.once && !entry.id) {
+            return {
+              ...entry,
+              id: `${this.id}:${triggerName}:${index}`,
+            };
+          }
+
+          return entry;
+        }),
+      ]),
+    );
   }
 
   normalizeObjects(objects = {}) {
@@ -76,18 +104,20 @@ export class Room {
       .filter(Boolean);
   }
 
+  runTrigger(triggerName, context = {}) {
+    return runTriggerEntries(this.triggers[triggerName] ?? [], context);
+  }
+
   runHook(hookName, context = {}) {
-    const hooks = Array.isArray(this[hookName]) ? this[hookName] : [];
+    let triggerName = hookName;
 
-    return hooks
-      .map(hook => {
-        if (typeof hook === 'function') {
-          return hook(context);
-        }
+    if (hookName === 'onEnter') {
+      triggerName = 'enter';
+    } else if (hookName === 'onLook') {
+      triggerName = 'look';
+    }
 
-        return hook;
-      })
-      .filter(Boolean);
+    return this.runTrigger(triggerName, context);
   }
 
   getExit(direction) {

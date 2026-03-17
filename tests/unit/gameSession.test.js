@@ -6,6 +6,7 @@ import {
   installMockLocalStorage,
   moveToFoyer,
   moveToFeastHall,
+  moveToGuestWing,
 } from '../helpers/testSession.js';
 
 test('foyer blocks feast-hall access until invitation is shown', () => {
@@ -26,6 +27,17 @@ test('giving the invitation in the foyer sets admission state', () => {
 
   assert.match(response, /proceed as a guest/i);
   assert.equal(session.worldState.getFlag('foyerAdmitted'), true);
+});
+
+test('showing the invitation in the foyer also supports admission flow', () => {
+  const session = createTestSession();
+
+  moveToFoyer(session);
+  const response = session.submitCommand('show invitation to oggaf');
+
+  assert.match(response, /proceed as a guest|accepted/i);
+  assert.equal(session.worldState.getFlag('foyerAdmitted'), true);
+  assert.ok(session.worldState.findInventoryItem('invitation'));
 });
 
 test('handshake puzzle unlocks the secret-circle route after a clue', () => {
@@ -126,4 +138,20 @@ test('map panel renders discovered rooms as connected room boxes with a location
   assert.equal(mapPanel?.currentRoomBox?.height, 3);
   assert.ok((mapPanel?.currentRoomBox?.left ?? -1) >= 0);
   assert.ok((mapPanel?.currentRoomBox?.top ?? -1) >= 0);
+});
+
+test('map panel prefers authored room coordinates over pure exit inference', () => {
+  const session = createTestSession();
+
+  moveToGuestWing(session);
+  session.submitCommand('debugpanel map');
+
+  const mapPanel = session.getInterfaceModel().panels.find(panel => panel.id === 'map');
+  const foyerBox = mapPanel?.roomBoxes?.foyer;
+  const guestRoomBox = mapPanel?.roomBoxes?.guestRoom;
+
+  assert.ok(foyerBox);
+  assert.ok(guestRoomBox);
+  assert.equal(mapPanel?.unlocked, true);
+  assert.ok((guestRoomBox?.left ?? -1) > (foyerBox?.left ?? -1));
 });

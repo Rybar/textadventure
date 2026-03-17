@@ -60,4 +60,31 @@ test('parser resolves custom verb aliases and preposition object forms', () => {
     preposition: null,
     indirectObject: null,
   });
+
+  assert.deepEqual(parser.parse('pull on bell pull'), {
+    type: 'command',
+    rawInput: 'pull on bell pull',
+    verb: 'pull',
+    directObject: 'bell pull',
+    preposition: null,
+    indirectObject: null,
+  });
+
+  assert.deepEqual(parser.parse('show invitation to oggaf'), {
+    type: 'command',
+    rawInput: 'show invitation to oggaf',
+    verb: 'show',
+    directObject: 'invitation',
+    preposition: 'to',
+    indirectObject: 'oggaf',
+  });
+
+  assert.deepEqual(parser.parse('use key on door'), {
+    type: 'command',
+    rawInput: 'use key on door',
+    verb: 'use',
+    directObject: 'key',
+    preposition: 'on',
+    indirectObject: 'door',
+  });
 });

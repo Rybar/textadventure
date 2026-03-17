@@ -55,3 +55,13 @@ export function moveToFeastHall(session) {
   admitAtFoyer(session);
   session.submitCommand('north');
 }
+
+export function moveToGuestWing(session) {
+  admitAtFoyer(session);
+  session.submitCommand('up');
+}
+
+export function moveToKitchen(session) {
+  moveToFeastHall(session);
+  session.submitCommand('east');
+}

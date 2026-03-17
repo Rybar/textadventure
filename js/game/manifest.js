@@ -1,3 +1,5 @@
+import { createGameEventDefinitions } from './events.js';
+import { createGameMapDefinition } from './mapLayout.js';
 import { createInvitation } from './items/invitation.js';
 import { createMetaGameContent } from './meta game/messages.js';
 import { createGameParserOptions, createGameVerbs } from './rules/verbs.js';
@@ -9,6 +11,8 @@ import { createGrandStairsRoom } from './rooms/grandStairs.js';
 import { createGuestRoom } from './rooms/guestRoom.js';
 import { createKelagoRoom } from './rooms/kelagoRoom.js';
 import { createKitchenRoom } from './rooms/kitchen.js';
+import { createNathemaRoom } from './rooms/nathemaRoom.js';
+import { createOgreBedsRoom } from './rooms/ogreBeds.js';
 import { createSecretCircleRoom } from './rooms/secretCircle.js';
 import { createSittingRoom } from './rooms/sittingRoom.js';
 
@@ -19,10 +23,14 @@ export function createGameManifest() {
   const foyer = createFoyerRoom();
   const sittingRoom = createSittingRoom();
   const guestRoom = createGuestRoom();
+  const nathemaRoom = createNathemaRoom();
   const feastHall = createFeastHall();
   const kelagoRoom = createKelagoRoom();
   const kitchen = createKitchenRoom();
+  const ogreBeds = createOgreBedsRoom();
   const metaGame = createMetaGameContent();
+  const events = createGameEventDefinitions();
+  const map = createGameMapDefinition();
   const secretCircle = createSecretCircleRoom();
 
   return {
@@ -33,6 +41,8 @@ export function createGameManifest() {
     parserOptions: createGameParserOptions(),
     verbs: createGameVerbs(),
     metaGame,
+    events,
+    map,
     ui: {
       panels: {
         map: {
@@ -69,6 +79,10 @@ export function createGameManifest() {
       folioMarginNoted: false,
       foyerSurveillanceNoticed: false,
       feastGuestPatternKnown: false,
+      ogreRosterKnown: false,
+      nathemaMet: false,
+      nathemaBargained: false,
+      nathemaContrabandKnown: false,
       foundTeleportCircle: false,
       hasTeleportScroll: false,
       secretCircleUnlocked: false,
@@ -81,9 +95,11 @@ export function createGameManifest() {
       foyer,
       sittingRoom,
       guestRoom,
+      nathemaRoom,
       feastHall,
       kelagoRoom,
       kitchen,
+      ogreBeds,
       secretCircle,
     },
   };

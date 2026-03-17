@@ -10,9 +10,12 @@ export class WorldState {
       startupMessageId: null,
       messages: {},
     };
+    this.eventDefinitions = this.normalizeEventDefinitions(manifest.events);
+    this.mapDefinition = this.normalizeMapDefinition(manifest.map);
     this.flags = manifest.flags ? { ...manifest.flags } : {};
     this.panelDefinitions = this.createPanelDefinitions(manifest.ui?.panels);
     this.panelState = this.createDefaultPanelState();
+    this.triggerState = this.createDefaultTriggerState();
     this.turns = 0;
     this.roomVisits = {};
     this.outputBuffer = [];
@@ -62,6 +65,38 @@ export class WorldState {
     );
   }
 
+  createDefaultTriggerState() {
+    return {
+      firedEventIds: [],
+    };
+  }
+
+  normalizeEventDefinitions(eventDefinitions = {}) {
+    return Object.fromEntries(
+      Object.entries(eventDefinitions ?? {}).map(([eventId, definition]) => {
+        if (typeof definition === 'function') {
+          return [eventId, {
+            id: eventId,
+            run: definition,
+            actions: [],
+          }];
+        }
+
+        return [eventId, {
+          id: eventId,
+          actions: Array.isArray(definition?.actions) ? definition.actions : [],
+          ...definition,
+        }];
+      }),
+    );
+  }
+
+  normalizeMapDefinition(mapDefinition = {}) {
+    return {
+      rooms: mapDefinition?.rooms ? { ...mapDefinition.rooms } : {},
+    };
+  }
+
   static get MAP_DIRECTION_VECTORS() {
     return {
       north: { x: 0, y: -1 },
@@ -100,6 +135,16 @@ export class WorldState {
       shownHackerIds: [],
       shownReactiveLackeyIds: [],
     };
+  }
+
+  normalizeTriggerState(triggerState = {}) {
+    if (Array.isArray(triggerState.firedEventIds)) {
+      return {
+        firedEventIds: [...new Set(triggerState.firedEventIds.filter(Boolean))],
+      };
+    }
+
+    return this.createDefaultTriggerState();
   }
 
   getScheduledEntryId(entry, prefix, index) {
@@ -290,6 +335,13 @@ export class WorldState {
       unlockExit: (roomId, direction, targetRoomId) => this.unlockExit(roomId, direction, targetRoomId),
       unlockPanel: panelId => this.unlockPanel(panelId),
       degradePanel: (panelId, mode) => this.degradePanel(panelId, mode),
+      hasTriggeredEvent: eventId => this.hasTriggeredEvent(eventId),
+      markTriggeredEvent: eventId => this.markTriggeredEvent(eventId),
+      triggerRoomEvent: (roomId, triggerName, eventContext = {}) => this.runRoomTrigger(roomId, triggerName, eventContext),
+      emitRoomEvent: (triggerName, eventContext = {}) => this.runRoomTrigger(currentRoom, triggerName, eventContext).join('\n\n'),
+      triggerEvent: (eventId, eventContext = {}) => this.runEvent(eventId, eventContext),
+      emitEvent: (eventId, eventContext = {}) => this.runEvent(eventId, eventContext).join('\n\n'),
+      hasRunEvent: eventId => this.hasTriggeredEvent(this.getEventStateId(eventId)),
       print: text => this.print(text),
       ...additionalContext,
     };
@@ -309,6 +361,164 @@ export class WorldState {
 
   getFlag(flagName) {
     return this.flags[flagName];
+  }
+
+  hasTriggeredEvent(eventId) {
+    return this.triggerState.firedEventIds.includes(eventId);
+  }
+
+  markTriggeredEvent(eventId) {
+    if (!eventId || this.hasTriggeredEvent(eventId)) {
+      return false;
+    }
+
+    this.triggerState.firedEventIds = [...this.triggerState.firedEventIds, eventId];
+    return true;
+  }
+
+  getEventStateId(eventId) {
+    return `event:${eventId}`;
+  }
+
+  resolveContextValue(value, context) {
+    if (typeof value === 'function') {
+      return value(context);
+    }
+
+    return value;
+  }
+
+  runEventAction(action, context = {}) {
+    if (typeof action === 'function') {
+      return action(context);
+    }
+
+    if (typeof action === 'string') {
+      return action;
+    }
+
+    if (!action || typeof action !== 'object') {
+      return null;
+    }
+
+    if (typeof action.run === 'function') {
+      return action.run(context);
+    }
+
+    switch (action.type) {
+      case 'setFlag': {
+        this.setFlag(action.flag, this.resolveContextValue(action.value, context));
+        return null;
+      }
+      case 'unlockExit': {
+        this.unlockExit(
+          this.resolveContextValue(action.roomId, context),
+          this.resolveContextValue(action.direction, context),
+          this.resolveContextValue(action.targetRoomId, context),
+        );
+        return null;
+      }
+      case 'unlockPanel': {
+        this.unlockPanel(this.resolveContextValue(action.panelId, context));
+        return null;
+      }
+      case 'lockPanel': {
+        this.lockPanel(this.resolveContextValue(action.panelId, context));
+        return null;
+      }
+      case 'degradePanel': {
+        this.degradePanel(
+          this.resolveContextValue(action.panelId, context),
+          this.resolveContextValue(action.mode, context),
+        );
+        return null;
+      }
+      case 'clearPanelDegradation': {
+        this.clearPanelDegradation(this.resolveContextValue(action.panelId, context));
+        return null;
+      }
+      case 'moveItem': {
+        this.moveItem(
+          this.resolveContextValue(action.itemId, context),
+          this.resolveContextValue(action.destination, context),
+        );
+        return null;
+      }
+      case 'movePlayer': {
+        this.movePlayer(this.resolveContextValue(action.roomId, context));
+        return null;
+      }
+      case 'print': {
+        this.print(this.resolveContextValue(action.text, context));
+        return null;
+      }
+      case 'queueMetaMessages': {
+        const messages = this.resolveContextValue(action.messages, context) ?? [];
+        this.queueMetaMessages(Array.isArray(messages) ? messages : [messages]);
+        return null;
+      }
+      case 'event': {
+        return this.runEvent(this.resolveContextValue(action.eventId, context), context);
+      }
+      case 'roomTrigger': {
+        return this.runRoomTrigger(
+          this.resolveContextValue(action.roomId, context) ?? context.currentRoom,
+          this.resolveContextValue(action.triggerName, context),
+          context,
+        );
+      }
+      default: {
+        return this.resolveContextValue(action.text, context);
+      }
+    }
+  }
+
+  runEvent(eventId, additionalContext = {}) {
+    const definition = this.eventDefinitions[eventId];
+    if (!definition) {
+      return [];
+    }
+
+    const context = this.createContext({
+      eventId,
+      ...additionalContext,
+    });
+    const stateId = this.getEventStateId(eventId);
+
+    if (definition.once && this.hasTriggeredEvent(stateId)) {
+      return [];
+    }
+
+    if (typeof definition.when === 'function' && !definition.when(context)) {
+      return [];
+    }
+
+    const outputs = [];
+
+    definition.actions.forEach(action => {
+      const result = this.runEventAction(action, context);
+
+      if (Array.isArray(result)) {
+        outputs.push(...result);
+        return;
+      }
+
+      outputs.push(result);
+    });
+
+    if (typeof definition.run === 'function') {
+      outputs.push(definition.run(context));
+    }
+
+    if (definition.text !== undefined) {
+      outputs.push(this.resolveContextValue(definition.text, context));
+    }
+
+    if (definition.once) {
+      this.markTriggeredEvent(stateId);
+    }
+
+    return outputs.filter(Boolean);
   }
 
   setFlag(flagName, value) {
@@ -632,6 +842,21 @@ export class WorldState {
     return true;
   }
 
+  runRoomTrigger(roomOrId, triggerName, additionalContext = {}) {
+    const room = typeof roomOrId === 'string'
+      ? this.rooms[roomOrId]
+      : roomOrId;
+
+    if (!room) {
+      return [];
+    }
+
+    return room.runTrigger(triggerName, this.createContext({
+      currentRoom: room,
+      ...additionalContext,
+    }));
+  }
+
   findInventoryItem(itemName) {
     return this.inventory.find(item => item.matchesName(itemName));
   }
@@ -739,7 +964,7 @@ export class WorldState {
       visitCount,
       isFirstVisit: visitCount === 1,
     });
-    const hookText = currentRoom.runHook('onEnter', context);
+    const hookText = this.runRoomTrigger(currentRoom, 'enter', context);
     const description = this.describeCurrentRoom(context);
     const printedOutput = this.flushPrintedOutput();
 
@@ -752,7 +977,7 @@ export class WorldState {
       currentRoom,
       isFirstVisit: this.getRoomVisitCount(currentRoom.id) <= 1,
     });
-    const hookText = currentRoom.runHook('onLook', context);
+    const hookText = this.runRoomTrigger(currentRoom, 'look', context);
     const description = this.describeCurrentRoom(context);
     const printedOutput = this.flushPrintedOutput();
 
@@ -847,7 +1072,16 @@ export class WorldState {
     return roomIds[0] ?? null;
   }
 
+  getRoomMapMetadata(roomId) {
+    return this.mapDefinition.rooms?.[roomId] ?? null;
+  }
+
   getRoomMapToken(room) {
+    const mapMetadata = room ? this.getRoomMapMetadata(room.id) : null;
+    if (mapMetadata?.token) {
+      return String(mapMetadata.token).toUpperCase().slice(0, 2).padEnd(2, ' ');
+    }
+
     const title = room?.title ?? room?.id ?? '';
     const words = title
       .replaceAll(/[^A-Za-z0-9 ]+/g, ' ')
@@ -871,13 +1105,30 @@ export class WorldState {
       return {};
     }
 
-    const anchorRoomId = this.getMapAnchorRoomId(roomIds);
     const allowedRoomIds = new Set(roomIds);
-    const coordinates = {
-      [anchorRoomId]: { x: 0, y: 0 },
-    };
-    const occupied = new Map([['0,0', anchorRoomId]]);
-    const queue = [anchorRoomId];
+    const coordinates = {};
+    const occupied = new Map();
+
+    roomIds.forEach(roomId => {
+      const mapMetadata = this.getRoomMapMetadata(roomId);
+      if (!Number.isFinite(mapMetadata?.x) || !Number.isFinite(mapMetadata?.y)) {
+        return;
+      }
+
+      coordinates[roomId] = {
+        x: mapMetadata.x,
+        y: mapMetadata.y,
+      };
+      occupied.set(`${mapMetadata.x},${mapMetadata.y}`, roomId);
+    });
+
+    if (Object.keys(coordinates).length === 0) {
+      const anchorRoomId = this.getMapAnchorRoomId(roomIds);
+      coordinates[anchorRoomId] = { x: 0, y: 0 };
+      occupied.set('0,0', anchorRoomId);
+    }
+
+    const queue = Object.keys(coordinates);
 
     while (queue.length > 0) {
       const roomId = queue.shift();
@@ -1070,6 +1321,16 @@ export class WorldState {
     });
 
     const currentPosition = positions[this.currentRoomId] ?? null;
+    const roomBoxes = Object.fromEntries(
+      roomIds.map(roomId => [roomId, {
+        left: positions[roomId].left,
+        top: positions[roomId].top,
+        width: 4,
+        height: 3,
+        token: this.getRoomMapToken(this.rooms[roomId]),
+        region: this.getRoomMapMetadata(roomId)?.region ?? null,
+      }]),
+    );
 
     return {
       lines: [
@@ -1077,6 +1338,7 @@ export class WorldState {
         '',
         `Location: ${this.getCurrentRoom().title}`,
       ],
+      roomBoxes,
       currentRoomBox: currentPosition
         ? {
             left: currentPosition.left,
@@ -1136,6 +1398,7 @@ export class WorldState {
       unlocked: true,
       state: state.degraded ? 'degraded' : 'online',
       lines: renderedMap.lines,
+      roomBoxes: renderedMap.roomBoxes,
       currentRoomBox: renderedMap.currentRoomBox,
     };
   }
@@ -1216,6 +1479,7 @@ export class WorldState {
       roomVisits: { ...this.roomVisits },
       metaState: { ...this.metaState },
       panelState: { ...this.panelState },
+      triggerState: { ...this.triggerState },
       items: Object.values(this.itemIndex).map(item => ({
         id: item.id,
         location: this.getItemLocation(item.id),
@@ -1241,6 +1505,7 @@ export class WorldState {
     this.roomVisits = saveData.roomVisits ? { ...saveData.roomVisits } : {};
     this.metaState = this.normalizeMetaState(saveData.metaState ?? this.createDefaultMetaState());
     this.panelState = this.normalizePanelState(saveData.panelState ?? this.createDefaultPanelState());
+    this.triggerState = this.normalizeTriggerState(saveData.triggerState ?? this.createDefaultTriggerState());
     this.outputBuffer = [];
     this.pendingMetaMessages = [];
     this.inventory = [];
