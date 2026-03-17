@@ -174,31 +174,75 @@ export function createMetaGameContent() {
     schedule: {
       lackeyConversations: [
         {
-          turn: 4,
+          id: 'baseline-hold',
+          when: {
+            minTurn: 6,
+          },
           leftMessageId: 'lackeyLeft001',
           rightMessageId: 'lackeyRight001',
         },
         {
-          turn: 7,
+          id: 'foyer-screening',
+          when: {
+            minTurn: 10,
+            allFlags: ['foyerAdmitted'],
+          },
           leftMessageId: 'lackeyLeft002',
           rightMessageId: 'lackeyRight002',
         },
         {
-          turn: 10,
+          id: 'host-contact',
+          when: {
+            minTurn: 14,
+            allFlags: ['metOshregaal'],
+          },
           leftMessageId: 'lackeyLeft003',
           rightMessageId: 'lackeyRight003',
         },
         {
-          turn: 13,
+          id: 'curiosity-breakpoint',
+          when: {
+            minTurn: 18,
+            anyFlags: ['impHandshakeHintKnown', 'kelagoHandshakeHintKnown', 'secretCircleUnlocked'],
+          },
           leftMessageId: 'lackeyLeft004',
           rightMessageId: 'lackeyRight004',
         },
       ],
-      hackerInterruptions: {
-        startTurn: 16,
-        interval: 4,
-        messageIds: Object.keys(hackerMessages),
-      },
+      hackerMessages: [
+        {
+          id: 'first-contact',
+          messageId: 'ghostHandshake',
+          when: {
+            minTurn: 16,
+            allFlags: ['metOshregaal'],
+          },
+        },
+        {
+          id: 'servant-friction',
+          messageId: 'noteTheServants',
+          when: {
+            minTurn: 18,
+            anyFlags: ['impHelpOffered', 'kelagoMet', 'secretCircleUnlocked'],
+          },
+        },
+        {
+          id: 'hidden-exit',
+          messageId: 'hiddenExitHint',
+          when: {
+            minTurn: 20,
+            allFlags: ['secretCircleUnlocked'],
+          },
+        },
+        {
+          id: 'circle-awakening',
+          messageId: 'circleAdvice',
+          when: {
+            minTurn: 22,
+            allFlags: ['foundTeleportCircle'],
+          },
+        },
+      ],
     },
     messages: {
       ...experimentLackeyMessages,

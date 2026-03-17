@@ -12,6 +12,8 @@ test('meta messages do not appear at startup or in the first few interactions', 
   session.submitCommand('look');
   session.submitCommand('look');
   session.submitCommand('look');
+  session.submitCommand('look');
+  session.submitCommand('look');
 
   assert.deepEqual(session.consumePendingMetaMessages(), []);
 });
@@ -24,9 +26,13 @@ test('lackey conversation begins after several interactions and appears on both 
   session.submitCommand('look');
   session.submitCommand('look');
   session.submitCommand('look');
+  session.submitCommand('look');
+  session.submitCommand('look');
 
   const messages = session.consumePendingMetaMessages();
   assert.equal(messages.length, 2);
+  assert.equal(messages[0].id, 'lackeyLeft001');
+  assert.equal(messages[1].id, 'lackeyRight001');
   assert.equal(messages[0].placement, 'side-left');
   assert.equal(messages[1].placement, 'side-right');
   assert.equal(messages[0].source, 'experiment-lackeys');
@@ -36,19 +42,49 @@ test('lackey conversation begins after several interactions and appears on both 
   assert.ok(messages[0].options.holdDuration >= 3900);
 });
 
-test('hacker messages begin later and use lower random placement', () => {
+test('foyer milestone gates the second lackey conversation', () => {
   const session = createTestSession();
 
   session.start();
-  for (let index = 0; index < 15; index += 1) {
+  for (let index = 0; index < 6; index += 1) {
     session.submitCommand('look');
     session.consumePendingMetaMessages();
   }
 
   session.submitCommand('look');
+  session.submitCommand('look');
+  session.submitCommand('look');
+  session.submitCommand('look');
+
+  assert.deepEqual(session.consumePendingMetaMessages(), []);
+
+  session.worldState.setFlag('foyerAdmitted', true);
+  session.submitCommand('look');
 
   const messages = session.consumePendingMetaMessages();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].id, 'lackeyLeft002');
+  assert.equal(messages[1].id, 'lackeyRight002');
+});
+
+test('hacker messages wait for story milestones and use lower random placement', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.worldState.turns = 16;
+  session.worldState.metaState.shownConversationIds = [
+    'baseline-hold',
+    'foyer-screening',
+    'host-contact',
+    'curiosity-breakpoint',
+  ];
+  session.worldState.advanceMetaMessages();
+  assert.deepEqual(session.worldState.consumePendingMetaMessages(), []);
+
+  session.worldState.setFlag('metOshregaal', true);
+  const messages = session.worldState.advanceMetaMessages();
   assert.equal(messages.length, 1);
+  assert.equal(messages[0].id, 'ghostHandshake');
   assert.equal(messages[0].source, 'hacker');
   assert.equal(messages[0].placement, 'lower-random');
 });
