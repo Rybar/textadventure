@@ -11,6 +11,7 @@ import {
   moveToNathemaRoom,
   moveToKitchen,
   moveToLibrary,
+  moveToTrophyRoom,
   moveToPlumRoom,
   moveToFoldedHallway,
   moveToTunnel,
@@ -423,4 +424,78 @@ test('Nathema turns black-wind evidence or contraband into immediate leverage', 
   const thirdSession = createTestSession();
   moveToNathemaRoom(thirdSession);
   assert.match(thirdSession.submitCommand('tell nathema i have evidence'), /show me something i can sell/i);
+});
+
+test('Nathema leverage can open the Grey Grin route through the library trophy room', () => {
+  const session = createTestSession();
+
+  moveToAlchemyStockroom(session);
+  assert.match(session.submitCommand('take ledger'), /you take the black wind ledger/i);
+  assert.match(session.submitCommand('west'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(session.submitCommand('show ledger to nathema'), /not gossip\. that is architecture/i);
+  assert.match(session.submitCommand('ask nathema about grey grin'), /concealed trophy gallery off the library/i);
+  assert.equal(session.worldState.getFlag('greyGrinLeadKnown'), true);
+
+  assert.match(session.submitCommand('south'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('down'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('north'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('north'), /curtains of living silk|kelago/i);
+  assert.match(session.submitCommand('east'), /private chamber is all velvet excess/i);
+  assert.match(session.submitCommand('shake hand'), /hidden catches withdraw/i);
+  assert.match(session.submitCommand('north'), /smaller chamber has the careful plainness/i);
+  assert.match(session.submitCommand('east'), /library is less a scholarly refuge/i);
+  assert.match(session.submitCommand('search cabinet'), /false genealogy index yields|concealed eastern gallery/i);
+  assert.equal(session.worldState.getFlag('trophyRoomUnlocked'), true);
+  assert.match(session.submitCommand('east'), /private gallery feels more prosecutorial/i);
+  assert.equal(session.worldState.currentRoomId, 'trophyRoom');
+  assert.match(session.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+  assert.match(session.submitCommand('look at blade'), /etched grin runs near the fuller|perfectly it balances/i);
+
+  const secondSession = createTestSession();
+  moveToTrophyRoom(secondSession);
+  assert.match(secondSession.submitCommand('look'), /private gallery feels more prosecutorial/i);
+});
+
+test('the Grey Grin Blade now changes how key NPCs react to the player', () => {
+  const nathemaSession = createTestSession();
+  moveToTrophyRoom(nathemaSession);
+  assert.match(nathemaSession.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+  assert.match(nathemaSession.submitCommand('west'), /library is less a scholarly refuge/i);
+  assert.match(nathemaSession.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(nathemaSession.submitCommand('south'), /private chamber is all velvet excess/i);
+  assert.match(nathemaSession.submitCommand('west'), /curtains of living silk|kelago/i);
+  assert.match(nathemaSession.submitCommand('south'), /immense dinner table dominates/i);
+  assert.match(nathemaSession.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(nathemaSession.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(nathemaSession.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(nathemaSession.submitCommand('show grey grin blade to nathema'), /succession written in metal/i);
+  assert.equal(nathemaSession.worldState.getFlag('greyGrinShownToNathema'), true);
+  assert.match(nathemaSession.submitCommand('give grey grin blade to nathema'), /leverage with edges/i);
+  assert.equal(nathemaSession.worldState.getFlag('greyGrinDeliveredToNathema'), true);
+  assert.equal(nathemaSession.worldState.getItemLocation('grey-grin-blade'), null);
+
+  const plumSession = createTestSession();
+  moveToTrophyRoom(plumSession);
+  assert.match(plumSession.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+  assert.match(plumSession.submitCommand('west'), /library is less a scholarly refuge/i);
+  assert.match(plumSession.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(plumSession.submitCommand('show blade to plum'), /can be stolen after all/i);
+  assert.equal(plumSession.worldState.getFlag('greyGrinShownToPlum'), true);
+  assert.match(plumSession.submitCommand('ask plum about blade'), /symbolic violence|potential consequence/i);
+
+  const oshregaalSession = createTestSession();
+  moveToTrophyRoom(oshregaalSession);
+  assert.match(oshregaalSession.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+  assert.match(oshregaalSession.submitCommand('west'), /library is less a scholarly refuge/i);
+  assert.match(oshregaalSession.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(oshregaalSession.submitCommand('south'), /private chamber is all velvet excess/i);
+  assert.match(oshregaalSession.submitCommand('west'), /curtains of living silk|kelago/i);
+  assert.match(oshregaalSession.submitCommand('south'), /immense dinner table dominates/i);
+  assert.match(oshregaalSession.submitCommand('show blade to oshregaal'), /guest with initiative|reconsider the seating chart/i);
+  assert.equal(oshregaalSession.worldState.getFlag('greyGrinShownToOshregaal'), true);
+  assert.match(oshregaalSession.submitCommand('look'), /host deciding whether insult should become entertainment or punishment/i);
 });

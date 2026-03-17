@@ -95,6 +95,29 @@ export function moveToLibrary(session) {
   session.submitCommand('east');
 }
 
+export function moveToTrophyRoom(session) {
+  moveToAlchemyStockroom(session);
+  session.submitCommand('take ledger');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('up');
+  session.submitCommand('north');
+  session.submitCommand('show ledger to nathema');
+  session.submitCommand('ask nathema about grey grin');
+  session.submitCommand('south');
+  session.submitCommand('down');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('shake hand');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('search cabinet');
+  session.submitCommand('east');
+}
+
 export function moveToFoldedHallway(session) {
   moveToLibrary(session);
   session.submitCommand('north');

@@ -42,6 +42,22 @@ export function createNathemaRoom() {
     return 'Nathema takes the elixir phial, turns it once against the light, and hides it inside her sleeve with practiced speed. "Concentrated, portable, and deniable," she murmurs. "You have finally brought me a sentence this house understands."';
   };
 
+  const handleNathemaGreyGrinReview = ({ setFlag }) => {
+    setFlag('nathemaBargained', true);
+    setFlag('greyGrinShownToNathema', true);
+
+    return 'Nathema takes in the Grey Grin Blade with a level of attention so exact it becomes intimacy by other means. "Now that," she says, "is not evidence. That is succession written in metal. Keep it visible only when you mean to renegotiate someone\'s future."';
+  };
+
+  const handleNathemaGreyGrinDelivery = ({ item, setFlag, worldState }) => {
+    setFlag('nathemaBargained', true);
+    setFlag('greyGrinShownToNathema', true);
+    setFlag('greyGrinDeliveredToNathema', true);
+    worldState.removeItemById(item.id);
+
+    return 'Nathema accepts the Grey Grin Blade without triumph, which makes the exchange feel more dangerous rather than less. She wraps it in black cloth and exhales once. "Good," she says. "Now we are no longer discussing escape as a moral wish. We are discussing leverage with edges."';
+  };
+
   const nathemaAsk = createTopicResponder({
     before: markNathemaMet,
     rules: [
@@ -83,6 +99,25 @@ export function createNathemaRoom() {
           : 'Nathema tilts her head. "If you can produce written proof instead of tavern outrage, my interest improves dramatically," she says.',
       },
       {
+        match: ['grey grin', 'blade', 'trophy', 'weapon'],
+        reply: ({ getFlag, setFlag }) => {
+          if (!(hasNathemaLeverage(getFlag))) {
+            return 'Nathema watches you for a moment. "If you want high-value rumors, bring high-value leverage first," she says. "I am not in the business of improving strangers for free."';
+          }
+
+          if (getFlag('greyGrinDeliveredToNathema')) {
+            return 'Nathema allows herself the smallest satisfied smile. "The blade is with me now," she says. "That means one future has already become less theoretical. Bring me one proper opening and I can turn that theft into policy."';
+          }
+
+          if (getFlag('greyGrinShownToNathema')) {
+            return 'Nathema folds her hands, visibly pleased. "Good," she says. "Now you understand why the Grey Grin is not merely a weapon. It is a claim. Carrying it changes every room by implication alone."';
+          }
+
+          setFlag('greyGrinLeadKnown', true);
+          return 'Nathema smiles with dangerous approval. "If you want a second theft worth surviving, Oshregaal keeps the Grey Grin in a concealed trophy gallery off the library," she says. "Search the eastern genealogy cases. One false index spine opens the room. He likes his conquests near his books, so he can pretend both are scholarship."';
+        },
+      },
+      {
         match: ['chest', 'contraband', 'luggage'],
         reply: ({ getFlag }) => getFlag('nathemaContrabandKnown')
           ? 'Nathema rests two fingers on the wrapped chest. "Private assets," she says. "If I trusted the house, they would not need wrapping."'
@@ -122,6 +157,17 @@ export function createNathemaRoom() {
         reply: ({ getFlag }) => getFlag('nathemaEvidenceShown')
           ? '"Yes," Nathema says. "You have already improved from rumor to usefulness. Continue."'
           : 'Nathema makes a small inviting motion with two fingers. "Then show me something I can sell, threaten with, or survive by," she says.',
+      },
+      {
+        match: ['i want the blade', 'i want grey grin', 'i want the grey grin blade'],
+        reply: ({ getFlag, setFlag }) => {
+          if (!(hasNathemaLeverage(getFlag))) {
+            return 'Nathema allows herself a short laugh. "Want more expensively," she says. "Then perhaps I will help."';
+          }
+
+          setFlag('greyGrinLeadKnown', true);
+          return '"Then take the library route," Nathema says. "The eastern genealogy cases hide a trophy gallery. Search for a false index spine and steal quickly. He values the Grey Grin too much to leave it honestly visible."';
+        },
       },
     ],
     fallback: 'Nathema receives your words without giving them the dignity of visible surprise.',
@@ -185,6 +231,10 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
               return handleNathemaLedgerReview({ setFlag });
             }
 
+            if (item.id === 'grey-grin-blade') {
+              return handleNathemaGreyGrinReview({ setFlag });
+            }
+
             if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir') {
               setFlag('nathemaBargained', true);
               return `Nathema studies the ${item.name} without touching it. "Good," she says. "Now either keep it as leverage or give it to me and turn leverage into alignment."`;
@@ -195,6 +245,10 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
           give({ item, setFlag, worldState }) {
             if (item.id === 'black-wind-ledger') {
               return handleNathemaLedgerReview({ setFlag });
+            }
+
+            if (item.id === 'grey-grin-blade') {
+              return handleNathemaGreyGrinDelivery({ item, setFlag, worldState });
             }
 
             if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir') {

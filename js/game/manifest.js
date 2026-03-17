@@ -20,6 +20,7 @@ import { createPlumRoom } from './rooms/plumRoom.js';
 import { createSecretCircleRoom } from './rooms/secretCircle.js';
 import { createSittingRoom } from './rooms/sittingRoom.js';
 import { createFoldedHallwayRoom } from './rooms/foldedHallway.js';
+import { createTrophyRoom } from './rooms/trophyRoom.js';
 import { createTunnelRoom } from './rooms/tunnel.js';
 
 export function createGameManifest() {
@@ -39,6 +40,7 @@ export function createGameManifest() {
   const ogreBeds = createOgreBedsRoom();
   const plumRoom = createPlumRoom();
   const foldedHallway = createFoldedHallwayRoom();
+  const trophyRoom = createTrophyRoom();
   const tunnel = createTunnelRoom();
   const metaGame = createMetaGameContent();
   const events = createGameEventDefinitions();
@@ -97,6 +99,12 @@ export function createGameManifest() {
       nathemaContrabandKnown: false,
       nathemaEvidenceShown: false,
       nathemaBlackWindSampleDelivered: false,
+      greyGrinLeadKnown: false,
+      trophyRoomUnlocked: false,
+      greyGrinShownToNathema: false,
+      greyGrinDeliveredToNathema: false,
+      greyGrinShownToPlum: false,
+      greyGrinShownToOshregaal: false,
       foundTeleportCircle: false,
       hasTeleportScroll: false,
       secretCircleUnlocked: false,
@@ -143,6 +151,7 @@ export function createGameManifest() {
       ogreBeds,
       plumRoom,
       foldedHallway,
+      trophyRoom,
       tunnel,
       secretCircle,
     },

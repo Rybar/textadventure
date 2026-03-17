@@ -105,6 +105,24 @@ export function createGameEventDefinitions() {
       ],
       text: 'Behind the bowing pantry shelf you find a lacquered service panel cut too cleanly into the wall to be accidental. It yields to pressure and exposes a narrow hidden stockroom where Oshregaal keeps the black-wind trade near the kitchen but safely out of polite sight.',
     },
+    unlockTrophyRoom: {
+      once: true,
+      when: ({ getFlag }) => getFlag('greyGrinLeadKnown') && !getFlag('trophyRoomUnlocked'),
+      actions: [
+        {
+          type: 'setFlag',
+          flag: 'trophyRoomUnlocked',
+          value: true,
+        },
+        {
+          type: 'unlockExit',
+          roomId: 'library',
+          direction: 'east',
+          targetRoomId: 'trophyRoom',
+        },
+      ],
+      text: 'The false genealogy index yields with a soft click, and one library case swings inward to expose a concealed eastern gallery where Oshregaal keeps victories polished into furniture.',
+    },
     discoverKitchenBloodRitual: {
       actions: [
         {

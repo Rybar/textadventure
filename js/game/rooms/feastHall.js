@@ -14,7 +14,6 @@ export function createFeastHall() {
       },
     },
   });
-
   const bloodCup = new Item({
     id: 'blood-cup',
     name: 'cup',
@@ -62,6 +61,12 @@ export function createFeastHall() {
       {
         match: ['house', 'mansion', 'home'],
         reply: 'Oshregaal spreads his fingers proudly. "A house should flatter its owner, intimidate its rivals, and confuse its guests just enough to make them memorable."',
+      },
+      {
+        match: ['grey grin', 'blade', 'sword'],
+        reply: ({ getFlag }) => getFlag('greyGrinShownToOshregaal')
+          ? 'Oshregaal smiles with alarming fondness. "Yes," he says. "You have moved from curiosity into theft. Much more flattering. Now all that remains is to discover whether you mean it."'
+          : 'Oshregaal lifts one heavy brow. "The Grey Grin? A charming old argument in metal," he says. "I keep it because conquest deserves indexing. Why do you ask?"',
       },
       {
         match: ['invitation', 'paper'],
@@ -356,6 +361,10 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         when: ({ getFlag }) => getFlag('secretCircleUnlocked'),
         text: 'Behind the red curtains, a newly accessible western passage waits like an indiscreet sentence finally allowed to finish.',
       },
+      {
+        when: ({ getFlag }) => getFlag('greyGrinShownToOshregaal'),
+        text: 'The table no longer feels merely ceremonial. After Oshregaal has seen the stolen blade, the room carries the brittle poise of a host deciding whether insult should become entertainment or punishment.',
+      },
     ],
     objects: {
       oshregaal: {
@@ -365,11 +374,26 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         actions: {
           ask: oshregaalAsk,
           tell: oshregaalTell,
+          show({ item, setFlag }) {
+            setFlag('metOshregaal', true);
+
+            if (item.id === 'grey-grin-blade') {
+              setFlag('greyGrinShownToOshregaal', true);
+              return 'Oshregaal sees the Grey Grin Blade and goes still in the way only very dangerous hosts can. Then he laughs, delighted and offended in equal measure. "Marvelous," he says. "A guest with initiative. Keep holding it if you like. Now every person in this room has to reconsider the seating chart."';
+            }
+
+            return `Oshregaal glances at the ${item.name} with lazy amusement and finds nothing in it worth interrupting the meal for.`;
+          },
           give({ item, setFlag }) {
             setFlag('metOshregaal', true);
 
             if (item.id === 'invitation') {
               return 'Oshregaal glances at the invitation and waves it away. "If you are here, little paper has already done its work."';
+            }
+
+            if (item.id === 'grey-grin-blade') {
+              setFlag('greyGrinShownToOshregaal', true);
+              return 'Oshregaal does not take the blade. He simply looks at you over steepled fingers and smiles. "No," he says. "If you stole it, the pleasure lies in what you think holding it entitles you to."';
             }
 
             if (item.id === 'wine') {

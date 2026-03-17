@@ -62,10 +62,20 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
 `.trim(),
     exits: {
       west: 'plumRoom',
+      east: 'trophyRoom',
       north: 'foldedHallway',
     },
+    exitGuards: {
+      east({ getFlag }) {
+        if (getFlag('trophyRoomUnlocked')) {
+          return null;
+        }
+
+        return 'The eastern shelves look fixed in place. If there is a gallery beyond them, the library is not volunteering it yet.';
+      },
+    },
     verbs: {
-      search({ command, getFlag, setFlag }) {
+      search({ command, getFlag, setFlag, emitEvent }) {
         const target = command.directObject;
 
         if (!target || target.includes('library') || target.includes('room') || target.includes('shelves') || target.includes('books')) {
@@ -89,6 +99,18 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
           return 'The ladders roll silently on brass rails. Most of the top shelves are devoted to books that sound like theology until you notice they are really manuals for power disguised as religion.';
         }
 
+        if (target.includes('cabinet') || target.includes('case') || target.includes('index') || target.includes('east shelf') || target.includes('eastern shelves')) {
+          if (getFlag('trophyRoomUnlocked')) {
+            return 'The eastern case already stands loose on its hidden pivot, the seam to the trophy gallery now obvious once you know to look for vanity disguised as cabinetry.';
+          }
+
+          if (!getFlag('greyGrinLeadKnown')) {
+            return 'The eastern cases appear to be devoted to family genealogies, corrected histories, and the sort of shelf order meant to discourage curiosity by looking administrative.';
+          }
+
+          return emitEvent('unlockTrophyRoom');
+        }
+
         return `You search the ${target} and come away with dust, doctrine, and stronger reasons not to trust Oshregaal's literary taste.`;
       },
     },
@@ -106,9 +128,14 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
         when: ({ getFlag }) => getFlag('foldedHallwayUnderstood'),
         text: 'The open geometry folio on the table gives the room an air of having accidentally explained too much.',
       },
+      {
+        when: ({ getFlag }) => getFlag('trophyRoomUnlocked'),
+        text: 'One eastern library case now sits fractionally misaligned, its hidden seam obvious once you know that Oshregaal shelves his glories like books.',
+      },
     ],
     objects: {
       shelves: 'The shelves carry wars, diets, cults, heresies, botanical crimes, and enough self-written marginalia to prove Oshregaal distrusts even printed agreement.',
+      cabinet: 'The eastern cabinets are crowded with genealogies, corrected triumphs, and catalogues that feel less archival than possessive.',
       table: 'The reading table is cluttered with diagrams, charms, wax drips, a wax practice palm, and one especially dangerous-looking folio on impossible corridors.',
       ladders: 'The brass ladders promise reach without wisdom.',
       passage: 'The northern passage narrows between shelves before becoming something less honest than a hallway.',

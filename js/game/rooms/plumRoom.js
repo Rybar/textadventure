@@ -58,6 +58,12 @@ export function createPlumRoom() {
         reply: 'Plum presses two fingers to her temple as if lining notes up behind her eyes. "Beyond the library is a corridor that refuses to stay one corridor. There is a black idol that wants two living palms. I never had enough hands, only versions of them in diagrams."',
       },
       {
+        match: ['grey grin', 'blade', 'weapon', 'sword'],
+        reply: ({ getFlag }) => getFlag('greyGrinShownToPlum')
+          ? 'Plum looks at the memory of the blade more than the blade itself. "Good," she says softly. "That means theft is no longer theoretical in this house. Just do not mistake symbolic violence for an exit."'
+          : 'Plum draws a slow breath. "The Grey Grin exists to make possession feel like intention," she says. "If you take it, everyone around you becomes a potential consequence."',
+      },
+      {
         match: ['help', 'rescue'],
         reply: ({ getFlag }) => getPlumHelpReply(getFlag),
       },
@@ -182,9 +188,21 @@ East, a door stands open into Oshregaal's library.
         actions: {
           ask: plumAsk,
           tell: plumTell,
+          show({ item, setFlag }) {
+            if (item.id === 'grey-grin-blade') {
+              setFlag('greyGrinShownToPlum', true);
+              return 'Plum goes very still at the sight of the Grey Grin Blade. "So it can be stolen after all," she says. "That is useful to know, though not nearly as safe as it sounds."';
+            }
+
+            return `Plum studies the ${item.name} carefully, as if checking whether it belongs to the part of the evening that can still be survived.`;
+          },
           give({ item }) {
             if (item.id === 'wax-plug') {
               return 'Plum closes your fingers back around the wax plug. "Keep it," she says. "If one of us gets ordered into stupidity, it should not be the one still moving through the house."';
+            }
+
+            if (item.id === 'grey-grin-blade') {
+              return 'Plum recoils from the offer by half an inch, then steadies. "No," she says. "If that blade is going to change tonight, let it change it in the hand that stole it."';
             }
 
             return `Plum looks at the ${item.name} carefully, then shakes her head. "Not yet," she says. "Useful things should stay with the person still walking around."`;

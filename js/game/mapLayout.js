@@ -15,6 +15,7 @@ export function createGameMapDefinition() {
       grandfatherRoom: { x: 1, y: -2, region: 'family' },
       plumRoom: { x: 1, y: -3, region: 'hidden' },
       library: { x: 2, y: -3, region: 'hidden' },
+      trophyRoom: { x: 3, y: -3, region: 'hidden' },
       foldedHallway: { x: 2, y: -4, region: 'hidden' },
       tunnel: { x: 2, y: -5, region: 'hidden' },
       guestRoom: { x: 1, y: 1, region: 'guest' },
