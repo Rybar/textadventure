@@ -209,7 +209,9 @@ The map should do two different jobs:
 
 ### World map panel
 
-Create a small always-visible map box in the interface that shows:
+Create a map box that the interface can reveal once the player gains access to it. It should not be assumed to exist from turn one. In this project, the map panel is part of the meta-fiction: it arrives as an unauthorized hack from the hacker personality and should feel useful, illicit, and slightly unstable.
+
+When enabled, it should show:
 
 - A simplified layout of discovered rooms.
 - The current player location.
@@ -232,7 +234,7 @@ Content authors should be able to provide room art as plain text files, not code
 
 The current UI is a centered grid plus a text input. A fuller retro interface should feel deliberate and information-dense.
 
-Recommended layout:
+Recommended layout once the full panel stack has been unlocked:
 
 ```text
 +------------------------------------------------------------------------------+
@@ -251,12 +253,15 @@ Recommended layout:
 +------------------------------------------------------------------------------+
 ```
 
+The engine should support panels being hidden, unlocked, or degraded by story state rather than assuming a fixed layout from boot.
+
 Interface components:
 
 - Header bar: location, score, turn count, status effects.
 - Transcript panel: the main scrolling narrative area.
-- Map panel: discovered rooms and player location.
-- Inventory/status strip: quick inventory summary.
+- Map panel: discovered rooms and player location once the hacker exposes the map hack.
+- Inventory panel or strip: quick inventory summary once the hacker exposes the inventory hack.
+- Memory panel: a later-game panel that lists pseudo-memory addresses, fragments, or slots that the player can learn to manipulate through systemic play.
 - Prompt line: always visible input prompt.
 
 Presentation details:
@@ -265,6 +270,7 @@ Presentation details:
 - Add boxed line-drawing characters for windows and panels.
 - Use subtle animation, not constant motion everywhere.
 - Reserve heavier glitch/scramble effects for special events.
+- Treat newly unlocked panels as events. Their arrival should include brief redraws, glitches, or shell-noise so the UI itself communicates that something unauthorized has been attached.
 
 ## 7. Support Dynamic World Rules
 
@@ -295,6 +301,8 @@ Instead, define:
 - Global verbs implemented by the engine: `look`, `go`, `take`, `drop`, `inventory`, `help`, `save`, `load`, `map`.
 - Content-defined verbs registered by the game: `pray`, `tune`, `translate`, `light`, `listen`.
 - Object-level affordances that declare what actions are supported.
+
+Some engine verbs can exist before their supporting panel is visible, but the UI should be able to gate or reinterpret them. In this project, `map` and quick-inventory affordances should become richer once the hacker's panel hacks are unlocked.
 
 Action resolution order:
 
@@ -338,6 +346,8 @@ Useful engine-facing content APIs:
 - `print(text)`
 - `playEffect(name)`
 - `unlockExit(roomId, direction)`
+- `unlockPanel(panelId)`
+- `degradePanel(panelId, mode)`
 
 Keep these APIs narrow. The more content reaches into engine internals, the less reusable the engine becomes.
 
@@ -382,16 +392,18 @@ Goal: make the game feel like a complete interactive terminal product.
 
 Deliverables:
 
-- Multi-panel UI layout.
+- Multi-panel UI layout with runtime enable/disable support.
 - Dedicated transcript viewport.
-- Status header and inventory line.
-- Map panel.
+- Status header.
+- Story-gated inventory and map panels.
+- A memory panel shell for later pseudo-memory interactions.
 - Configurable color themes.
 
 Success criteria:
 
 - UI remains readable on common desktop and laptop viewport sizes.
-- Content authors can decide which panels are enabled.
+- Content authors can decide which panels are enabled and when they unlock.
+- The game can begin with only the core transcript interface and add panels later without layout breakage.
 
 ## Phase 4: Add ASCII Graphics and Map Rendering
 
@@ -468,7 +480,7 @@ This project can be considered a reusable animated text adventure engine when al
 - A new game can be created by replacing content files, not engine files.
 - Rooms, items, ASCII art, and rules live in content packages with stable schemas.
 - The parser resolves common adventure-game commands with synonyms and disambiguation.
-- The UI supports transcript, map, prompt, and status regions.
+- The UI supports transcript, prompt, and status regions at baseline plus unlockable map, inventory, and memory regions.
 - State can be saved and restored.
 - At least one complete playable game exists on top of the engine.
 
@@ -479,7 +491,7 @@ The most useful next implementation steps for this repository are:
 1. Refactor `GameState` into parser plus world-state responsibilities.
 2. Move room definitions and exits into a dedicated game manifest.
 3. Introduce room metadata for map coordinates and optional ASCII art.
-4. Replace the single-screen layout with transcript, map, and status panels.
+4. Replace the single-screen layout with a panel system that can unlock transcript-adjacent map, inventory, and memory panels over time.
 5. Build a small vertical slice before attempting a large content expansion.
 
 That sequence keeps momentum high while forcing the architecture to become reusable early, before too much game-specific logic accumulates in the engine.

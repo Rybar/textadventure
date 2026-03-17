@@ -7,10 +7,12 @@ export function createSittingRoom() {
     name: 'fountain',
     description: 'A small fountain of sparkling water bubbles in the corner, too tasteful to be innocent.',
     actions: {
-      drink() {
+      drink(context) {
+        context?.setFlag?.('sittingRoomWaterTasted', true);
         return 'The water is crisp and impossibly clean. It leaves you refreshed, slightly foolish, and convinced for a moment that obedience might not be the worst thing in the world.';
       },
-      listen() {
+      listen(context) {
+        context?.setFlag?.('sittingRoomGossipKnown', true);
         return 'The fountain chatters over itself in a polite little voice, as though rehearsing conversation topics for nervous guests.';
       },
     },
@@ -30,7 +32,8 @@ export function createSittingRoom() {
     aliases: ['book', 'skin-bound folio'],
     description: 'A skin-bound folio full of skinned cats and nonsense writing, the sort of object designed either to impress or to remove the right kind of guest.',
     actions: {
-      read() {
+      read(context) {
+        context?.setFlag?.('folioMarginNoted', true);
         return 'The text remains gibberish no matter how carefully you study it. The cats, however, seem annotated with total seriousness.';
       },
     },
@@ -42,10 +45,12 @@ export function createSittingRoom() {
     aliases: ['couches', 'sofa'],
     description: 'Four couches upholstered in leather, lace, canvas, and fur. If you watch long enough, they begin to breathe in slow domestic harmony.',
     actions: {
-      listen() {
+      listen(context) {
+        context?.setFlag?.('sittingRoomGossipKnown', true);
         return 'The couches whisper to one another about the staff, the guests, and Grandfather’s latest weight gain with malicious household intimacy.';
       },
-      sit() {
+      sit(context) {
+        context?.setFlag?.('sittingRoomGossipKnown', true);
         return 'The couch yields under you like a living thing considering whether to tolerate your presence.';
       },
     },
@@ -63,7 +68,46 @@ The foyer lies back to the east.
     exits: {
       east: 'foyer',
     },
+    verbs: {
+      search({ command, getFlag, setFlag }) {
+        const target = command.directObject;
+
+        if (!target || target.includes('room') || target.includes('table') || target.includes('folios')) {
+          if (!getFlag('folioMarginNoted')) {
+            setFlag('folioMarginNoted', true);
+            return 'You rifle the folios and loose papers until one margin note emerges from the nonsense: "butlers hear the bell before they hear the guest." The rest returns to gibberish as if embarrassed to have been useful.';
+          }
+
+          return 'The folios remain obscene, unreadable, and occasionally helpful in spite of themselves. The one useful margin note about the butlers and the guest bell is still there if you pretend not to need it.';
+        }
+
+        if (target.includes('couch') || target.includes('couches') || target.includes('sofa')) {
+          if (!getFlag('sittingRoomGossipKnown')) {
+            setFlag('sittingRoomGossipKnown', true);
+            return 'You search between the breathing cushions and are rewarded mostly with dust, one glass bead, and a muttered complaint from the upholstery: apparently the butlers dislike being summoned twice for the same guest.';
+          }
+
+          return 'The couches resent your hands but repeat the same household malice in softer upholstery tones.';
+        }
+
+        return `You search the ${target} and find only guest-room polish and seated suspicion.`;
+      },
+    },
     items: [fountain, glassCup, folio, couch],
+    conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('sittingRoomGossipKnown'),
+        text: 'Once heard properly, the room no longer feels quiet at all. The couches and fountain keep up a household murmur about guests, bells, and staff resentment.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('sittingRoomWaterTasted'),
+        text: 'The fountain water still leaves a faint afterimage of compliance at the edge of your thoughts.',
+      },
+    ],
+    objects: {
+      table: 'The low table is laden with folios chosen to frighten, flatter, or classify a waiting guest.',
+      basin: 'The basin beneath the fountain is too clean for a room this old, as if refreshed between anxieties.',
+    },
   });
 }
 

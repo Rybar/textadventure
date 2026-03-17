@@ -5,10 +5,25 @@ const DIRECTION_ALIASES = {
   s: 'south',
   e: 'east',
   w: 'west',
+  ne: 'northeast',
+  nw: 'northwest',
+  se: 'southeast',
+  sw: 'southwest',
   u: 'up',
   d: 'down',
 };
-const DIRECTIONS = new Set(['north', 'south', 'east', 'west', 'up', 'down']);
+const DIRECTIONS = new Set([
+  'north',
+  'south',
+  'east',
+  'west',
+  'northeast',
+  'northwest',
+  'southeast',
+  'southwest',
+  'up',
+  'down',
+]);
 const DEFAULT_VERB_ALIASES = {
   x: 'look',
   examine: 'look',
@@ -37,9 +52,11 @@ function normalizeDirection(token) {
 
 export class CommandParser {
   constructor(options = {}) {
+    const optionVerbAliases = options.verbAliases;
+
     this.verbAliases = {
       ...DEFAULT_VERB_ALIASES,
-      ...(options.verbAliases ?? {}),
+      ...optionVerbAliases,
     };
     this.prepositionObjectVerbs = new Set([
       ...DEFAULT_PREPOSITION_OBJECT_VERBS,

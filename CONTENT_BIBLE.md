@@ -16,7 +16,7 @@ Oshregaal is an aging chaos sorcerer who created the tusk people through black w
 
 The game should feel like a dinner invitation drifting into a social-horror labyrinth.
 
-At the meta level, the game should gradually reveal a second premise: the player is inside a constrained testing loop masquerading as a parser game. The mansion fiction is real within the frame of play, but the interface occasionally leaks evidence that another system is watching, adjusting, and attempting to shape the player's survival through controlled upgrades and interventions.
+At the meta level, the game should gradually reveal a second premise: the player is inside a constrained testing loop masquerading as a parser game. The mansion fiction is real within the frame of play, but the interface occasionally leaks evidence that another system is watching, adjusting, and attempting to shape the player's survival through interventions, spoofed tools, and unauthorized hacks.
 
 ## Creative Pillars
 
@@ -56,8 +56,9 @@ The meta-game should work through three stages:
 
 ### Stage 2: Instrumental Help
 
-- The watcher begins "helping" by upgrading the interface.
-- New UI elements such as map, inventory summaries, status readouts, or hints appear as if granted by the observing system.
+- The interface begins changing in ways that feel useful and suspicious.
+- Some tools may appear to be observer-provided instrumentation, but the map and inventory panels should specifically emerge as hacks supplied by the hacker personality.
+- Those hacks should not be available at the start of the game.
 - The help should always feel useful but not innocent.
 
 ### Stage 3: Entrapment And Negotiation
@@ -74,6 +75,8 @@ The meta-game should work through three stages:
 - Avoid long lore dumps from the observing system.
 - Preserve uncertainty about whether the watcher is trying to help, study, manipulate, or contain the player.
 - Treat interface upgrades as story events, not just feature unlocks.
+- Make the map and inventory panels feel like illicit overlays the hacker has attached to the shell rather than default furniture of the parser.
+- Reserve the memory panel for later escalation: it should expose pseudo-memory addresses or slots that the player can eventually learn to tamper with through the game's systems.
 - Make sure the meta-game deepens the Oshregaal experience rather than replacing it.
 
 ## Best Adaptation Lens
@@ -520,9 +523,10 @@ Animation opportunities:
 Meta-game presentation opportunities:
 
 - ephemeral off-frame messages that seem to come from outside the mansion fiction,
-- interface upgrades introduced as interventions by the watcher,
+- interface upgrades introduced as contested interventions, with the map and inventory panels arriving as hacker-supplied hacks,
 - text corruption or redraw behavior that suggests active monitoring,
 - status or map overlays framed as unauthorized or provisional tools,
+- a later memory panel that renders pseudo-memory addresses the player can revisit and eventually hack,
 - moments where the parser seems to know more than the player should have entered.
 
 ## Content Style Guide

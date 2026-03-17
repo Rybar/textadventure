@@ -113,3 +113,41 @@ test('meta debug toggle and nextmeta can preview the next scheduled exchange', (
   assert.equal(messages[0].delayMs, 0);
   assert.ok(messages[1].delayMs >= 4000);
 });
+
+test('lackeys react if the player echoes their side-channel language back at them', () => {
+  const session = createTestSession();
+
+  session.start();
+  for (let index = 0; index < 6; index += 1) {
+    session.submitCommand('look');
+  }
+  session.consumePendingMetaMessages();
+
+  session.submitCommand('look at baseline fiction');
+
+  const messages = session.consumePendingMetaMessages();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].id, 'lackeyLeftReactive001');
+  assert.equal(messages[1].id, 'lackeyRightReactive001');
+  assert.equal(messages[0].placement, 'side-left');
+  assert.equal(messages[1].placement, 'side-right');
+});
+
+test('lackeys react when the player addresses the shell after seeing their messages', () => {
+  const session = createTestSession();
+
+  session.start();
+  for (let index = 0; index < 6; index += 1) {
+    session.submitCommand('look');
+  }
+  session.consumePendingMetaMessages();
+
+  session.submitCommand('can you see these messages');
+
+  const messages = session.consumePendingMetaMessages();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].id, 'lackeyLeftReactive002');
+  assert.equal(messages[1].id, 'lackeyRightReactive002');
+  assert.equal(messages[0].placement, 'side-left');
+  assert.equal(messages[1].placement, 'side-right');
+});

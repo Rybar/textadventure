@@ -55,6 +55,14 @@ Every major authored element should fit one of these primitives.
 - trigger conditions
 - one clear dramatic purpose
 
+### Meta interface unlock
+
+- panel id such as `map`, `inventory`, or `memory`
+- source identity such as `hacker` or `operators`
+- unlock conditions
+- presentation behavior on unlock
+- optional degradation or revocation conditions
+
 ## Parser Verbs That Matter For This Game
 
 The current prototype already supports a useful subset. The full adaptation should prioritize the verbs below.
@@ -156,6 +164,9 @@ Recommended flag families:
 - hacker contacted
 - shell breach suspected
 - upgrade tier granted
+- inventory hack granted
+- map hack granted
+- memory panel exposed
 
 ## Room Implementation Rules
 
@@ -204,6 +215,8 @@ For maintainable dialogue, each important NPC should define:
 
 - no meta interruptions fire too early;
 - milestone-specific messages wait for the relevant fiction beat;
+- map and inventory hacks are absent at game start and unlock only after intended milestones;
+- the memory panel appears later than the first utility hacks and remains clearly stranger than them;
 - debug tooling can preview scheduled meta beats.
 
 ## Suggested Content Workflow

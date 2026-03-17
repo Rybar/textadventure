@@ -68,3 +68,62 @@ test('save and load restores room and inventory state', () => {
     restoreStorage();
   }
 });
+
+test('interface model starts with locked panels and debugpanel unlocks without spending a turn', () => {
+  const session = createTestSession();
+
+  session.start();
+  const initialModel = session.getInterfaceModel();
+  assert.equal(initialModel.panels.find(panel => panel.id === 'map')?.unlocked, false);
+  assert.equal(session.worldState.turns, 0);
+
+  const response = session.submitCommand('debugpanel map');
+
+  assert.match(response, /map panel unlocked/i);
+  assert.equal(session.worldState.turns, 0);
+  assert.equal(session.getInterfaceModel().panels.find(panel => panel.id === 'map')?.unlocked, true);
+});
+
+test('save and load restores panel unlock state', () => {
+  const restoreStorage = installMockLocalStorage();
+
+  try {
+    const session = createTestSession();
+    session.start();
+    session.submitCommand('debugpanel inventory');
+    session.submitCommand('save panelslot');
+
+    const reloadedSession = createTestSession();
+    reloadedSession.start();
+    const response = reloadedSession.submitCommand('load panelslot');
+
+    assert.match(response, /game loaded from slot "panelslot"/i);
+    assert.equal(reloadedSession.getInterfaceModel().panels.find(panel => panel.id === 'inventory')?.unlocked, true);
+  } finally {
+    restoreStorage();
+  }
+});
+
+test('map panel renders discovered rooms as connected room boxes with a location label', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('debugpanel map');
+
+  const mapPanel = session.getInterfaceModel().panels.find(panel => panel.id === 'map');
+  const mapText = mapPanel?.lines.join('\n') ?? '';
+
+  assert.equal(mapPanel?.unlocked, true);
+  assert.match(mapText, /\+--\+/);
+  assert.match(mapText, /\|CA\|/);
+  assert.match(mapText, /\|GS\|/);
+  assert.match(mapText, /\|FO\|/);
+  assert.match(mapText, /\|/);
+  assert.match(mapText, /Location: Foyer/);
+  assert.equal(mapPanel?.currentRoomBox?.width, 4);
+  assert.equal(mapPanel?.currentRoomBox?.height, 3);
+  assert.ok((mapPanel?.currentRoomBox?.left ?? -1) >= 0);
+  assert.ok((mapPanel?.currentRoomBox?.top ?? -1) >= 0);
+});

@@ -35,6 +35,10 @@ export class GameSession {
     return this.worldState.getStartupMetaMessage();
   }
 
+  getInterfaceModel() {
+    return this.worldState.getInterfaceModel();
+  }
+
   consumePendingMetaMessages() {
     const messages = [...this.pendingMetaMessages];
     this.pendingMetaMessages = [];
@@ -50,6 +54,7 @@ export class GameSession {
 
     if (normalizedCommand.type !== 'empty' && !this.isNonTurnCommand(normalizedCommand.verb)) {
       this.worldState.advanceMetaMessages();
+      this.collectReactiveLackeyMessages(rawInput, normalizedCommand);
       this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
     }
 
@@ -89,15 +94,16 @@ export class GameSession {
       take: context => this.worldState.takeItem(context.command.directObject),
       drop: context => this.worldState.dropItem(context.command.directObject),
       inventory: () => this.worldState.listInventory(),
-      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, READ INVITATION, LISTEN TO FOUNTAIN, SIT ON COUCH, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA.',
+      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, READ INVITATION, LISTEN TO FOUNTAIN, SIT ON COUCH, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
       give: context => this.handleGive(context.command, context),
       ask: context => this.handleAsk(context.command, context),
       tell: context => this.handleTell(context.command, context),
       debugmeta: context => this.toggleMetaDebug(context.command.directObject),
+      debugpanel: context => this.debugPanel(context.command.directObject),
       nextmeta: () => this.forceNextMetaEvent(),
       save: context => this.saveGame(context.command.directObject),
       load: context => this.loadGame(context.command.directObject),
-      map: () => 'No map is available yet.',
+      map: () => this.worldState.describeMapPanel(),
     });
 
     this.actionRegistry.registerGlobalVerbs(this.manifest.verbs ?? {});
@@ -112,7 +118,54 @@ export class GameSession {
   }
 
   isNonTurnCommand(verb) {
-    return verb === 'debugmeta' || verb === 'nextmeta';
+    return verb === 'debugmeta' || verb === 'debugpanel' || verb === 'nextmeta';
+  }
+
+  normalizeInputText(rawInput) {
+    return String(rawInput ?? '').trim().toLowerCase().replaceAll(/\s+/g, ' ');
+  }
+
+  playerEchoedLackeyLanguage(rawInput) {
+    const normalizedInput = this.normalizeInputText(rawInput);
+    if (!normalizedInput) {
+      return false;
+    }
+
+    return this.worldState.getShownLackeyLexicon().some(token => normalizedInput.includes(token));
+  }
+
+  playerAddressedTheShell(rawInput) {
+    const normalizedInput = this.normalizeInputText(rawInput);
+    if (!normalizedInput) {
+      return false;
+    }
+
+    const shellAddressPatterns = [
+      /\bwho are you\b/u,
+      /\bcan you (see|hear|read)\b/u,
+      /\bdid you say\b/u,
+      /\bcan you see (this|these|the) (message|messages|text)\b/u,
+      /\b(see|read) (the|these|your) (message|messages|text)\b/u,
+      /\b(sideband|monitor|screen|shell|subject|scenario|grammar)\b/u,
+    ];
+
+    return shellAddressPatterns.some(pattern => pattern.test(normalizedInput));
+  }
+
+  collectReactiveLackeyMessages(rawInput, normalizedCommand) {
+    if (!this.worldState.hasSeenLackeyConversation()) {
+      return [];
+    }
+
+    if (this.playerEchoedLackeyLanguage(rawInput)) {
+      return this.worldState.triggerReactiveLackeyConversation('echoed-sideband');
+    }
+
+    if (normalizedCommand.type === 'command' && this.playerAddressedTheShell(rawInput)) {
+      return this.worldState.triggerReactiveLackeyConversation('outside-scope-input');
+    }
+
+    return [];
   }
 
   normalizeCommand(command) {
@@ -173,6 +226,35 @@ export class GameSession {
     }
 
     return `Queued ${messages.length} meta ${messages.length === 1 ? 'message' : 'messages'} for preview.`;
+  }
+
+  debugPanel(argument = '') {
+    const normalizedArgument = String(argument ?? '').trim().toLowerCase();
+
+    if (!normalizedArgument) {
+      return 'Specify a panel: MAP, INVENTORY, MEMORY, ALL, or RESET.';
+    }
+
+    if (normalizedArgument === 'all') {
+      ['map', 'inventory', 'memory'].forEach(panelId => this.worldState.unlockPanel(panelId));
+      return 'All debug panels unlocked.';
+    }
+
+    if (normalizedArgument === 'reset') {
+      ['map', 'inventory', 'memory'].forEach(panelId => {
+        this.worldState.lockPanel(panelId);
+        this.worldState.clearPanelDegradation(panelId);
+      });
+      return 'All debug panels reset to locked.';
+    }
+
+    if (!this.worldState.getPanelState(normalizedArgument)) {
+      return `Unknown panel "${normalizedArgument}".`;
+    }
+
+    this.worldState.togglePanel(normalizedArgument);
+    const isUnlocked = this.worldState.isPanelUnlocked(normalizedArgument);
+    return `${normalizedArgument.toUpperCase()} panel ${isUnlocked ? 'unlocked' : 'locked'}.`;
   }
 
   handleLook(command) {

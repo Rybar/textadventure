@@ -56,7 +56,45 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
     exits: {
       east: 'feastHall',
     },
+    onEnter: [
+      ({ getFlag, setFlag }) => {
+        if (!getFlag('foundTeleportCircle')) {
+          setFlag('foundTeleportCircle', true);
+        }
+
+        return null;
+      },
+    ],
+    verbs: {
+      search({ command }) {
+        const target = command.directObject;
+
+        if (!target || target.includes('room') || target.includes('chamber')) {
+          return 'A careful search turns up three important facts at once: the bookshelf holds older transit lore than Oshregaal\'s household should possess, the cabinet stores practical escape reagents, and the circle itself has seen far more departures than this room\'s dust would suggest.';
+        }
+
+        if (target.includes('books') || target.includes('bookshelf') || target.includes('shelf')) {
+          return 'Several books bear shelf marks older than the rest of the manor. One margin note describes the circle as "a borrowed road dressed in newer chalk," which makes the room feel borrowed as well.';
+        }
+
+        if (target.includes('cabinet')) {
+          return 'The cabinet yields salts, chalk, folded linen, and practical exit-work. Someone stocked it for leaving in a hurry, which is more reassuring than the mutation potion and less reassuring than it ought to be.';
+        }
+
+        if (target.includes('circle') || target.includes('rune') || target.includes('runes')) {
+          return 'Close inspection shows the circle has been renewed in places but not invented here. Older scoring lies beneath the brighter marks, proof that the apparatus predates Oshregaal\'s current domestic theatrics.';
+        }
+
+        return `You search the ${target} and find dust, wax, and the sense that more useful people have already taken what mattered most.`;
+      },
+    },
     items: [teleportScroll, mutationPotion, portalRing],
+    conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('escapeRouteUnlocked'),
+        text: 'The circular rune now holds a quiet ring of pale readiness, as if the room itself has admitted the possibility of departure.',
+      },
+    ],
     objects: {
       skulls: 'The floating skulls glow with steady obedience. Whatever animates them is not interested in being theatrical twice.',
       bookshelf: 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader.',

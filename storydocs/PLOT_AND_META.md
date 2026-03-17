@@ -102,6 +102,7 @@ There are at least three hidden forces:
 
 - upgrades arrive in ways that feel useful and suspicious;
 - the system appears to optimize the player's experience while narrowing it;
+- the map and inventory panels are not present at the beginning and should arrive as hacker-delivered hacks rather than neutral defaults;
 - leaked messages reference baselines, compliance, tolerance, or attachment.
 
 ### Stage 3: Explicit Entrapment
@@ -115,6 +116,7 @@ There are at least three hidden forces:
 - Meta messages should not interrupt the most important first impressions of a room.
 - Early meta text should sound procedural, not melodramatic.
 - The hacker voice should sound urgent, terse, and materially useful.
+- When the hacker grants a panel, the UI should treat that as a dramatic beat, not a silent quality-of-life toggle.
 - Oshregaal should remain more emotionally vivid than any off-screen operator.
 - Meta escalation should follow story milestones, not only turn counts.
 
@@ -131,12 +133,13 @@ There are at least three hidden forces:
 
 ## Recommended UI Upgrade Fiction
 
-These upgrades should feel like interventions from the observing system.
+These upgrades should feel like contested interventions inside the shell rather than benign UI growth.
 
-- inventory summary: framed as retention aid;
+- inventory panel: granted later by the hacker as an illicit retention hack;
 - status readout: framed as subject monitoring;
-- map fragments: framed as navigation assist or spatial debugging;
-- transcript search or memory recall: framed as cognitive support;
+- map panel or map fragments: granted later by the hacker as navigation-debugging contraband;
+- memory panel: a later unstable display of pseudo-memory addresses that the player can eventually learn to probe and hack by interacting with the game's different systems;
+- transcript search or memory recall: framed as cognitive support or shell leakage depending on source;
 - hint surfacing: framed as correction, not kindness.
 
 ## Meta Questions To Keep Open

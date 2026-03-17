@@ -25,11 +25,42 @@ One of them has been draped with a fine red cloak, as though even the statuary m
       south: 'cavern',
       north: 'foyer',
     },
+    verbs: {
+      search({ command, getFlag, setFlag }) {
+        const target = command.directObject;
+
+        if (!target || target.includes('stair') || target.includes('east') || target.includes('gargoyle') || target.includes('rail')) {
+          if (!getFlag('pitRouteHintKnown')) {
+            setFlag('pitRouteHintKnown', true);
+            return 'You pace the eastern side of the stair and notice scrape marks on the marble beyond the balustrade. A narrow maintenance ledge descends along the wall into darkness below the mansion facade, carrying a sour smell of wet stone and something less architectural.';
+          }
+
+          return 'The eastern balustrade still hides the same narrow ledge descending below the main approach. It is not a guest route, which recommends it slightly.';
+        }
+
+        return `You search the ${target} and find only dust, marble grit, and ceremonial overconfidence.`;
+      },
+    },
     items: [redCloak],
+    conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('pitRouteHintKnown'),
+        text: 'On the eastern side, the balustrade no longer hides a narrow maintenance ledge descending out of sight below the stair.',
+      },
+    ],
     objects: {
       gargoyles: 'The gargoyles are nonmagical, though each wears its ridiculous hat with enough dignity to make mockery seem rude.',
       hats: 'Pointed festive hats trimmed in faded gold thread. Someone in this house believes solemnity and comedy should always dine together.',
       doors: 'The double doors are polished and imposing. Beyond them lies warmth, light, and likely the first mistake of the evening.',
+      balustrade: {
+        description({ getFlag }) {
+          if (!getFlag('pitRouteHintKnown')) {
+            return 'The carved stone balustrade is spotless, theatrical, and just tall enough to discourage casual peering over the eastern side.';
+          }
+
+          return 'Beyond the eastern balustrade, a narrow ledge clings to the mansion wall and sinks toward some lower service or waste level. It is not accessible casually, but it is undeniably there.';
+        },
+      },
     },
   });
 }

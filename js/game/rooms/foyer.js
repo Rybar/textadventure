@@ -74,15 +74,43 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
 
         return `Shaking the ${target} would improve very little.`;
       },
+      search({ command, getFlag, setFlag }) {
+        const target = command.directObject;
+
+        if (!target || target.includes('foyer') || target.includes('carpet') || target.includes('floor')) {
+          if (!getFlag('foyerSurveillanceNoticed')) {
+            setFlag('foyerSurveillanceNoticed', true);
+            return 'You crouch to inspect the red carpet and find threadbare channels worn into it by repeated pacing at exactly the butlers\' watch positions. Hospitality here has ruts. So does surveillance.';
+          }
+
+          return 'The carpet still shows the same disciplined wear patterns around the butlers\' station, proof that the room has practiced receiving people for a long time.';
+        }
+
+        if (target.includes('rack') || target.includes('cloak')) {
+          if (!getFlag('foyerSurveillanceNoticed')) {
+            setFlag('foyerSurveillanceNoticed', true);
+          }
+
+          return 'Among the hanging cloaks you find sewn name-tabs, each clipped out after use. Whatever else the house forgets, it does not seem to keep guest names for comfort.';
+        }
+
+        return `You search the ${target} and find only polish, etiquette, and the sense of being noticed doing it.`;
+      },
     },
     items: [blackCloak, piano, coatRack],
+    conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('foyerSurveillanceNoticed'),
+        text: 'The room now reads less like ornament and more like a checkpoint dressed as a welcome.',
+      },
+    ],
     objects: {
       ogres: {
         name: 'ogre butlers',
         aliases: ['ogre butlers', 'butlers', 'ogres'],
         description: 'The ogre butlers bow with alarming grace. One has three arms and the other two heads. Both radiate the polite confidence of men who can remove a guest in pieces.',
         actions: {
-          ask({ topic }) {
+          ask({ topic, getFlag }) {
             if (topic.includes('oshregaal') || topic.includes('grandfather')) {
               return 'The butlers answer in perfect unison: "Grandfather receives all worthy guests in due order." The wording suggests that worthiness and order are both actively supervised.';
             }
@@ -97,6 +125,12 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
 
             if (topic.includes('leave') || topic.includes('leav') || topic.includes('exit') || topic.includes('outside')) {
               return 'Both butlers smile with professional regret. "Departures are a later course," says Zamzam.';
+            }
+
+            if (topic.includes('piano') || topic.includes('music')) {
+              return getFlag('foyerSurveillanceNoticed')
+                ? '"The piano assists with ambience and observation," says Oggaf before Zamzam nudges the conversation back toward decorum.'
+                : '"The piano contributes to the welcome," says Oggaf. "And to the acoustics," adds Zamzam, which somehow answers more than it should.';
             }
 
             return 'The butlers provide the sort of courteous non-answer that has ended duels and started them.';

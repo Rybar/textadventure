@@ -32,7 +32,45 @@ export function createGuestRoom() {
     name: 'chest',
     aliases: ['empty chest'],
     description: 'An empty chest waiting for luggage, loot, or a more final use of the word guest.',
+    actions: {
+      open() {
+        return 'You lift the lid. The chest is empty except for cedar shavings and a few shallow scratches in the wood, as though prior guests had once reconsidered its intended use from the inside.';
+      },
+    },
     portable: false,
+  });
+
+  const bellPull = new Item({
+    id: 'bell-pull',
+    name: 'bell pull',
+    aliases: ['bellpull', 'cord', 'pull'],
+    description: 'A tasseled bell pull hangs beside the bed in case a guest requires comfort, service, or a witness.',
+    actions: {
+      use(context) {
+        if (!context.getFlag('guestBellRung')) {
+          context.setFlag('guestBellRung', true);
+          return 'You tug the bell pull. Somewhere deep in the house, a polite bell answers once. No one comes. The delay feels less negligent than intentional.';
+        }
+
+        return 'You ring again. The faint bell replies from below with exactly the same calm note, as if the house is marking your persistence for later review.';
+      },
+      pull(context) {
+        return this.performAction('use', context);
+      },
+    },
+    portable: false,
+  });
+
+  const guestCard = new Item({
+    id: 'guest-card',
+    name: 'guest card',
+    aliases: ['card', 'calling card', 'instruction card'],
+    description: 'A stiff cream card left on the nightstand in a hand too careful to be friendly.',
+    actions: {
+      read() {
+        return 'The card reads: "Ring once for comfort. Ring twice if your memories trouble you. A servant will attend when convenient." The last phrase does not improve on reflection.';
+      },
+    },
   });
 
   return new Room({
@@ -46,7 +84,7 @@ The stair leads back down to the foyer.
     exits: {
       down: 'foyer',
     },
-    items: [lamp, bed, chest],
+    items: [lamp, bed, chest, bellPull, guestCard],
     objects: {
       nightstand: 'The nightstand is polished, ordinary, and therefore one of the more suspicious objects in the house.',
       sheets: 'The sheets smell faintly of lavender and old dust.',

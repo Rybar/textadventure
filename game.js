@@ -20,12 +20,100 @@ const ephemeralMessageElements = {
 };
 const stopEphemeralAnimations = new Map();
 const scheduledEphemeralTimeouts = new Map();
+const statusElements = {
+    gameTitle: document.getElementById('game-title'),
+    currentLocation: document.getElementById('current-location'),
+    turnCounter: document.getElementById('turn-counter'),
+    scoreCounter: document.getElementById('score-counter'),
+};
+const terminalStageElement = document.getElementById('terminal-stage');
+const panelStackElement = document.getElementById('panel-stack');
+const panelElements = {
+    map: {
+        root: document.getElementById('panel-map'),
+        body: document.getElementById('panel-map-body'),
+    },
+    inventory: {
+        root: document.getElementById('panel-inventory'),
+        body: document.getElementById('panel-inventory-body'),
+    },
+    memory: {
+        root: document.getElementById('panel-memory'),
+        body: document.getElementById('panel-memory-body'),
+    },
+};
 const metaColumns = {
     sideLeft: document.getElementById('meta-column-left'),
     sideRight: document.getElementById('meta-column-right'),
     lowerLeft: document.getElementById('meta-column-left'),
     lowerRight: document.getElementById('meta-column-right'),
 };
+
+function formatCounter(value, width = 3) {
+    return String(value).padStart(width, '0');
+}
+
+function escapeHtml(text) {
+    return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+}
+
+function renderMapPanelMarkup(panelModel) {
+    const { currentRoomBox } = panelModel;
+
+    return panelModel.lines.map((line, rowIndex) => {
+        return Array.from(line).map((character, columnIndex) => {
+            if (character === ' ') {
+                return ' ';
+            }
+
+            const isInCurrentRoomBox = currentRoomBox
+                && rowIndex >= currentRoomBox.top
+                && rowIndex < currentRoomBox.top + currentRoomBox.height
+                && columnIndex >= currentRoomBox.left
+                && columnIndex < currentRoomBox.left + currentRoomBox.width;
+            const className = isInCurrentRoomBox ? 'map-char-current' : 'map-char-dim';
+            return `<span class="${className}">${escapeHtml(character)}</span>`;
+        }).join('');
+    }).join('\n');
+}
+
+function renderPanel(panelModel) {
+    const panelElement = panelElements[panelModel.id];
+    if (!panelElement) {
+        return;
+    }
+
+    panelElement.root.dataset.state = panelModel.state;
+    panelElement.root.dataset.visible = panelModel.unlocked ? 'true' : 'false';
+    panelElement.root.setAttribute('aria-hidden', panelModel.unlocked ? 'false' : 'true');
+
+    if (panelModel.id === 'map' && panelModel.currentRoomBox) {
+        panelElement.body.innerHTML = renderMapPanelMarkup(panelModel);
+        return;
+    }
+
+    panelElement.body.textContent = panelModel.lines.join('\n');
+}
+
+function renderInterfaceChrome() {
+    const interfaceModel = gameSession.getInterfaceModel();
+    const unlockedPanels = interfaceModel.panels.filter(panel => panel.unlocked);
+
+    terminalStageElement.dataset.layout = unlockedPanels.length > 0 ? 'with-panels' : 'transcript-only';
+    panelStackElement.setAttribute('aria-hidden', unlockedPanels.length > 0 ? 'false' : 'true');
+
+    statusElements.gameTitle.textContent = interfaceModel.title;
+    statusElements.currentLocation.textContent = interfaceModel.location;
+    statusElements.turnCounter.textContent = `TURNS ${formatCounter(interfaceModel.turns)}`;
+    statusElements.scoreCounter.textContent = interfaceModel.score == null
+        ? 'SCORE ---'
+        : `SCORE ${formatCounter(interfaceModel.score)}`;
+
+    interfaceModel.panels.forEach(renderPanel);
+}
 
 function focusCommandInput() {
     if (document.activeElement !== inputElement) {
@@ -118,9 +206,11 @@ function updateMetaMessages(messages = []) {
             return;
         }
 
+        const messageOptions = message.options;
+
         if (message.placement === 'side-left') {
             updateEphemeralMessage('sideLeft', message.text, {
-                ...(message.options ?? {}),
+                ...messageOptions,
                 placement: 'side-left',
                 delayMs: message.delayMs ?? 0,
             });
@@ -129,7 +219,7 @@ function updateMetaMessages(messages = []) {
 
         if (message.placement === 'side-right') {
             updateEphemeralMessage('sideRight', message.text, {
-                ...(message.options ?? {}),
+                ...messageOptions,
                 placement: 'side-right',
                 delayMs: message.delayMs ?? 0,
             });
@@ -140,7 +230,7 @@ function updateMetaMessages(messages = []) {
         clearEphemeralSlot('lowerLeft');
         clearEphemeralSlot('lowerRight');
         updateEphemeralMessage(lowerKey, message.text, {
-            ...(message.options ?? {}),
+            ...messageOptions,
             placement: message.placement ?? 'lower-random',
             delayMs: message.delayMs ?? 0,
         });
@@ -148,6 +238,7 @@ function updateMetaMessages(messages = []) {
 }
 
 function renderScreen() {
+    renderInterfaceChrome();
     textGrid.renderFrame({
         transcriptLines,
         promptText: inputElement.value,

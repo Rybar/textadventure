@@ -61,6 +61,16 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       west: 'secretCircle',
       north: 'kelagoRoom',
     },
+    onEnter: [
+      ({ getFlag, setFlag }) => {
+        if (!getFlag('feastStarted')) {
+          setFlag('feastStarted', true);
+          return 'The room seems to register your arrival as a social fact. Several tusk guests glance up only long enough to decide whether you belong to the menu, the audience, or both.';
+        }
+
+        return null;
+      },
+    ],
     exitGuards: {
       west({ getFlag }) {
         if (getFlag('secretCircleUnlocked')) {
@@ -71,6 +81,34 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       },
     },
     verbs: {
+      search({ command, getFlag, setFlag }) {
+        const target = command.directObject;
+
+        if (!target || target.includes('hall') || target.includes('room') || target.includes('table')) {
+          if (!getFlag('feastGuestPatternKnown')) {
+            setFlag('feastGuestPatternKnown', true);
+            return 'Watching the table closely, you realize the guests are not merely drunk or dull. They keep falling back into repeated gestures, toasts, and silences, as though the dinner has grooves worn into it deeper than appetite alone.';
+          }
+
+          return 'The feast still runs on repetition: servants circling, guests repeating themselves, Oshregaal at the center like a conductor pretending not to conduct.';
+        }
+
+        if (target.includes('guest') || target.includes('tusk')) {
+          if (!getFlag('feastGuestPatternKnown')) {
+            setFlag('feastGuestPatternKnown', true);
+          }
+
+          return 'Seen up close, the tusk guests are less convivial than captive to momentum. Some are overfed, some afraid, and several seem to answer the same joke with the same weary laugh each time Oshregaal makes it.';
+        }
+
+        if (target.includes('curtain') || target.includes('west')) {
+          return getFlag('secretCircleUnlocked')
+            ? 'The curtains now conceal very little. The hidden brass hand and yielded passage beyond them feel like a household impropriety you have already committed.'
+            : 'Your hands find thicker folds, hidden weight, and one suspiciously shaped seam, but without a clearer clue the curtain keeps its manners.';
+        }
+
+        return `You search the ${target} and gain only grease, perfume, and more reasons not to trust the hospitality.`;
+      },
       shake({ command, getFlag, setFlag, unlockExit }) {
         const target = command.directObject;
         if (!target) {
@@ -100,6 +138,20 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       },
     },
     items: [wine, bloodCup, roast],
+    conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('gaveBlood'),
+        text: 'The silver cup now seems to orbit the table with unpleasant familiarity. Having contributed once, you notice how practiced the ritual is.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('feastGuestPatternKnown'),
+        text: 'The rhythm of the room has become impossible to ignore: repeated laughter, repeated gestures, repeated compliance wearing the mask of custom.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('secretCircleUnlocked'),
+        text: 'Behind the red curtains, a newly accessible western passage waits like an indiscreet sentence finally allowed to finish.',
+      },
+    ],
     objects: {
       oshregaal: {
         name: 'Grandfather Oshregaal',
@@ -129,6 +181,16 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
               return 'Oshregaal smiles too broadly. "Private family business, little guest. If the house wants you there, it will extend a hand."';
             }
 
+            if (topic.includes('blood') || topic.includes('cup')) {
+              return getFlag('gaveBlood')
+                ? '"And a generous guest besides," Oshregaal says. "A meal improves when everyone contributes something of themselves."'
+                : 'Oshregaal lifts his brows. "A drop is only manners," he says. "If one cannot share blood at table, civilization has truly withered."';
+            }
+
+            if (topic.includes('guest') || topic.includes('tusk')) {
+              return '"Companions, creditors, dependents, admirers," Oshregaal says, waving a jeweled hand down the table. "Labels are a poor substitute for seating arrangements."';
+            }
+
             return 'Oshregaal answers with theatrical warmth and exactly as much truth as flatters him.';
           },
           tell({ topic, setFlag }) {
@@ -140,6 +202,10 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
 
             if (topic.includes('praise') || topic.includes('dinner') || topic.includes('magnificent')) {
               return 'Oshregaal preens openly. "At last, literacy of the palate," he says. His attention warms just enough to become more dangerous.';
+            }
+
+            if (topic.includes('leave') || topic.includes('escape')) {
+              return 'Oshregaal rests one jeweled finger against his goblet and smiles at you like a patient executioner. "You persist in treating chronology as a personal right," he says.';
             }
 
             return 'Oshregaal receives your words as though deciding whether they are worth keeping.';
@@ -187,6 +253,16 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
               return '"The curtains matter," the imp says. "That is all the charity you get for free."';
             }
 
+            if (topic.includes('guest') || topic.includes('tusk')) {
+              return 'The imp glances down the table and lowers his voice. "Some are loyal, some are trapped, some forgot the difference years ago. Dinner is very educational that way."';
+            }
+
+            if (topic.includes('blood') || topic.includes('cup')) {
+              return getFlag('gaveBlood')
+                ? 'The imp winces theatrically. "Congratulations. You have participated in custom. Try not to volunteer for any more traditions tonight."'
+                : '"The silver cup comes around sooner or later," the imp mutters. "Everything in this room wants a sample."';
+            }
+
             return 'The imp answers in fragments sharp enough to draw blood if handled carelessly.';
           },
           tell({ topic, setFlag }) {
@@ -209,6 +285,8 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         },
       },
       guests: 'Most of the tusk guests look dazed, overfed, or partially trapped inside commands they are still obeying hours too late.',
+      chain: 'The imp\'s chain is old magic disguised as household hardware. It gives him enough slack to serve and not enough to forget who profits from it.',
+      butter: 'The butter dish on the imp\'s hands gleams absurdly under the chandelier, a domestic humiliation polished into ritual.',
       curtains: {
         description({ getFlag }) {
           if (getFlag('secretCircleUnlocked')) {

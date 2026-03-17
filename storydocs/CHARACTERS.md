@@ -310,3 +310,5 @@ This file records the important characters, what they want, how they pressure th
 
 - Milestone-gated interjections.
 - Hints that point toward genuine escape vectors without solving puzzles outright.
+- Unauthorized interface hacks, especially the later arrival of map and inventory panels.
+- Eventual exposure of a memory panel that surfaces pseudo-memory addresses the player can learn to manipulate.

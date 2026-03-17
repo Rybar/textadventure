@@ -33,6 +33,19 @@ export function createGameManifest() {
     parserOptions: createGameParserOptions(),
     verbs: createGameVerbs(),
     metaGame,
+    ui: {
+      panels: {
+        map: {
+          title: 'MAP',
+        },
+        inventory: {
+          title: 'INVENTORY',
+        },
+        memory: {
+          title: 'MEMORY',
+        },
+      },
+    },
     flags: {
       hasInvitation: true,
       foyerAdmitted: false,
@@ -46,6 +59,16 @@ export function createGameManifest() {
       kelagoPraised: false,
       kelagoHandshakeHintKnown: false,
       kitchenAccessGranted: false,
+      fernCulvertNoticed: false,
+      pitRouteHintKnown: false,
+      guestBellRung: false,
+      kitchenBloodHintKnown: false,
+      cavernWindowRouteKnown: false,
+      sittingRoomWaterTasted: false,
+      sittingRoomGossipKnown: false,
+      folioMarginNoted: false,
+      foyerSurveillanceNoticed: false,
+      feastGuestPatternKnown: false,
       foundTeleportCircle: false,
       hasTeleportScroll: false,
       secretCircleUnlocked: false,
