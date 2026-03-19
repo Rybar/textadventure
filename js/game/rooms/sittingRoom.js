@@ -3,6 +3,46 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createSittingRoom() {
+  const getSittingRoomPhase = ({ getFlag }) => {
+    if (getFlag('sittingRoomWaterTasted')) {
+      return 'compliance';
+    }
+
+    if (getFlag('sittingRoomGossipKnown') || getFlag('folioMarginNoted')) {
+      return 'whispering';
+    }
+
+    return 'waiting';
+  };
+
+  const advanceSittingRoomScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastSittingRoomPhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.sittingRoomPhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastSittingRoomPhase: currentScenePhase,
+      sittingRoomPhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'waiting':
+        return 'One couch exhales, the fountain answers with a bright little burble, and the room resumes rehearsing patience at you.';
+      case 'whispering':
+        return 'Now that you have heard the room properly, every small sound arrives as if it might be gossip pretending to be furniture.';
+      case 'compliance':
+        return 'The memory of the fountain water lingers just long enough to make the room\'s softness feel briefly persuasive.';
+      default:
+        return null;
+    }
+  };
+
   const couchAsk = createTopicResponder({
     rules: [
       {
@@ -98,6 +138,23 @@ This room is arranged for guests who are expected to wait and, while waiting, qu
 Four couches of mismatched luxury breathe almost imperceptibly around a low table of obscene folios. In the corner, a fountain spills bright water into a basin lined with stacked glass cups.
 The foyer lies back to the east.
 `.trim(),
+    scene: {
+      getPhase: getSittingRoomPhase,
+      phases: {
+        waiting: {
+          description: 'At first the room seems merely patient: a holding space dressed in comfort and designed to make waiting feel like a choice.',
+          onTurn: advanceSittingRoomScene,
+        },
+        whispering: {
+          description: 'Once you start listening, the sitting room stops being restful and starts being social in a deeply household way, all whispers, side-comments, and managed unease.',
+          onTurn: advanceSittingRoomScene,
+        },
+        compliance: {
+          description: 'After tasting the fountain water, the room\'s comforts feel more coordinated than comforting, as though hospitality here has begun trying to think on your behalf.',
+          onTurn: advanceSittingRoomScene,
+        },
+      },
+    },
     exits: {
       east: 'foyer',
     },

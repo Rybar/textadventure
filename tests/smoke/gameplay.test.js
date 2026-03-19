@@ -89,13 +89,17 @@ test('kitchen and secret circle interactions deepen the escape thread', () => {
   assert.match(session.submitCommand('ask imp about curtains'), /hidden brass hand/i);
   assert.match(session.submitCommand('shake hand'), /hidden brass hand sewn into the curtain folds/i);
   assert.match(session.submitCommand('west'), /hidden chamber lies behind heavy red curtains/i);
+  assert.match(session.submitCommand('look'), /concealed answer|older than the feast/i);
   assert.match(session.submitCommand('search bookshelf'), /borrowed road dressed in newer chalk|activation only wakes the prepared route/i);
   assert.match(session.submitCommand('take road annotation'), /you take the road annotation/i);
   assert.match(session.submitCommand('read road annotation'), /borrowed road, not a sovereign gate|activation opens the prepared route only/i);
   assert.equal(session.worldState.getFlag('portalBypassLearned'), true);
+  assert.match(session.submitCommand('wait'), /difference between activation and bypass|You wait for a moment/i);
+  assert.match(session.submitCommand('look'), /precise instrument embedded in a larger threshold problem|starts reading as a precise instrument/i);
   assert.match(session.submitCommand('ask skulls about bypass'), /HOST KEEPS ACTIVATION HERE|BYPASS LIVES IN THE INSULT/i);
   assert.match(session.submitCommand('read scroll'), /floor-runes brighten|one prepared road/i);
   assert.equal(session.worldState.getFlag('escapeRouteUnlocked'), true);
+  assert.match(session.submitCommand('look'), /dormant apparatus to live route|narrow, conditional, and dangerous/i);
 });
 
 test('cavern, sitting room, foyer, and feast hall support deeper clue play', () => {
@@ -112,10 +116,13 @@ test('cavern, sitting room, foyer, and feast hall support deeper clue play', () 
   assert.match(session.submitCommand('ask ogres about piano'), /ambience and observation|acoustics/i);
 
   assert.match(session.submitCommand('west'), /expected to wait/i);
+  assert.match(session.submitCommand('look'), /holding space dressed in comfort|waiting feel like a choice/i);
   assert.match(session.submitCommand('search folios'), /butlers hear the bell before they hear the guest/i);
   assert.equal(session.worldState.getFlag('folioMarginNoted'), true);
+  assert.match(session.submitCommand('look'), /starts being social in a deeply household way|whispers, side-comments/i);
   assert.match(session.submitCommand('drink fountain'), /obedience might not be the worst thing/i);
   assert.equal(session.worldState.getFlag('sittingRoomWaterTasted'), true);
+  assert.match(session.submitCommand('wait'), /memory of the fountain water lingers|You wait for a moment/i);
 
   assert.match(session.submitCommand('east'), /foyer is all red carpet/i);
   assert.match(session.submitCommand('give invitation to oggaf'), /proceed as a guest|accepted/i);
@@ -302,13 +309,17 @@ test('the library and folded hallway now extend the deep escape cluster', () => 
 
   moveToLibrary(session);
   assert.equal(session.worldState.currentRoomId, 'library');
+  assert.match(session.submitCommand('look'), /oppressive confidence|shelving his thoughts is the same as mastering them/i);
   assert.match(session.submitCommand('search shelves'), /obedient geometry|folded corridor|threshold spellbook/i);
   assert.equal(session.worldState.getFlag('libraryRouteKnown'), true);
+  assert.match(session.submitCommand('look'), /usable categories: corridor, spellbook, fraud|starts sorting itself/i);
   assert.match(session.submitCommand('read geometry folio'), /paired living contact|competent fraud/i);
   assert.equal(session.worldState.getFlag('foldedHallwayUnderstood'), true);
   assert.equal(session.worldState.getFlag('portalBypassLearned'), true);
+  assert.match(session.submitCommand('wait'), /feels less like scholarship and more like applied escape mathematics|You wait for a moment/i);
   assert.match(session.submitCommand('take threshold spellbook'), /you take the threshold spellbook|archive theft/i);
   assert.equal(session.worldState.getFlag('spellbooksSecured'), true);
+  assert.match(session.submitCommand('look'), /feels newly vulnerable|prepared answers is gone from its shelf/i);
   assert.match(session.submitCommand('read threshold spellbook'), /threshold rites|better mathematics/i);
   assert.match(session.submitCommand('smell incense'), /cedar, dust, and the sort of disciplined breathing/i);
 

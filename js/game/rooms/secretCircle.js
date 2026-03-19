@@ -3,6 +3,46 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createSecretCircleRoom() {
+  const getSecretCirclePhase = ({ getFlag }) => {
+    if (getFlag('escapeRouteUnlocked')) {
+      return 'activated';
+    }
+
+    if (getFlag('portalBypassLearned')) {
+      return 'interpreted';
+    }
+
+    return 'discovered';
+  };
+
+  const advanceSecretCircleScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastSecretCirclePhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.secretCirclePhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastSecretCirclePhase: currentScenePhase,
+      secretCirclePhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'discovered':
+        return 'The drifting skulls adjust by a fraction as if acknowledging a new observer, while the floor circle goes on pretending it is only waiting decor.';
+      case 'interpreted':
+        return 'Now that you understand the difference between activation and bypass, the room feels less generous and more technically honest.';
+      case 'activated':
+        return 'A pale line of fire crawls the circle\'s edge and holds. The chamber has not opened, exactly, but it has started listening.';
+      default:
+        return null;
+    }
+  };
+
   const roadAnnotation = new Item({
     id: 'road-annotation',
     name: 'road annotation',
@@ -102,6 +142,23 @@ export function createSecretCircleRoom() {
 This hidden chamber lies behind heavy red curtains and smells of dust, wax, and old spellwork. Five glowing skulls drift near the ceiling, illuminating a bookshelf, a wall cabinet, and a broad circular rune set into the floor.
 Every surface suggests power guarded by inconvenience rather than by secrecy. The feast hall lies back to the east.
 `.trim(),
+    scene: {
+      getPhase: getSecretCirclePhase,
+      phases: {
+        discovered: {
+          description: 'At first the chamber feels like a concealed answer: older than the feast, practical in its occultism, and only half interested in whether you deserve to be here.',
+          onTurn: advanceSecretCircleScene,
+        },
+        interpreted: {
+          description: 'Once the annotation has corrected your assumptions, the room stops reading as a complete escape and starts reading as a precise instrument embedded in a larger threshold problem.',
+          onTurn: advanceSecretCircleScene,
+        },
+        activated: {
+          description: 'With the scroll read, the chamber has shifted from dormant apparatus to live route: narrow, conditional, and dangerous in the specific way working exits usually are.',
+          onTurn: advanceSecretCircleScene,
+        },
+      },
+    },
     exits: {
       east: 'feastHall',
     },

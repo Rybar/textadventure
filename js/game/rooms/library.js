@@ -2,6 +2,58 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createLibraryRoom() {
+  const getLibraryPhase = ({ getFlag }) => {
+    if (getFlag('trophyRoomUnlocked')) {
+      return 'compromised';
+    }
+
+    if (getFlag('spellbooksSecured')) {
+      return 'looted';
+    }
+
+    if (getFlag('foldedHallwayUnderstood') || getFlag('portalBypassLearned')) {
+      return 'interpreted';
+    }
+
+    if (getFlag('libraryRouteKnown')) {
+      return 'oriented';
+    }
+
+    return 'awe';
+  };
+
+  const advanceLibraryScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastLibraryPhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.libraryPhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastLibraryPhase: currentScenePhase,
+      libraryPhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'awe':
+        return 'Somewhere high on the brass tracks, a ladder settles with a tiny metallic complaint, as if the shelves resent being browsed without reverence.';
+      case 'oriented':
+        return 'Now that you have noticed the northern geometry, the room keeps trying to organize itself into route, doctrine, and theft opportunity.';
+      case 'interpreted':
+        return 'With the folios understood, the library feels less like a monument to intellect than a workshop for cheating impossible spaces.';
+      case 'looted':
+        return 'The missing spellbook alters the room more than the theft should. Absence here is another kind of annotation.';
+      case 'compromised':
+        return 'Once the eastern seam is known, even the shelving starts to look performative, as though the library had been hiding vanity under cataloguing all along.';
+      default:
+        return null;
+    }
+  };
+
   const waxPalm = new Item({
     id: 'wax-palm',
     name: 'wax palm',
@@ -97,6 +149,31 @@ Oshregaal's library is less a scholarly refuge than a shrine to his own continue
   One chained threshold spellbook lies loose enough to steal, as if Oshregaal expected to consult it again before dawn.
 To the north, an unusually narrow opening gives onto a corridor whose angles seem unwilling to stay resolved. West lies Plum's room.
 `.trim(),
+    scene: {
+      getPhase: getLibraryPhase,
+      phases: {
+        awe: {
+          description: 'At first the library plays as intended: grandeur, accumulation, and the oppressive confidence of a man who believes shelving his thoughts is the same as mastering them.',
+          onTurn: advanceLibraryScene,
+        },
+        oriented: {
+          description: 'Once the route clues emerge, the library stops being merely grand and starts sorting itself into usable categories: corridor, spellbook, fraud, and hidden vanity.',
+          onTurn: advanceLibraryScene,
+        },
+        interpreted: {
+          description: 'With the geometry notes properly read, the room feels less like scholarship and more like applied escape mathematics authored by an egotist.',
+          onTurn: advanceLibraryScene,
+        },
+        looted: {
+          description: 'After the threshold spellbook is taken, the library feels newly vulnerable. One of Oshregaal\'s prepared answers is gone from its shelf.',
+          onTurn: advanceLibraryScene,
+        },
+        compromised: {
+          description: 'Once the eastern case yields its seam, the library reads as two things at once: archive above the surface, trophy logic underneath.',
+          onTurn: advanceLibraryScene,
+        },
+      },
+    },
     exits: {
       west: 'plumRoom',
       east: 'trophyRoom',
