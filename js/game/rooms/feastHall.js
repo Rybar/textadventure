@@ -3,13 +3,27 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createFeastHall() {
+  const noteBloodRequest = ({ setFlag }) => {
+    setFlag('feastBloodRequested', true);
+  };
+
+  const raiseOshregaalSuspicion = ({ setFlag }) => {
+    setFlag('oshregaalSuspicious', true);
+  };
+
   const wine = new Item({
     id: 'wine',
     name: 'wine',
     aliases: ['goblet', 'wine goblet'],
     description: 'A heavy goblet of dark wine that reflects the chandelier in a thin red tremor.',
     actions: {
-      drink() {
+      drink(context) {
+        context.worldState.setFlag('feastBloodRequested', true);
+
+        if (context.worldState.getFlag('bloodRefused')) {
+          return 'The wine runs hot and medicinal down your throat. Around the table, the silver cup keeps moving as though your refusal were merely another course delayed, and Oshregaal notices that you are still willing to swallow something he poured.';
+        }
+
         return 'The wine runs hot and medicinal down your throat. For one beat of the heart you feel stronger. For the next, slightly less certain that your body remains entirely committed to its current arrangement.';
       },
     },
@@ -21,12 +35,16 @@ export function createFeastHall() {
     description: 'A silver cup being passed for drops of blood with the breezy confidence of an established custom.',
     actions: {
       use(context) {
+        context.worldState.setFlag('feastBloodRequested', true);
+
         if (context.worldState.getFlag('gaveBlood')) {
           return 'You have already contributed. Oshregaal would call that generosity. A physician might choose another term.';
         }
 
         context.worldState.setFlag('gaveBlood', true);
-        return 'You add a single bright drop to the cup. Around the table, no one reacts as though this were unusual, which is worse than surprise.';
+        return context.worldState.getFlag('bloodRefused')
+          ? 'You add a single bright drop to the cup after all. No one comments on the reversal. Around the table, practiced relief looks much too similar to obedience.'
+          : 'You add a single bright drop to the cup. Around the table, no one reacts as though this were unusual, which is worse than surprise.';
       },
     },
   });
@@ -49,6 +67,7 @@ export function createFeastHall() {
 
   const markOshregaalMet = ({ setFlag }) => {
     setFlag('metOshregaal', true);
+    setFlag('hostContactEstablished', true);
   };
 
   const oshregaalAsk = createTopicResponder({
@@ -78,7 +97,10 @@ export function createFeastHall() {
       },
       {
         match: ['escape', 'leave', 'outside'],
-        reply: 'Oshregaal laughs until he has to dab at one eye. "My dear guest, departure is a vulgar obsession in the middle of a meal."',
+        effect: raiseOshregaalSuspicion,
+        reply: ({ getFlag }) => getFlag('bloodRefused') || getFlag('oshregaalSuspicious')
+          ? 'Oshregaal laughs softly and does not bother dabbing at the corners of his eyes. "You refuse the cup and speak of departure in the same breath," he says. "How refreshing to be warned exactly when a guest intends to become work."'
+          : 'Oshregaal laughs until he has to dab at one eye. "My dear guest, departure is a vulgar obsession in the middle of a meal."',
       },
       {
         match: ['kelago', 'sister'],
@@ -96,9 +118,18 @@ export function createFeastHall() {
       },
       {
         match: ['blood', 'cup'],
-        reply: ({ getFlag }) => getFlag('gaveBlood')
-          ? '"And a generous guest besides," Oshregaal says. "A meal improves when everyone contributes something of themselves."'
-          : 'Oshregaal lifts his brows. "A drop is only manners," he says. "If one cannot share blood at table, civilization has truly withered."',
+        effect: noteBloodRequest,
+        reply: ({ getFlag }) => {
+          if (getFlag('gaveBlood')) {
+            return '"And a generous guest besides," Oshregaal says. "A meal improves when everyone contributes something of themselves."';
+          }
+
+          if (getFlag('bloodRefused')) {
+            return 'Oshregaal studies you with bright dislike wrapped in velvet. "A guest may refuse a course," he says, "but then the table must decide what sort of hunger has taken their place."';
+          }
+
+          return 'Oshregaal lifts his brows. "A drop is only manners," he says. "If one cannot share blood at table, civilization has truly withered."';
+        },
       },
       {
         match: ['guest', 'tusk'],
@@ -131,12 +162,23 @@ export function createFeastHall() {
         match: ['you are awful', 'you are monstrous', 'i hate you', 'you are a monster'],
         effect: ({ setFlag }) => {
           setFlag('insultedOshregaal', true);
+          setFlag('oshregaalSuspicious', true);
         },
         reply: 'Oshregaal lets the insult settle over the table like a napkin dropped into blood. Then he smiles. "Good," he says. "Guests who stop pretending are almost always more interesting for at least one course."',
       },
       {
         match: ['leave', 'escape'],
+        effect: raiseOshregaalSuspicion,
         reply: 'Oshregaal rests one jeweled finger against his goblet and smiles at you like a patient executioner. "You persist in treating chronology as a personal right," he says.',
+      },
+      {
+        match: ['i refuse blood', 'no blood', 'i refuse the cup', 'i will not give blood', 'keep the cup'],
+        effect: ({ setFlag }) => {
+          setFlag('feastBloodRequested', true);
+          setFlag('bloodRefused', true);
+          setFlag('oshregaalSuspicious', true);
+        },
+        reply: 'Oshregaal goes still enough to become the room for a heartbeat. Then he smiles with exquisite bad manners. "How educational," he says. "A guest who declines the table before the table declines them. Keep the blood, then. I will simply have to discover what you think purchaseable instead."',
       },
       {
         match: ['i will stay', 'i will remain', 'i accept your hospitality', 'i will be a good guest'],
@@ -157,6 +199,10 @@ export function createFeastHall() {
         reply: ({ getFlag }) => {
           if (getFlag('impHelpOffered')) {
             return 'The imp bares his teeth in satisfaction. "Behind the red curtains there is a hidden brass hand. Shake it like you mean an introduction. The house respects etiquette almost as much as it enjoys traps."';
+          }
+
+          if (getFlag('bloodRefused') || getFlag('oshregaalSuspicious')) {
+            return 'The imp bares his teeth in something much closer to joy. "Good," he mutters. "He heard that. Keep going and the curtains may start looking like architecture instead of upholstery. If you want specifics, risk sounding serious."';
           }
 
           return 'The imp bares his teeth in something too sharp to be a smile. "Everything leaves eventually. Some routes are merely less educational than others. If you want specifics, risk sounding serious."';
@@ -315,7 +361,7 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         if (!target || target.includes('hall') || target.includes('room') || target.includes('table')) {
           if (!getFlag('feastGuestPatternKnown')) {
             setFlag('feastGuestPatternKnown', true);
-            return 'Watching the table closely, you realize the guests are not merely drunk or dull. They keep falling back into repeated gestures, toasts, and silences, as though the dinner has grooves worn into it deeper than appetite alone.';
+            return 'Watching the table closely, you realize the guests are not merely drunk or dull. They keep falling back into repeated gestures, toasts, and silences, as though the dinner has grooves worn into it deeper than appetite alone. The silver cup making its rounds is part of the pattern, not an interruption to it.';
           }
 
           return 'The feast still runs on repetition: servants circling, guests repeating themselves, Oshregaal at the center like a conductor pretending not to conduct.';
@@ -330,6 +376,10 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         }
 
         if (target.includes('curtain') || target.includes('west')) {
+          if ((getFlag('impHandshakeHintKnown') || getFlag('kelagoHandshakeHintKnown')) && !getFlag('secretCircleUnlocked')) {
+            return 'Now that you know what to feel for, the curtain no longer seems coy. Beneath the velvet folds, a brass hand bulges from the wall like a household joke too pleased with itself.';
+          }
+
           return getFlag('secretCircleUnlocked')
             ? 'The curtains now conceal very little. The hidden brass hand and yielded passage beyond them feel like a household impropriety you have already committed.'
             : 'Your hands find thicker folds, hidden weight, and one suspiciously shaped seam, but without a clearer clue the curtain keeps its manners.';
@@ -369,12 +419,24 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         text: 'The silver cup now seems to orbit the table with unpleasant familiarity. Having contributed once, you notice how practiced the ritual is.',
       },
       {
+        when: ({ getFlag }) => getFlag('bloodRefused'),
+        text: 'The silver cup keeps circling without you now, and several guests have perfected the art of not watching Oshregaal remember the refusal.',
+      },
+      {
         when: ({ getFlag }) => getFlag('feastGuestPatternKnown'),
         text: 'The rhythm of the room has become impossible to ignore: repeated laughter, repeated gestures, repeated compliance wearing the mask of custom.',
       },
       {
+        when: ({ getFlag }) => getFlag('hostContactEstablished'),
+        text: 'Oshregaal has turned enough of his attention toward you that the rest of the table feels arranged around his curiosity.',
+      },
+      {
         when: ({ getFlag }) => getFlag('secretCircleUnlocked'),
         text: 'Behind the red curtains, a newly accessible western passage waits like an indiscreet sentence finally allowed to finish.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('oshregaalSuspicious') && !getFlag('greyGrinShownToOshregaal') && !getFlag('oshregaalWounded'),
+        text: 'The host is still smiling, but no longer diffusely. Whatever else this dinner is, you are no longer being treated as background to it.',
       },
       {
         when: ({ getFlag }) => getFlag('greyGrinShownToOshregaal'),
@@ -455,6 +517,10 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         description({ getFlag }) {
           if (getFlag('secretCircleUnlocked')) {
             return 'The red curtains now stand slightly parted. Inside their folds, a hidden brass hand protrudes from the wall beside a newly yielded passage west.';
+          }
+
+          if (getFlag('impHandshakeHintKnown') || getFlag('kelagoHandshakeHintKnown')) {
+            return 'Heavy red curtains hide a side chamber from casual view. Now that you know the trick, the outline of a hidden brass hand distends one fold with almost obscene obviousness.';
           }
 
           return 'Heavy red curtains hide a side chamber from casual view. Their folds are unusually thick, as though hiding more hardware than cloth ought to require.';

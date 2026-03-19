@@ -109,6 +109,8 @@ test('cavern, sitting room, foyer, and feast hall support deeper clue play', () 
   assert.match(session.submitCommand('east'), /foyer is all red carpet/i);
   assert.match(session.submitCommand('give invitation to oggaf'), /proceed as a guest|accepted/i);
   assert.match(session.submitCommand('north'), /immense dinner table dominates/i);
+  assert.equal(session.worldState.getFlag('admittedToFeast'), true);
+  assert.equal(session.worldState.getFlag('feastBloodRequested'), true);
   assert.match(session.submitCommand('search guests'), /less convivial than captive to momentum/i);
   assert.equal(session.worldState.getFlag('feastGuestPatternKnown'), true);
   assert.match(session.submitCommand('ask oshregaal about blood'), /drop is only manners|generous guest/i);
@@ -128,8 +130,26 @@ test('foyer and feast hall social interactions respond correctly', () => {
   session.submitCommand('north');
   assert.match(session.submitCommand('ask imp about escape'), /everything leaves eventually/i);
   assert.match(session.submitCommand('tell oshregaal your name'), /a pleasure/i);
+  assert.equal(session.worldState.getFlag('hostContactEstablished'), true);
   assert.match(session.submitCommand('ask oshregaal about house'), /flatter its owner, intimidate its rivals/i);
   assert.match(session.submitCommand('ask imp about chain'), /decorative slavery/i);
+});
+
+test('feast hall tracks blood refusal and sharper host scrutiny', () => {
+  const session = createTestSession();
+
+  moveToFeastHall(session);
+  assert.equal(session.worldState.getFlag('admittedToFeast'), true);
+  assert.equal(session.worldState.getFlag('feastBloodRequested'), true);
+
+  assert.match(session.submitCommand('tell oshregaal i refuse blood'), /declines the table|keep the blood/i);
+  assert.equal(session.worldState.getFlag('hostContactEstablished'), true);
+  assert.equal(session.worldState.getFlag('bloodRefused'), true);
+  assert.equal(session.worldState.getFlag('oshregaalSuspicious'), true);
+
+  assert.match(session.submitCommand('ask oshregaal about blood'), /guest may refuse a course|what sort of hunger/i);
+  assert.match(session.submitCommand('ask imp about escape'), /He heard that|curtains may start looking like architecture/i);
+  assert.match(session.submitCommand('look'), /silver cup keeps circling without you now|no longer being treated as background/i);
 });
 
 test('kelago clue path can unlock the secret circle handshake puzzle', () => {

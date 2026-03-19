@@ -19,8 +19,18 @@ export function createGameEventDefinitions() {
           flag: 'feastStarted',
           value: true,
         },
+        {
+          type: 'setFlag',
+          flag: 'admittedToFeast',
+          value: true,
+        },
+        {
+          type: 'setFlag',
+          flag: 'feastBloodRequested',
+          value: true,
+        },
       ],
-      text: 'The room seems to register your arrival as a social fact. Several tusk guests glance up only long enough to decide whether you belong to the menu, the audience, or both.',
+      text: 'The room seems to register your arrival as a social fact. A servant draws out a place for you with insulting confidence while the silver cup already making the rounds glitters somewhere nearer than comfort allows. Several tusk guests glance up only long enough to decide whether you belong to the menu, the audience, or both.',
     },
     unlockSecretCirclePassage: {
       once: true,
