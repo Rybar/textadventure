@@ -13,9 +13,12 @@ test('foyer blocks feast-hall access until invitation is shown', () => {
   const session = createTestSession();
 
   moveToFoyer(session);
+  assert.match(session.submitCommand('look'), /performs welcome beautifully|music, symmetry, light/i);
   const blockedResponse = session.submitCommand('north');
 
   assert.match(blockedResponse, /the feast receives invited guests/i);
+  assert.equal(session.worldState.getFlag('foyerThresholdTested'), true);
+  assert.match(session.submitCommand('look'), /receiving mechanism|room's decision rendered in muscle and gloves/i);
   assert.equal(session.worldState.currentRoomId, 'foyer');
 });
 
@@ -27,6 +30,7 @@ test('giving the invitation in the foyer sets admission state', () => {
 
   assert.match(response, /proceed as a guest/i);
   assert.equal(session.worldState.getFlag('foyerAdmitted'), true);
+  assert.match(session.submitCommand('look'), /successfully categorized problem|less like an interruption/i);
 });
 
 test('showing the invitation in the foyer also supports admission flow', () => {

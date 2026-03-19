@@ -70,14 +70,19 @@ test('kitchen and secret circle interactions deepen the escape thread', () => {
 
   moveToFeastHall(session);
   assert.match(session.submitCommand('east'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('look'), /brute competence|forcing impossible ingredients to accept hierarchy/i);
   assert.match(session.submitCommand('ask wrongus about blood'), /tiny red gentleman stand up in the pot/i);
   assert.equal(session.worldState.getFlag('kitchenBloodHintKnown'), true);
+  assert.match(session.submitCommand('look'), /ritual workshop that happens to smell delicious|less like a cookspace/i);
   assert.match(session.submitCommand('search stew'), /darker red film|reducing more than broth/i);
   assert.match(session.submitCommand('ask wrongus about timing'), /blood by the silver scrape|sequence stumbles/i);
   assert.equal(session.worldState.getFlag('kitchenTimingKnown'), true);
+  assert.match(session.submitCommand('wait'), /kitchen keeps exact time|You wait for a moment/i);
+  assert.match(session.submitCommand('look'), /stage-managing a belief system|ordered courses and hidden cues/i);
   assert.match(session.submitCommand('search prep table'), /laid out in a strict sequence|stage marks/i);
   assert.match(session.submitCommand('sabotage stew'), /delay the silver cups|turn Wrongus from cook into alarm/i);
   assert.equal(session.worldState.getFlag('kitchenSabotageOpportunityKnown'), true);
+  assert.match(session.submitCommand('look'), /meal's weak points|manufactured line by line/i);
 
   assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
   assert.match(session.submitCommand('tell imp help'), /which piece of this room still remembers how to open/i);

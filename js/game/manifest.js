@@ -87,6 +87,7 @@ export function createGameManifest() {
     flags: {
       hasInvitation: true,
       foyerAdmitted: false,
+      foyerThresholdTested: false,
       metOshregaal: false,
       admittedToFeast: false,
       hostContactEstablished: false,

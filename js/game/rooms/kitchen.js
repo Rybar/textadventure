@@ -3,6 +3,52 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createKitchenRoom() {
+  const getKitchenPhase = ({ getFlag }) => {
+    if (getFlag('kitchenSabotageOpportunityKnown')) {
+      return 'fragile';
+    }
+
+    if (getFlag('kitchenTimingKnown')) {
+      return 'sequenced';
+    }
+
+    if (getFlag('kitchenBloodHintKnown')) {
+      return 'revealed';
+    }
+
+    return 'working';
+  };
+
+  const advanceKitchenScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastKitchenScenePhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.kitchenScenePhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastKitchenScenePhase: currentScenePhase,
+      kitchenScenePhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'working':
+        return 'Wrongus snaps the ladle once against the iron rim, and three separate kitchen tasks resume as though the room itself had been holding its breath for the cue.';
+      case 'revealed':
+        return 'A silver cup returns to the stove with a soft scrape. Wrongus does not look at it. That refusal of emphasis is emphasis enough.';
+      case 'sequenced':
+        return 'The kitchen keeps exact time: cup, reduction, plate, reassurance. Once seen, the order feels less culinary than liturgical.';
+      case 'fragile':
+        return 'Now that you know where the sequence could break, every ladle movement looks like a point of failure being narrowly avoided.';
+      default:
+        return null;
+    }
+  };
+
   const spiceBundle = new Item({
     id: 'spice-bundle',
     name: 'spice bundle',
@@ -200,6 +246,27 @@ export function createKitchenRoom() {
 Wrongus holds dominion here. Barrels line the walls, spice bundles hang from the beams, and an immense cauldron stews on the fire while glass jars full of candy oozes tremble on a shelf.
 The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies the feast hall.
 `.trim(),
+    scene: {
+      getPhase: getKitchenPhase,
+      phases: {
+        working: {
+          description: 'The kitchen still reads as brute competence: heat, clutter, and Wrongus forcing impossible ingredients to accept hierarchy.',
+          onTurn: advanceKitchenScene,
+        },
+        revealed: {
+          description: 'Now that you know about the blood work, the kitchen looks less like a cookspace and more like a ritual workshop that happens to smell delicious.',
+          onTurn: advanceKitchenScene,
+        },
+        sequenced: {
+          description: 'With the service timing understood, the whole room resolves into ordered courses and hidden cues. Wrongus is not just cooking; he is stage-managing a belief system.',
+          onTurn: advanceKitchenScene,
+        },
+        fragile: {
+          description: 'Having identified the meal\'s weak points, you can feel how precariously the kitchen maintains the illusion that dinner simply happens instead of being manufactured line by line.',
+          onTurn: advanceKitchenScene,
+        },
+      },
+    },
     exits: {
       west: 'feastHall',
       north: 'ogreBeds',

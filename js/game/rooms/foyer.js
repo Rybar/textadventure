@@ -3,6 +3,52 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createFoyerRoom() {
+  const getFoyerPhase = ({ getFlag }) => {
+    if (getFlag('foyerAdmitted')) {
+      return 'admitted';
+    }
+
+    if (getFlag('butlerDiversionActive')) {
+      return 'diverted';
+    }
+
+    if (getFlag('foyerThresholdTested') || getFlag('foyerSurveillanceNoticed')) {
+      return 'scrutiny';
+    }
+
+    return 'reception';
+  };
+
+  const advanceFoyerScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastFoyerScenePhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.foyerScenePhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastFoyerScenePhase: currentScenePhase,
+      foyerScenePhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'reception':
+        return 'The piano leans into a welcoming phrase while Oggaf and Zamzam do not move at all. The contrast is the foyer in miniature.';
+      case 'scrutiny':
+        return 'One of Zamzam\'s heads tracks you while the other watches the door. Oggaf somehow makes stillness feel procedural.';
+      case 'diverted':
+        return 'Without the butlers at center post, the foyer feels abruptly larger and much less sure of its own manners.';
+      case 'admitted':
+        return 'Having been accepted, you can feel the foyer relaxing exactly one degree. It is not trust. It is routing.';
+      default:
+        return null;
+    }
+  };
+
   const pianoAsk = createTopicResponder({
     rules: [
       {
@@ -181,6 +227,27 @@ The foyer is all red carpet, white pillars, and overconfident elegance. A crysta
 Two mutant ogre butlers stand on ceremonial alert near the center of the hall while a piano creature sings to the chandelier as if it were royalty.
 West lies a sitting room for waiting guests. A stair curves up to the guest rooms, and a broad passage north opens toward the smell of dinner.
 `.trim(),
+    scene: {
+      getPhase: getFoyerPhase,
+      phases: {
+        reception: {
+          description: 'At first glance the foyer performs welcome beautifully: music, symmetry, light, and servants arranged to imply that nothing here could possibly be accidental.',
+          onTurn: advanceFoyerScene,
+        },
+        scrutiny: {
+          description: 'The foyer has stopped pretending to be neutral space. It is a receiving mechanism, and you are currently the thing being sorted.',
+          onTurn: advanceFoyerScene,
+        },
+        diverted: {
+          description: 'With Oggaf and Zamzam called away, the receiving hall loses its center of enforcement and becomes, for a moment, architecture again.',
+          onTurn: advanceFoyerScene,
+        },
+        admitted: {
+          description: 'Now that your invitation has passed inspection, the foyer treats you less like an interruption and more like a successfully categorized problem.',
+          onTurn: advanceFoyerScene,
+        },
+      },
+    },
     exits: {
       south: 'grandStairs',
       west: 'sittingRoom',
@@ -188,7 +255,7 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
       up: 'guestRoom',
     },
     exitGuards: {
-      north({ getFlag }) {
+      north({ getFlag, setFlag }) {
         if (getFlag('foyerAdmitted')) {
           return null;
         }
@@ -196,6 +263,8 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
         if (getFlag('butlerDiversionActive')) {
           return null;
         }
+
+        setFlag('foyerThresholdTested', true);
 
         return 'One of the ogre butlers steps neatly into your path. "The feast receives invited guests," he says. The implication is that unverified guests may be received differently.';
       },
@@ -241,6 +310,10 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
       {
         when: ({ getFlag }) => getFlag('foyerSurveillanceNoticed'),
         text: 'The room now reads less like ornament and more like a checkpoint dressed as a welcome.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('foyerThresholdTested') && !getFlag('foyerAdmitted') && !getFlag('butlerDiversionActive'),
+        text: 'After testing the northern passage, it becomes impossible to miss that the butlers are not decorative. They are the room\'s decision rendered in muscle and gloves.',
       },
       {
         when: ({ getFlag }) => getFlag('butlerDiversionActive') && !getFlag('foyerAdmitted'),
