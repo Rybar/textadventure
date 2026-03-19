@@ -146,15 +146,15 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
       getPhase: getSecretCirclePhase,
       phases: {
         discovered: {
-          description: 'At first the chamber feels like a concealed answer: older than the feast, practical in its occultism, and only half interested in whether you deserve to be here.',
+          description: 'At first the chamber feels like a concealed answer: older than the feast, practical in its occultism, and only half interested in whether you deserve to be here or merely need it badly enough.',
           onTurn: advanceSecretCircleScene,
         },
         interpreted: {
-          description: 'Once the annotation has corrected your assumptions, the room stops reading as a complete escape and starts reading as a precise instrument embedded in a larger threshold problem.',
+          description: 'Once the annotation has corrected your assumptions, the room stops reading as a complete escape and starts reading as a precise instrument embedded in a larger threshold problem Oshregaal never fully solved.',
           onTurn: advanceSecretCircleScene,
         },
         activated: {
-          description: 'With the scroll read, the chamber has shifted from dormant apparatus to live route: narrow, conditional, and dangerous in the specific way working exits usually are.',
+          description: 'With the scroll read, the chamber has shifted from dormant apparatus to live route: narrow, conditional, and dangerous in the specific way working exits usually are when someone else designed them first.',
           onTurn: advanceSecretCircleScene,
         },
       },

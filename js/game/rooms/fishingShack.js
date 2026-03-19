@@ -77,15 +77,15 @@ Nets, bait jars, and servant-marked lockers crowd the walls. East, the feral gar
             setFlag('pitRouteHintKnown', true);
           }
 
-          return 'You search the shack and find clipped duty tags, bait hooks, and a grease-penciled servant rota noting east stair runoff checks before dinner. The household clearly services a dirtier lower route than the front door fiction admits.';
+          return 'You search the shack and find clipped duty tags, bait hooks, and a grease-penciled servant rota noting east stair runoff checks before dinner. The household clearly services a dirtier lower route than the front door fiction admits, and does so on schedule.';
         }
 
         if (target.includes('jar') || target.includes('bait') || target.includes('shelf')) {
-          return 'One bait jar smells of fish and cave-salt; another carries the sweeter medicinal rot of the house\'s stranger alchemical habits. Whatever feeds the feast also leaks into the workspaces.';
+          return 'One bait jar smells of fish and cave-salt; another carries the sweeter medicinal rot of the house\'s stranger alchemical habits. Whatever feeds the feast also leaks into the workspaces and gets handled by hands too busy to mythologize it.';
         }
 
         if (target.includes('boat') || target.includes('skiff') || target.includes('nets')) {
-          return 'The skiff and nets have seen real labor, not decorative sport. The servants fish, drag, and retrieve whatever the cavern or the house happens to cough up.';
+          return 'The skiff and nets have seen real labor, not decorative sport. The servants fish, drag, and retrieve whatever the cavern or the house happens to cough up, which is an unflattering category for both.';
         }
 
         return `You search the ${target} and come away with splinters, salt, and stronger suspicions about how the house disposes of its practical needs.`;
@@ -95,14 +95,14 @@ Nets, bait jars, and servant-marked lockers crowd the walls. East, the feral gar
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('eastRunoffNoted'),
-        text: 'Now that you have seen the rota, the shack reads less like a hobby shed and more like the mouth of a servant logistics network running below the house\'s manners.',
+        text: 'Now that you have seen the rota, the shack reads less like a hobby shed and more like the mouth of a servant logistics network running below the house\'s manners and tidying up after them.',
       },
     ],
     objects: {
-      nets: 'The cave-nets are stiff with mineral salt and old scales. They were built for ugly catches and heavier retrieval than dinner alone would require.',
+      nets: 'The cave-nets are stiff with mineral salt and old scales. They were built for ugly catches and heavier retrieval than dinner alone would require, and repaired without sentiment.',
       locker: 'The locker doors are carved with initials, tally marks, and one scratched warning about checking runoff before the upstairs guests start pretending to enjoy themselves.',
-      skiff: 'A flat-bottomed skiff rests half-dragged onto the stone, practical enough to suggest real work in the underground water beyond the light.',
-      jars: 'The jars hold bait, hooks, and a few stoppers of chemical nonsense labeled in the same hand that probably salts the fish.',
+      skiff: 'A flat-bottomed skiff rests half-dragged onto the stone, practical enough to suggest real work in the underground water beyond the light and too plain to flatter anyone about it.',
+      jars: 'The jars hold bait, hooks, and a few stoppers of chemical nonsense labeled in the same hand that probably salts the fish and scrubs the runoff.',
       block: 'The gutting block is stained almost black. It has never been asked to look ceremonial.',
     },
   });

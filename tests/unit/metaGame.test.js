@@ -31,8 +31,8 @@ test('lackey conversation begins after several interactions and appears on both 
 
   const messages = session.consumePendingMetaMessages();
   assert.equal(messages.length, 2);
-  assert.equal(messages[0].id, 'lackeyLeft001');
-  assert.equal(messages[1].id, 'lackeyRight001');
+  assert.equal(messages[0].id, 'maraBaselineA1');
+  assert.equal(messages[1].id, 'kellanBaselineA1');
   assert.equal(messages[0].placement, 'side-left');
   assert.equal(messages[1].placement, 'side-right');
   assert.equal(messages[0].source, 'experiment-lackeys');
@@ -63,8 +63,8 @@ test('foyer milestone gates the second lackey conversation', () => {
 
   const messages = session.consumePendingMetaMessages();
   assert.equal(messages.length, 2);
-  assert.equal(messages[0].id, 'lackeyLeft002');
-  assert.equal(messages[1].id, 'lackeyRight002');
+  assert.equal(messages[0].id, 'maraInvitationA2');
+  assert.equal(messages[1].id, 'kellanInvitationA2');
 });
 
 test('hacker messages wait for story milestones and use lower random placement', () => {
@@ -76,7 +76,6 @@ test('hacker messages wait for story milestones and use lower random placement',
     'baseline-hold',
     'foyer-screening',
     'host-contact',
-    'curiosity-breakpoint',
   ];
   session.worldState.advanceMetaMessages();
   assert.deepEqual(session.worldState.consumePendingMetaMessages(), []);
@@ -84,7 +83,7 @@ test('hacker messages wait for story milestones and use lower random placement',
   session.worldState.setFlag('metOshregaal', true);
   const messages = session.worldState.advanceMetaMessages();
   assert.equal(messages.length, 1);
-  assert.equal(messages[0].id, 'ghostHandshake');
+  assert.equal(messages[0].id, 'ilexFirstContactD1');
   assert.equal(messages[0].source, 'hacker');
   assert.equal(messages[0].placement, 'lower-random');
 });
@@ -133,7 +132,6 @@ test('debughacker and nexthacker preview only hacker messages without spending a
     'baseline-hold',
     'foyer-screening',
     'host-contact',
-    'curiosity-breakpoint',
   ];
 
   const previewResponse = session.submitCommand('nexthacker');
@@ -143,7 +141,7 @@ test('debughacker and nexthacker preview only hacker messages without spending a
   const messages = session.consumePendingMetaMessages();
   assert.equal(messages.length, 1);
   assert.equal(messages[0].source, 'hacker');
-  assert.equal(messages[0].id, 'ghostHandshake');
+  assert.equal(messages[0].id, 'ilexFirstContactD1');
   assert.equal(messages[0].placement, 'lower-random');
   assert.equal(messages[0].delayMs, 0);
 });

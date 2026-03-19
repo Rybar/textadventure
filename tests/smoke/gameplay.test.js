@@ -59,10 +59,12 @@ test('outer and guest rooms now expose exploratory clue interactions', () => {
   assert.match(session.submitCommand('north'), /foyer is all red carpet/i);
   assert.match(session.submitCommand('give invitation to oggaf'), /proceed as a guest|accepted/i);
   assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('look'), /performs ordinary comfort with suspicious discipline|assembled to look restful/i);
   assert.match(session.submitCommand('open chest'), /empty except for cedar shavings/i);
   assert.match(session.submitCommand('read guest card'), /Ring once for comfort/i);
   assert.match(session.submitCommand('pull on bell pull'), /Somewhere deep in the house, a polite bell answers once/i);
   assert.equal(session.worldState.getFlag('guestBellRung'), true);
+  assert.match(session.submitCommand('look'), /starts feeling managed|answers on its own schedule/i);
 });
 
 test('kitchen and secret circle interactions deepen the escape thread', () => {
@@ -255,11 +257,15 @@ test('new rooms beyond the initial slice extend the household and political map'
   moveToGuestWing(secondSession);
   assert.match(secondSession.submitCommand('north'), /forcefully improved by its current occupant/i);
   assert.equal(secondSession.worldState.currentRoomId, 'nathemaRoom');
+  assert.match(secondSession.submitCommand('look'), /occupied embassy suite|evaluate visitors before granting them the dignity of relevance/i);
   assert.match(secondSession.submitCommand('search chest'), /wrapped in diplomatic cloth but weighted like contraband/i);
   assert.equal(secondSession.worldState.getFlag('nathemaContrabandKnown'), true);
+  assert.match(secondSession.submitCommand('look'), /forward position for private policy|contraband chest is noticed/i);
   assert.match(secondSession.submitCommand('ask nathema about black wind'), /Bring me anything from the black wind line/i);
   assert.equal(secondSession.worldState.getFlag('nathemaBargained'), true);
+  assert.match(secondSession.submitCommand('look'), /openly transactional|travels with contingencies instead of comforts/i);
   assert.match(secondSession.submitCommand('tell nathema about escape'), /stop treating departure as a confession/i);
+  assert.match(secondSession.submitCommand('look'), /openly transactional|travels with contingencies instead of comforts/i);
 });
 
 test('the deeper private rooms now introduce Plum and the rescue branch', () => {
@@ -487,6 +493,7 @@ test('Nathema turns black-wind evidence or contraband into immediate leverage', 
   assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
   assert.match(session.submitCommand('show ledger to nathema'), /not gossip\. that is architecture/i);
   assert.equal(session.worldState.getFlag('nathemaEvidenceShown'), true);
+  assert.match(session.submitCommand('look'), /active political pressure|proof, contraband, route knowledge, and succession/i);
   assert.match(session.submitCommand('ask nathema about escape'), /evidence if you want scandal/i);
 
   const secondSession = createTestSession();
@@ -500,6 +507,7 @@ test('Nathema turns black-wind evidence or contraband into immediate leverage', 
   assert.match(secondSession.submitCommand('give black wind fruit to nathema'), /alter decisions|turn leverage into alignment/i);
   assert.equal(secondSession.worldState.getFlag('nathemaBlackWindSampleDelivered'), true);
   assert.equal(secondSession.worldState.getItemLocation('black-wind-fruit'), null);
+  assert.match(secondSession.submitCommand('wait'), /loses any last pretense of guesthood|negotiation suite now/i);
   assert.match(secondSession.submitCommand('ask nathema about black wind'), /documents buy fear|fruit buys appetites/i);
 
   const thirdSession = createTestSession();
@@ -659,6 +667,7 @@ test('Nathema can convert delivered leverage into a dark-bargain escape', () => 
   assert.match(session.submitCommand('give grey grin blade to nathema'), /leverage with edges/i);
   assert.match(session.submitCommand('tell nathema escape'), /tomorrow's emergency|transfer of power|ugly, but it will work/i);
   assert.equal(session.worldState.getFlag('nathemaEscapeDealSecured'), true);
+  assert.match(session.submitCommand('look'), /command post of a coming internal crisis|escape arrangement secured/i);
 
   assert.match(session.submitCommand('south'), /guest room is almost offensively normal/i);
   assert.match(session.submitCommand('down'), /foyer is all red carpet/i);

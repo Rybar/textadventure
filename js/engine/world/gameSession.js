@@ -134,7 +134,7 @@ export class GameSession {
       take: context => this.handleTake(context.command),
       drop: context => this.handleDrop(context.command),
       inventory: () => this.worldState.listInventory(),
-      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD. For meta previewing, use DEBUGMETA and NEXTMETA. For hacker-only previewing, use DEBUGHACKER and NEXTHACKER. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
+      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD. For shell work, use SCAN, PEEK, or POKE once memory is exposed. For meta previewing, use DEBUGMETA and NEXTMETA. For hacker-only previewing, use DEBUGHACKER and NEXTHACKER. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
       give: context => this.handleGive(context.command, context),
       show: context => this.handleShow(context.command, context),
       ask: context => this.handleAsk(context.command, context),
@@ -152,6 +152,9 @@ export class GameSession {
       debugmeta: context => this.toggleMetaDebug(context.command.directObject),
       debughacker: context => this.toggleHackerDebug(context.command.directObject),
       debugpanel: context => this.debugPanel(context.command.directObject),
+      scan: context => this.handleMemoryScan(context.command.directObject),
+      peek: context => this.handleMemoryPeek(context.command.directObject),
+      poke: context => this.handleMemoryPoke(context.command.directObject),
       nextmeta: () => this.forceNextMetaEvent(),
       nexthacker: () => this.forceNextHackerEvent(),
       save: context => this.saveGame(context.command.directObject),
@@ -182,8 +185,152 @@ export class GameSession {
     return verb === 'debugmeta'
       || verb === 'debughacker'
       || verb === 'debugpanel'
+      || verb === 'scan'
+      || verb === 'peek'
+      || verb === 'poke'
       || verb === 'nextmeta'
       || verb === 'nexthacker';
+  }
+
+  ensureMemoryShellAvailable() {
+    if (!this.worldState.isPanelUnlocked('memory')) {
+      return 'No readable memory bus is exposed yet.';
+    }
+
+    if (!this.worldState.getFlag('shellContactAcknowledged')) {
+      this.worldState.setFlag('shellContactAcknowledged', true);
+    }
+
+    if (!this.worldState.getFlag('memoryBusExposed')) {
+      this.worldState.setFlag('memoryBusExposed', true);
+    }
+
+    return null;
+  }
+
+  parseMemoryAddressToken(token) {
+    const normalizedToken = String(token ?? '').trim().toLowerCase();
+    if (!normalizedToken) {
+      return null;
+    }
+
+    if (/^0x[0-9a-f]+$/u.test(normalizedToken)) {
+      return Number.parseInt(normalizedToken, 16);
+    }
+
+    if (/^\d+$/u.test(normalizedToken)) {
+      return Number.parseInt(normalizedToken, 10);
+    }
+
+    return null;
+  }
+
+  parseMemoryBitToken(token) {
+    const normalizedToken = String(token ?? '').trim().toLowerCase();
+    if (!/^[0-7]$/u.test(normalizedToken)) {
+      return null;
+    }
+
+    return Number.parseInt(normalizedToken, 10);
+  }
+
+  parseMemoryOperands(rawOperands = '') {
+    return String(rawOperands ?? '')
+      .trim()
+      .split(/\s+/u)
+      .filter(Boolean);
+  }
+
+  handleMemoryScan(rawOperands = '') {
+    const unavailableMessage = this.ensureMemoryShellAvailable();
+    if (unavailableMessage) {
+      return unavailableMessage;
+    }
+
+    const operands = this.parseMemoryOperands(rawOperands);
+    if (operands.length === 0) {
+      return this.worldState.describeMemoryPanel();
+    }
+
+    const address = this.parseMemoryAddressToken(operands[0]);
+    if (address === null) {
+      return 'Usage: SCAN or SCAN <address>.';
+    }
+
+    const rowLine = this.worldState.renderMemoryRowLine(address);
+    if (!rowLine) {
+      return 'No readable row exists at that address.';
+    }
+
+    return rowLine;
+  }
+
+  handleMemoryPeek(rawOperands = '') {
+    const unavailableMessage = this.ensureMemoryShellAvailable();
+    if (unavailableMessage) {
+      return unavailableMessage;
+    }
+
+    const operands = this.parseMemoryOperands(rawOperands);
+    if (operands.length === 0) {
+      return 'Usage: PEEK <address> [bit].';
+    }
+
+    const address = this.parseMemoryAddressToken(operands[0]);
+    if (address === null) {
+      return 'Usage: PEEK <address> [bit].';
+    }
+
+    if (operands.length === 1) {
+      const rowLine = this.worldState.renderMemoryRowLine(address);
+      return rowLine ?? 'No readable row exists at that address.';
+    }
+
+    const bit = this.parseMemoryBitToken(operands[1]);
+    if (bit === null) {
+      return 'Usage: PEEK <address> [bit].';
+    }
+
+    const entry = this.worldState.getMemoryFlagEntryByAddress(address, bit);
+    if (!entry) {
+      return 'No readable cell exists at that address.';
+    }
+
+    return `${this.worldState.formatMemoryAddress(entry.address)}.${entry.bit} ${entry.value ? '##' : '[]'}`;
+  }
+
+  handleMemoryPoke(rawOperands = '') {
+    const unavailableMessage = this.ensureMemoryShellAvailable();
+    if (unavailableMessage) {
+      return unavailableMessage;
+    }
+
+    const operands = this.parseMemoryOperands(rawOperands);
+    if (operands.length < 2) {
+      return 'Usage: POKE <address> <bit> [toggle|set|clear].';
+    }
+
+    const address = this.parseMemoryAddressToken(operands[0]);
+    const bit = this.parseMemoryBitToken(operands[1]);
+    if (address === null || bit === null) {
+      return 'Usage: POKE <address> <bit> [toggle|set|clear].';
+    }
+
+    const modeToken = String(operands[2] ?? 'toggle').trim().toLowerCase();
+      let mode = null;
+      if (modeToken === '1' || modeToken === 'on' || modeToken === 'set') {
+        mode = 'set';
+      } else if (modeToken === '0' || modeToken === 'off' || modeToken === 'clear') {
+        mode = 'clear';
+      } else if (modeToken === 'toggle') {
+        mode = 'toggle';
+      }
+
+    if (!mode) {
+      return 'Usage: POKE <address> <bit> [toggle|set|clear].';
+    }
+
+    return this.worldState.writeMemoryFlagByLocation(address, bit, mode).message;
   }
 
   normalizeInputText(rawInput) {

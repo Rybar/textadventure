@@ -58,7 +58,7 @@ export function createCesspoolRoom() {
     id: 'cesspool',
     title: 'Cesspool',
     description: `
-The house\'s digestive underside spreads out in a stone cistern of runoff, refuse, and slow foul water. Narrow ledges skirt the wall. At the center, crates and broken platters have been arranged into a mock dinner tableau around cracked dolls and salvaged silver.
+  The house's digestive underside spreads out in a stone cistern of runoff, refuse, and slow foul water. Narrow ledges skirt the wall. At the center, crates and broken platters have been arranged into a mock dinner tableau around cracked dolls and salvaged silver.
 Half-submerged beside that obscene little feast lounges Slorum, who regards the room less as waste than as a salon. A service ledge lies west beyond the muck.
 `.trim(),
     exits: {
@@ -94,8 +94,8 @@ Half-submerged beside that obscene little feast lounges Slorum, who regards the 
 
         if (!target || target.includes('cesspool') || target.includes('room') || target.includes('tableau') || target.includes('table')) {
           return getFlag('cesspoolCrossingSafe')
-            ? 'The mock dinner tableau remains hideous, but now Slorum has marked the dry stones through it with proprietary care. Past the dolls and cracked plates, the western ledge offers a real if humiliating route out.'
-            : 'A closer look reveals that the little table is carefully arranged: cracked plates, doll-guests, scraps sorted by type, even a place of honor set with salvaged silver. Slorum is not guarding random filth. She is hosting with it.';
+            ? 'The mock dinner tableau remains hideous, but now Slorum has marked the dry stones through it with proprietary care. Past the dolls and cracked plates, the western ledge offers a real if humiliating route out, licensed by etiquette rather than engineering.'
+            : 'A closer look reveals that the little table is carefully arranged: cracked plates, doll-guests, scraps sorted by type, even a place of honor set with salvaged silver. Slorum is not guarding random filth. She is hosting with it and judging accordingly.';
         }
 
         if (target.includes('doll') || target.includes('plate') || target.includes('silver')) {
@@ -105,20 +105,20 @@ Half-submerged beside that obscene little feast lounges Slorum, who regards the 
         if (target.includes('grate') || target.includes('drain') || target.includes('west')) {
           return getFlag('cesspoolCrossingSafe')
             ? 'Beyond Slorum\'s table, the western stones lead to a service ledge and a low drain cleft opening back toward cavern air.'
-            : 'The western way out is real, but the safest stones pass directly by Slorum and her dinner party. In this room, passage apparently depends on manners.';
+            : 'The western way out is real, but the safest stones pass directly by Slorum and her dinner party. In this room, passage apparently depends on manners more than balance.';
         }
 
-        return `You search the ${target} and come away wetter, dirtier, and no better disposed toward Oshregaal\'s plumbing.`;
+        return `You search the ${target} and come away wetter, dirtier, and no better disposed toward Oshregaal's plumbing.`;
       },
     },
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('slorumFlattered') && !getFlag('slorumGifted'),
-        text: 'Slorum now regards you as potentially educable, which is more dangerous than open dislike but much more workable.',
+        text: 'Slorum now regards you as potentially educable, which is more dangerous than open dislike but much more workable if you enjoy passing exams in sewage.',
       },
       {
         when: ({ getFlag }) => getFlag('cesspoolCrossingSafe'),
-        text: 'A line of slightly drier stones now leads west past Slorum\'s table, each one tacitly licensed by her approval.',
+        text: 'A line of slightly drier stones now leads west past Slorum\'s table, each one tacitly licensed by her approval and therefore somehow more unnerving than the sludge.',
       },
     ],
     objects: {
@@ -162,10 +162,10 @@ Half-submerged beside that obscene little feast lounges Slorum, who regards the 
           },
         },
       },
-      table: 'The mock dinner table is built from crate wood, broken plates, doll limbs, and salvaged silver arranged with disturbing care.',
-      dolls: 'The cracked dolls are posed as guests in various states of ruin and etiquette.',
-      ledges: 'The ledges around the cistern wall are narrow, slick, and much less safe than Slorum\'s approval would make them.',
-      water: 'Calling it water is generous. The cesspool has ambitions beyond chemistry.',
+      table: 'The mock dinner table is built from crate wood, broken plates, doll limbs, and salvaged silver arranged with disturbing care, as if etiquette itself had washed up here and adapted.',
+      dolls: 'The cracked dolls are posed as guests in various states of ruin and etiquette, each one waiting for a course that should never be served.',
+      ledges: 'The ledges around the cistern wall are narrow, slick, and much less safe than Slorum\'s approval would make them sound.',
+      water: 'Calling it water is generous. The cesspool has ambitions beyond chemistry and no interest in modesty.',
     },
   });
 }

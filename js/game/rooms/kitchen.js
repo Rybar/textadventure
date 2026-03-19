@@ -250,19 +250,19 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
       getPhase: getKitchenPhase,
       phases: {
         working: {
-          description: 'The kitchen still reads as brute competence: heat, clutter, and Wrongus forcing impossible ingredients to accept hierarchy.',
+          description: 'The kitchen still reads as brute competence: heat, clutter, and Wrongus forcing impossible ingredients to accept hierarchy under deadline.',
           onTurn: advanceKitchenScene,
         },
         revealed: {
-          description: 'Now that you know about the blood work, the kitchen looks less like a cookspace and more like a ritual workshop that happens to smell delicious.',
+          description: 'Now that you know about the blood work, the kitchen looks less like a cookspace and more like a ritual workshop that happens to smell delicious while hiding its theology in reductions.',
           onTurn: advanceKitchenScene,
         },
         sequenced: {
-          description: 'With the service timing understood, the whole room resolves into ordered courses and hidden cues. Wrongus is not just cooking; he is stage-managing a belief system.',
+          description: 'With the service timing understood, the whole room resolves into ordered courses and hidden cues. Wrongus is not just cooking; he is stage-managing a belief system with ladles and silver.',
           onTurn: advanceKitchenScene,
         },
         fragile: {
-          description: 'Having identified the meal\'s weak points, you can feel how precariously the kitchen maintains the illusion that dinner simply happens instead of being manufactured line by line.',
+          description: 'Having identified the meal\'s weak points, you can feel how precariously the kitchen maintains the illusion that dinner simply happens instead of being manufactured line by line and passed off as inevitability.',
           onTurn: advanceKitchenScene,
         },
       },

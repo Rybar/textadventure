@@ -30,7 +30,7 @@ export function createBathroomRoom() {
     id: 'bathroom',
     title: 'Bathroom',
     description: `
-The guest bathroom is absurdly luxurious in the punishing way only Oshregaal\'s house could manage. Marble tile gleams under flattering candlelight. A claw-foot bath, a silver-backed mirror, and a cabinet of soaps and powders all suggest that even hygiene here is a performance.
+  The guest bathroom is absurdly luxurious in the punishing way only Oshregaal's house could manage. Marble tile gleams under flattering candlelight. A claw-foot bath, a silver-backed mirror, and a cabinet of soaps and powders all suggest that even hygiene here is a performance.
 West lies the guest room. Somewhere behind the eastern tilework, a sour draft keeps ruining the illusion.
 `.trim(),
     exits: {
@@ -53,18 +53,18 @@ West lies the guest room. Somewhere behind the eastern tilework, a sour draft ke
         if (!target || target.includes('bathroom') || target.includes('tile') || target.includes('floor') || target.includes('wall')) {
           if (!getFlag('bathroomRouteKnown')) {
             setFlag('bathroomRouteKnown', true);
-            return 'You kneel among the polished tiles and find scrape marks around a decorative cistern panel. Behind the perfume and marble, a sour draft rises from maintenance space below. The house, apparently, has a digestive tract.';
+            return 'You kneel among the polished tiles and find scrape marks around a decorative cistern panel. Behind the perfume and marble, a sour draft rises from maintenance space below. The house, apparently, has a digestive tract and only modest shame about hiding it.';
           }
 
           return 'The tile seams still betray the concealed maintenance panel. Luxury is only a lid on the route below.';
         }
 
         if (target.includes('cabinet') || target.includes('soap') || target.includes('powder')) {
-          return 'The cabinet holds guest soaps, powders, and oils expensive enough to flatter the living and impress the dead. Even the toiletries here feel like diplomatic instruments.';
+          return 'The cabinet holds guest soaps, powders, and oils expensive enough to flatter the living and impress the dead. Even the toiletries here feel like diplomatic instruments issued to faces before reentry.';
         }
 
         if (target.includes('bath') || target.includes('tub') || target.includes('commode')) {
-          return 'The fixtures are oversized, overdesigned, and almost ceremonial. Oshregaal appears to believe even private functions should feel curated.';
+          return 'The fixtures are oversized, overdesigned, and almost ceremonial. Oshregaal appears to believe even private functions should feel curated and gently surveilled by taste.';
         }
 
         return `You search the ${target} and discover only polish, plumbing, and one more proof that the house considers privacy a decorative genre.`;
@@ -74,11 +74,11 @@ West lies the guest room. Somewhere behind the eastern tilework, a sour draft ke
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('bathroomRouteKnown'),
-        text: 'Now that you have noticed the scrape marks, the decorative cistern panel no longer reads as ornament. It reads as access.',
+        text: 'Now that you have noticed the scrape marks, the decorative cistern panel no longer reads as ornament. It reads as access pretending to be refinement.',
       },
       {
         when: ({ getFlag }) => getFlag('bathroomPanelOpened'),
-        text: 'The opened cistern panel exposes a service descent below the marble, carrying up the candid smell of the house\'s underside.',
+        text: 'The opened cistern panel exposes a service descent below the marble, carrying up the candid smell of the house\'s underside and ruining the room\'s manners all by itself.',
       },
     ],
     objects: {
@@ -104,7 +104,7 @@ West lies the guest room. Somewhere behind the eastern tilework, a sour draft ke
 
             setFlag('bathroomRouteKnown', true);
             setFlag('bathroomPanelOpened', true);
-            return 'You work your fingers into the tile seam and pull. A concealed cistern panel swings free, releasing a rank breath from the service shaft below. So much for luxury.';
+            return 'You work your fingers into the tile seam and pull. A concealed cistern panel swings free, releasing a rank breath from the service shaft below. So much for luxury remaining a complete argument.';
           },
         },
       },

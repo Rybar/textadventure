@@ -190,16 +190,16 @@ The safer path leads back southeast toward the cavern and the stairs.
         if (!target || target.includes('garden') || target.includes('ferns') || target.includes('foliage')) {
           if (!getFlag('fernCulvertNoticed')) {
             setFlag('fernCulvertNoticed', true);
-            return 'You part the cold fronds and discover a low stone culvert hidden behind one of the ecstatic gnome statues. Roots choke most of it, but the tunnel proves the garden was once meant to breathe into the house by some quieter route.';
+            return 'You part the cold fronds and discover a low stone culvert hidden behind one of the ecstatic gnome statues. Roots choke most of it, but the tunnel proves the garden was once meant to breathe into the house by some quieter route than ceremony would permit.';
           }
 
-          return 'You search the garden again and find the same hidden culvert behind the statues, still too root-choked for an easy crawl. The knowledge feels more useful than the opening itself.';
+          return 'You search the garden again and find the same hidden culvert behind the statues, still too root-choked for an easy crawl. The discovery continues to matter more as an idea of the house than as a practical hole.';
         }
 
         if (target.includes('statue') || target.includes('gnome')) {
           if (!getFlag('fernCulvertNoticed')) {
             setFlag('fernCulvertNoticed', true);
-            return 'Kneeling among the gnomes, you notice that one statue sits before a half-buried stone culvert. The opening is narrow and fouled with roots, but it is unmistakably architectural rather than natural.';
+            return 'Kneeling among the gnomes, you notice that one statue sits before a half-buried stone culvert. The opening is narrow and fouled with roots, but it is unmistakably architectural rather than natural, a polite piece of hidden infrastructure gone wild at the edges.';
           }
 
           return 'The statues remain blissful and hideous. Behind the rearmost one, the narrow culvert waits in root-clotted secrecy.';
@@ -220,7 +220,7 @@ The safer path leads back southeast toward the cavern and the stairs.
       },
       {
         when: ({ getFlag }) => getFlag('fernCulvertNoticed'),
-        text: 'Behind one of the statues, a root-choked stone culvert now stands out once you know to look for it.',
+        text: 'Behind one of the statues, a root-choked stone culvert now stands out once you know to look for it, turning the garden from scenery into evidence of another route.',
       },
     ],
     objects: {
@@ -255,17 +255,17 @@ The safer path leads back southeast toward the cavern and the stairs.
           },
         },
       },
-      ferns: 'The fronds are slick and cold to the touch. Between them, the darkness looks deeper than the cavern really is.',
-      peafowl: 'You glimpse a length of impossible plumage and then nothing at all. Whatever nests here is not entirely concerned with remaining in one plane.',
-      statues: 'Each gnome is uniquely mutated and improbably serene, as though the sculptor admired both ecstasy and deformity.',
-      shack: 'A low fishing shack squats west of the garden, kept just far enough from the formal approach to avoid embarrassing the architecture.',
+      ferns: 'The fronds are slick and cold to the touch. Between them, the darkness looks deeper than the cavern really is, as if the garden has learned to keep secrets by imitation.',
+      peafowl: 'You glimpse a length of impossible plumage and then nothing at all. Whatever nests here is not entirely concerned with remaining in one plane or one mood.',
+      statues: 'Each gnome is uniquely mutated and improbably serene, as though the sculptor admired both ecstasy and deformity and saw no reason to choose between them.',
+      shack: 'A low fishing shack squats west of the garden, kept just far enough from the formal approach to avoid embarrassing the architecture with practicality.',
       culvert: {
         description({ getFlag }) {
           if (!getFlag('fernCulvertNoticed')) {
             return 'You do not yet spot any opening worth calling a culvert among the roots and fern-shadow.';
           }
 
-          return 'The culvert is old stonework, too deliberate to be a natural crack. It runs under the garden wall toward the house, but roots and wet soil have narrowed it to something only a smaller creature could love.';
+          return 'The culvert is old stonework, too deliberate to be a natural crack. It runs under the garden wall toward the house, but roots and wet soil have narrowed it to something only a smaller creature, or a more desperate plan, could love.';
         },
       },
     },

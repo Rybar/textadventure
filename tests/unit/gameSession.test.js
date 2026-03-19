@@ -159,3 +159,83 @@ test('map panel prefers authored room coordinates over pure exit inference', () 
   assert.equal(mapPanel?.unlocked, true);
   assert.ok((guestRoomBox?.left ?? -1) > (foyerBox?.left ?? -1));
 });
+
+test('memory panel renders an unlabeled flag bit-grid with byte-style addresses', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.submitCommand('debugpanel memory');
+
+  const memoryPanel = session.getInterfaceModel().panels.find(panel => panel.id === 'memory');
+  const memoryText = memoryPanel?.lines.join('\n') ?? '';
+
+  assert.equal(memoryPanel?.unlocked, true);
+  assert.match(memoryText, /0\s+1\s+2\s+3\s+4\s+5\s+6\s+7/);
+  assert.match(memoryText, /0x0000/);
+  assert.match(memoryText, /##|\[\]/);
+  assert.doesNotMatch(memoryText, /hasInvitation|foyerAdmitted|plumFound/);
+});
+
+test('memory flag locations resolve to stable hidden system flags', () => {
+  const session = createTestSession();
+
+  const entries = session.worldState.getMemoryFlagEntries();
+  const hiddenEntry = entries.find(entry => entry.flagName === 'exitPermissionGranted');
+
+  assert.ok(hiddenEntry);
+  assert.equal(hiddenEntry?.value, false);
+  assert.equal(
+    session.worldState.getMemoryFlagByLocation(hiddenEntry?.address, hiddenEntry?.bit),
+    'exitPermissionGranted',
+  );
+});
+
+test('scan and peek expose the memory bus without revealing flag labels', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.submitCommand('debugpanel memory');
+
+  const scanResponse = session.submitCommand('scan');
+  assert.match(scanResponse, /0x0000/);
+  assert.match(scanResponse, /0\s+1\s+2\s+3\s+4\s+5\s+6\s+7/);
+  assert.equal(session.worldState.getFlag('memoryBusExposed'), true);
+  assert.equal(session.worldState.turns, 0);
+
+  const firstEntry = session.worldState.getMemoryFlagEntries()[0];
+  const peekResponse = session.submitCommand(`peek ${session.worldState.formatMemoryAddress(firstEntry.address)} ${firstEntry.bit}`);
+  assert.match(peekResponse, /0x0000\.[0-7] (##|\[\])/);
+  assert.doesNotMatch(peekResponse, /hasInvitation|foyerAdmitted/);
+  assert.equal(session.worldState.turns, 0);
+});
+
+test('poke can flip hidden system flags and unlock injected overlays', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.submitCommand('debugpanel memory');
+
+  const mapEntry = session.worldState.getMemoryFlagEntries().find(entry => entry.flagName === 'mapOverlayInjected');
+  assert.ok(mapEntry);
+
+  const response = session.submitCommand(`poke ${session.worldState.formatMemoryAddress(mapEntry.address)} ${mapEntry.bit} set`);
+  assert.match(response, /=> ##/);
+  assert.equal(session.worldState.getFlag('mapOverlayInjected'), true);
+  assert.equal(session.getInterfaceModel().panels.find(panel => panel.id === 'map')?.unlocked, true);
+  assert.equal(session.worldState.turns, 0);
+});
+
+test('poke rejects writes to normal story flags', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.submitCommand('debugpanel memory');
+
+  const storyEntry = session.worldState.getMemoryFlagEntries().find(entry => entry.flagName === 'hasInvitation');
+  assert.ok(storyEntry);
+
+  const response = session.submitCommand(`poke ${session.worldState.formatMemoryAddress(storyEntry.address)} ${storyEntry.bit}`);
+  assert.match(response, /read-only/i);
+  assert.equal(session.worldState.getFlag('hasInvitation'), true);
+  assert.equal(session.worldState.turns, 0);
+});

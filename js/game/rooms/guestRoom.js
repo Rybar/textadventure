@@ -2,6 +2,46 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createGuestRoom() {
+  const getGuestRoomPhase = ({ getFlag }) => {
+    if (getFlag('butlerDiversionActive')) {
+      return 'loosened';
+    }
+
+    if (getFlag('guestBellRung')) {
+      return 'monitored';
+    }
+
+    return 'presented';
+  };
+
+  const advanceGuestRoomScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastGuestRoomPhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.guestRoomPhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastGuestRoomPhase: currentScenePhase,
+      guestRoomPhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'presented':
+        return 'The lamp, the chest, and the bell pull maintain their perfect little arrangement, as if the room were practicing how to seem kind without ever becoming safe.';
+      case 'monitored':
+        return 'After the bell answer from below, the room feels less empty than staffed at a distance, as if your needs have been entered into a ledger instead of ignored.';
+      case 'loosened':
+        return 'With the correction signal drawing eyes elsewhere, the guest room feels briefly downgraded from custody to furniture.';
+      default:
+        return null;
+    }
+  };
+
   const lamp = new Item({
     id: 'oil-lamp',
     name: 'oil lamp',
@@ -93,12 +133,33 @@ The guest room is almost offensively normal: a neat rococo bed, a nightstand, an
 It is the sort of room designed to calm a person who has not yet understood how carefully they are being kept.
 The stair leads back down to the foyer.
 `.trim(),
+    scene: {
+      getPhase: getGuestRoomPhase,
+      phases: {
+        presented: {
+          description: 'At first the room performs ordinary comfort with suspicious discipline, a guest chamber assembled to look restful before it proves supervisory and administrative about it.',
+          onTurn: advanceGuestRoomScene,
+        },
+        monitored: {
+          description: 'Once the bell has been tested, the room stops feeling vacant and starts feeling managed, every soft surface implicated in a service system that answers on its own schedule and remembers the request.',
+          onTurn: advanceGuestRoomScene,
+        },
+        loosened: {
+          description: 'With the butlers pulled off their normal rhythm, the guest room briefly loses some of its grip. The same furniture remains, but the custody behind it feels fractionally under-attended and therefore newly imaginable as escapable.',
+          onTurn: advanceGuestRoomScene,
+        },
+      },
+    },
     exits: {
       north: 'nathemaRoom',
       east: 'bathroom',
       down: 'foyer',
     },
     conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('guestBellRung') && !getFlag('butlerDiversionActive'),
+        text: 'Now that you have tested the bell, the room feels calibrated rather than neglected. Service here is clearly real; it is simply not obliged to arrive on your terms.',
+      },
       {
         when: ({ getFlag }) => getFlag('butlerDiversionActive'),
         text: 'Somewhere beyond the room, the house sounds fractionally less supervised than usual. Oggaf and Zamzam are attending to the correction signal instead of their normal stations.',

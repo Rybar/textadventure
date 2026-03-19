@@ -121,16 +121,16 @@ The main stair rises to the mansion doors, while a narrower path wanders northwe
         if (!target || target.includes('cavern') || target.includes('ground') || target.includes('pool') || target.includes('puddle')) {
           if (!getFlag('cavernWindowRouteKnown')) {
             setFlag('cavernWindowRouteKnown', true);
-            return 'You pick through the wet stone and mineral crust until you find broken white plaster beneath the wall. Looking up again, you realize one high service window is cracked open a finger-width wider than the others. Not usable from here, but enough to prove the house leaks in more ways than the front door admits.';
+            return 'You pick through the wet stone and mineral crust until you find broken white plaster beneath the wall, fresh enough to feel like a quiet indiscretion. Looking up again, you realize one high service window is cracked open a finger-width wider than the others. Not usable from here, but enough to prove the house leaks in more ways than the front door admits.';
           }
 
-          return 'The pools still hide broken plaster and grit fallen from above. Once noticed, the slightly open service window cannot be mistaken for decoration.';
+          return 'The pools still hide broken plaster and grit fallen from above. Once noticed, the slightly open service window stops reading as ornament and starts reading as habit.';
         }
 
         if (target.includes('window')) {
           if (!getFlag('cavernWindowRouteKnown')) {
             setFlag('cavernWindowRouteKnown', true);
-            return 'You study the mansion facade until one upper window resolves itself as subtly different: not merely curtained, but imperfectly shut. Pale plaster dust below suggests it opens often enough to shed crumbs of the wall.';
+            return 'You study the mansion facade until one upper window resolves itself as subtly different: not merely curtained, but imperfectly shut. Pale plaster dust below suggests it opens often enough to shed crumbs of the wall and enough caution to matter.';
           }
 
           return 'One upper service window remains cracked open by a mean, practical margin. It is too high to help you now, but too real to ignore.';
@@ -143,14 +143,14 @@ The main stair rises to the mansion doors, while a narrower path wanders northwe
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('cavernWindowRouteKnown'),
-        text: 'High above, one service window now stands out as slightly ajar, a tiny architectural indiscretion in an otherwise composed facade.',
+        text: 'High above, one service window now stands out as slightly ajar, a tiny architectural indiscretion in an otherwise composed facade and proof that formal entry is not the only traffic this house expects.',
       },
     ],
     objects: {
-      mansion: 'The mansion looks as though a nobleman commissioned it and a fever designed the details later. Windows gleam in two levels across the cavern wall.',
-      windows: 'Nine windows watch the cavern. Most are curtained, as if the house has decided what deserves to be seen.',
-      stalactites: 'Each stalactite is wrapped in chain. The effect is less protective than punitive.',
-      stairs: 'Broad white marble stairs climb toward the double doors with theatrical confidence.',
+      mansion: 'The mansion looks as though a nobleman commissioned it and a fever designed the details later. Its marble front pretends to belong to daylight and lawns rather than wet stone and echo.',
+      windows: 'Nine windows watch the cavern. Most are curtained, as if the house has already decided what deserves to be seen and what must only be inferred.',
+      stalactites: 'Each stalactite is wrapped in chain. The effect is less protective than punitive, as if even the cave had to be taught table manners.',
+      stairs: 'Broad white marble stairs climb toward the double doors with theatrical confidence, daring you to treat the approach as choice rather than procession.',
       doors: 'The double doors atop the stairs are the sort built to admit honored guests and trap them later.',
       plaster: {
         description({ getFlag }) {
@@ -158,7 +158,7 @@ The main stair rises to the mansion doors, while a narrower path wanders northwe
             return 'There is some white grit among the darker stone, but nothing you would yet call meaningful plasterfall.';
           }
 
-          return 'The fallen plaster is fresh enough to connect with the slightly open service window above. The house is shedding evidence of quieter traffic.';
+          return 'The fallen plaster is fresh enough to connect with the slightly open service window above. The house is shedding evidence of quieter traffic than its stairs are willing to acknowledge.';
         },
       },
     },

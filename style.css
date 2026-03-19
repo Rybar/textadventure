@@ -7,6 +7,7 @@
   --terminal-frame-padding: clamp(8px, 1.2vh, 14px);
   --panel-width: clamp(220px, 24vw, 320px);
   --panel-gap: clamp(10px, 1.5vw, 18px);
+  --desktop-transcript-stage-width: clamp(720px, 60vw, 1120px);
   --mobile-command-bar-height: 52px;
   --visual-viewport-height: 100dvh;
   --mobile-keyboard-offset: 0px;
@@ -54,6 +55,13 @@ body {
   min-height: 0;
   overflow: hidden;
   transition: width 420ms ease;
+}
+
+@media (min-width: 761px) {
+  body:not([data-device-theme="mobile"]) #terminal-stage[data-layout="transcript-only"] {
+    width: min(100%, var(--desktop-transcript-stage-width));
+    max-width: min(var(--desktop-transcript-stage-width), calc(100vw - (var(--screen-shell-padding) * 2)));
+  }
 }
 
 #status-bar {
@@ -241,7 +249,7 @@ body {
 }
 
 #terminal-stage[data-layout="with-panels"] #text-grid-container {
-  transform: translateX(-10px);
+  transform: translateX(0);
 }
 
 #transcript-output {

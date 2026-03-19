@@ -1795,35 +1795,190 @@ export class WorldState {
     };
   }
 
-  buildMemoryPanelModel(definition, state) {
-    const currentRoom = this.getCurrentRoom();
-    const trueFlags = Object.entries(this.flags)
-      .filter(([, value]) => value)
-      .slice(0, 3)
-      .map(([flagName]) => flagName);
-    const inventoryEntries = this.inventory.slice(0, 2).map(item => item.id);
-    const labels = [
-      'shell.bootstrap',
-      `room.${currentRoom.id}`,
-      ...inventoryEntries.map(itemId => `item.${itemId}`),
-      ...trueFlags.map(flagName => `flag.${flagName}`),
-    ].slice(0, 6);
-
-    const lines = labels.map((label, index) => {
-      const address = (0x1000 + (index * 0x10)).toString(16).toUpperCase().padStart(4, '0');
-      return `0x${address} ${label}`;
+  getMemoryFlagEntries() {
+    return Object.keys(this.flags).map((flagName, index) => {
+      const byteIndex = Math.floor(index / 8);
+      return {
+        flagName,
+        index,
+        byteIndex,
+        address: byteIndex * 0x08,
+        bit: index % 8,
+        value: Boolean(this.flags[flagName]),
+      };
     });
+  }
 
-    if (lines.length === 0) {
-      lines.push('0x1000 shell.bootstrap');
+  getMemoryFlagEntryByAddress(address, bit) {
+    const normalizedAddress = Number(address);
+    const normalizedBit = Number(bit);
+
+    if (!Number.isInteger(normalizedAddress) || normalizedAddress < 0) {
+      return null;
     }
 
+    if (!Number.isInteger(normalizedBit) || normalizedBit < 0 || normalizedBit > 7) {
+      return null;
+    }
+
+    return this.getMemoryFlagEntries().find(entry => entry.address === normalizedAddress && entry.bit === normalizedBit) ?? null;
+  }
+
+  getMemoryFlagByLocation(address, bit) {
+    return this.getMemoryFlagEntryByAddress(address, bit)?.flagName ?? null;
+  }
+
+  formatMemoryAddress(address) {
+    return `0x${Number(address).toString(16).toUpperCase().padStart(4, '0')}`;
+  }
+
+  getMemoryRowEntries(address) {
+    const normalizedAddress = Number(address);
+    if (!Number.isInteger(normalizedAddress) || normalizedAddress < 0) {
+      return null;
+    }
+
+    const rowAddress = Math.floor(normalizedAddress / 0x08) * 0x08;
+    const rowEntries = this.getMemoryFlagEntries().filter(entry => entry.address === rowAddress);
+
+    if (rowEntries.length === 0) {
+      return null;
+    }
+
+    return {
+      address: rowAddress,
+      entries: rowEntries,
+    };
+  }
+
+  renderMemoryRowLine(address) {
+    const row = this.getMemoryRowEntries(address);
+    if (!row) {
+      return null;
+    }
+
+    const cells = Array.from({ length: 8 }, (_, bitIndex) => {
+      const entry = row.entries.find(candidate => candidate.bit === bitIndex);
+
+      if (!entry) {
+        return '  ';
+      }
+
+      return entry.value ? '##' : '[]';
+    }).join(' ');
+
+    return `${this.formatMemoryAddress(row.address)} ${cells}`;
+  }
+
+  isMemoryFlagWritable(flagName) {
+    return new Set([
+      'shellContactAcknowledged',
+      'mapOverlayInjected',
+      'inventoryOverlayInjected',
+      'memoryBusExposed',
+      'exitPermissionGranted',
+      'containmentOverride',
+      'operatorAuthorityShifted',
+      'subjectDesignationRecovered',
+    ]).has(flagName);
+  }
+
+  applyMemoryFlagSideEffects(flagName, value) {
+    if (flagName === 'mapOverlayInjected') {
+      if (value) {
+        this.unlockPanel('map');
+      } else {
+        this.lockPanel('map');
+      }
+    }
+
+    if (flagName === 'inventoryOverlayInjected') {
+      if (value) {
+        this.unlockPanel('inventory');
+      } else {
+        this.lockPanel('inventory');
+      }
+    }
+  }
+
+  writeMemoryFlagByLocation(address, bit, mode = 'toggle') {
+    const entry = this.getMemoryFlagEntryByAddress(address, bit);
+    if (!entry) {
+      return {
+        status: 'missing',
+        message: 'No writable cell exists at that address.',
+      };
+    }
+
+    if (!this.isMemoryFlagWritable(entry.flagName)) {
+      return {
+        status: 'readonly',
+        message: `${this.formatMemoryAddress(entry.address)}.${entry.bit} rejects the write. That cell is read-only.`,
+        entry,
+      };
+    }
+
+    let nextValue = null;
+    if (mode === 'toggle') {
+      nextValue = !entry.value;
+    } else if (mode === 'set') {
+      nextValue = true;
+    } else if (mode === 'clear') {
+      nextValue = false;
+    } else {
+      return {
+        status: 'invalid-mode',
+        message: 'Write mode must be TOGGLE, SET, or CLEAR.',
+        entry,
+      };
+    }
+
+    this.setFlag(entry.flagName, nextValue);
+    this.applyMemoryFlagSideEffects(entry.flagName, nextValue);
+
+    const updatedEntry = {
+      ...entry,
+      value: nextValue,
+    };
+
+    return {
+      status: 'written',
+      entry: updatedEntry,
+      message: `${this.formatMemoryAddress(updatedEntry.address)}.${updatedEntry.bit} => ${nextValue ? '##' : '[]'}`,
+    };
+  }
+
+  renderMemoryPanelLines() {
+    const entries = this.getMemoryFlagEntries();
+    const rowCount = Math.max(1, Math.ceil(entries.length / 8));
+    const lines = ['       0  1  2  3  4  5  6  7'];
+
+    for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+      const rowEntries = entries.slice(rowIndex * 8, (rowIndex + 1) * 8);
+      const address = `0x${(rowIndex * 0x08).toString(16).toUpperCase().padStart(4, '0')}`;
+      const cells = Array.from({ length: 8 }, (_, bitIndex) => {
+        const entry = rowEntries.find(candidate => candidate.bit === bitIndex);
+
+        if (!entry) {
+          return '  ';
+        }
+
+        return entry.value ? '##' : '[]';
+      }).join(' ');
+
+      lines.push(`${address} ${cells}`);
+    }
+
+    return lines;
+  }
+
+  buildMemoryPanelModel(definition, state) {
     return {
       id: 'memory',
       title: definition.title,
       unlocked: true,
       state: state.degraded ? 'degraded' : 'online',
-      lines,
+      lines: this.renderMemoryPanelLines(),
     };
   }
 
@@ -1845,6 +2000,14 @@ export class WorldState {
     }
 
     return this.buildMapPanelModel(this.panelDefinitions.map, this.getPanelState('map')).lines.join('\n');
+  }
+
+  describeMemoryPanel() {
+    if (!this.isPanelUnlocked('memory')) {
+      return 'No readable memory bus is exposed yet.';
+    }
+
+    return this.renderMemoryPanelLines().join('\n');
   }
 
   exportSaveData() {

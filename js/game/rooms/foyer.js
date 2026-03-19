@@ -231,19 +231,19 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
       getPhase: getFoyerPhase,
       phases: {
         reception: {
-          description: 'At first glance the foyer performs welcome beautifully: music, symmetry, light, and servants arranged to imply that nothing here could possibly be accidental.',
+          description: 'At first glance the foyer performs welcome beautifully: music, symmetry, flattering light, and servants arranged to imply that nothing here could possibly be accidental.',
           onTurn: advanceFoyerScene,
         },
         scrutiny: {
-          description: 'The foyer has stopped pretending to be neutral space. It is a receiving mechanism, and you are currently the thing being sorted.',
+          description: 'The foyer has stopped pretending to be neutral space. It is a receiving mechanism, the room\'s decision rendered in muscle and gloves, and you are currently the thing being sorted.',
           onTurn: advanceFoyerScene,
         },
         diverted: {
-          description: 'With Oggaf and Zamzam called away, the receiving hall loses its center of enforcement and becomes, for a moment, architecture again.',
+          description: 'With Oggaf and Zamzam called away, the receiving hall loses its center of enforcement and becomes, for a moment, architecture again instead of policy.',
           onTurn: advanceFoyerScene,
         },
         admitted: {
-          description: 'Now that your invitation has passed inspection, the foyer treats you less like an interruption and more like a successfully categorized problem.',
+          description: 'Now that your invitation has passed inspection, the foyer treats you less like an interruption and more like a successfully categorized problem being routed deeper into the house.',
           onTurn: advanceFoyerScene,
         },
       },

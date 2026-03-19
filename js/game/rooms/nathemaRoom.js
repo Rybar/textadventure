@@ -3,6 +3,58 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createNathemaRoom() {
+  const getNathemaRoomPhase = ({ getFlag }) => {
+    if (getFlag('nathemaEscapeDealSecured')) {
+      return 'compact';
+    }
+
+    if (hasNathemaLeverage(getFlag)) {
+      return 'leveraged';
+    }
+
+    if (getFlag('nathemaBargained')) {
+      return 'bargaining';
+    }
+
+    if (getFlag('nathemaContrabandKnown')) {
+      return 'exposed';
+    }
+
+    return 'assessment';
+  };
+
+  const advanceNathemaScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastNathemaRoomPhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.nathemaRoomPhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastNathemaRoomPhase: currentScenePhase,
+      nathemaRoomPhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'assessment':
+        return 'Nathema adjusts nothing and yet the room keeps developing the feeling that you are the object currently being unpacked.';
+      case 'exposed':
+        return 'Now that the wrapped chest has been noticed, every lacquered surface in the room seems arranged around the fact that Nathema arrived prepared for something less lawful than etiquette.';
+      case 'bargaining':
+        return 'Nathema has stopped treating your presence as incidental. The room now feels staged for pricing, concession, and selective disclosures.';
+      case 'leveraged':
+        return 'With real leverage on the table, the chamber loses any last pretense of guesthood. It is a negotiation suite now.';
+      case 'compact':
+        return 'The bargain has settled in. Nathema sits like a woman already redistributing tomorrow while the room quietly rehearses the scandal to come.';
+      default:
+        return null;
+    }
+  };
+
   const sableVeil = new Item({
     id: 'sable-veil',
     name: 'sable veil',
@@ -265,6 +317,31 @@ export function createNathemaRoom() {
 This guest chamber has been forcefully improved by its current occupant. Travel chests, lacquered cases, and folded silks occupy every useful surface, while a brazier burns bitter perfume meant to dominate the room before its owner speaks.
 Lady Nathema sits amid the arrangement like a woman already pricing the house. The quieter guest room lies back to the south.
 `.trim(),
+    scene: {
+      getPhase: getNathemaRoomPhase,
+      phases: {
+        assessment: {
+          description: 'At first the room feels like an occupied embassy suite: expensive, disciplined, and arranged to let Nathema evaluate visitors before granting them the dignity of relevance.',
+          onTurn: advanceNathemaScene,
+        },
+        exposed: {
+          description: 'Once the contraband chest is noticed, the room stops reading as a mere guest chamber and starts reading as a forward position for private policy and portable scandal.',
+          onTurn: advanceNathemaScene,
+        },
+        bargaining: {
+          description: 'After the first useful exchange, Nathema\'s room becomes openly transactional. Every object in it seems to belong to a woman who travels with contingencies instead of comforts and never unpacks without a second purpose.',
+          onTurn: advanceNathemaScene,
+        },
+        leveraged: {
+          description: 'Once you bring Nathema real leverage, the room sharpens into active political pressure: proof, contraband, route knowledge, and succession all waiting to be spent at the right angle and preferably at Oshregaal\'s expense.',
+          onTurn: advanceNathemaScene,
+        },
+        compact: {
+          description: 'With the escape arrangement secured, the chamber feels less like borrowed lodging than the command post of a coming internal crisis that Nathema has already started budgeting for.',
+          onTurn: advanceNathemaScene,
+        },
+      },
+    },
     exits: {
       south: 'guestRoom',
     },

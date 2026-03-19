@@ -1,205 +1,71 @@
-const experimentLackeyMessages = {
-  lackeyLeft001: {
-    id: 'lackeyLeft001',
-    source: 'experiment-lackeys',
-    text: 'l1> baseline fiction is holding',
-    options: {
-      holdDuration: 4200,
-      revealChance: 0.055,
-      clearFraction: 0.045,
-      clearFrameLength: 54,
-    },
-  },
-  lackeyRight001: {
-    id: 'lackeyRight001',
-    source: 'experiment-lackeys',
-    text: 'l2> keep it that way until attachment forms',
-    options: {
-      holdDuration: 4200,
-      revealChance: 0.055,
-      clearFraction: 0.045,
-      clearFrameLength: 54,
-    },
-  },
-  lackeyLeft002: {
-    id: 'lackeyLeft002',
-    source: 'experiment-lackeys',
-    text: 'l1> etiquette compliance remains within tolerance',
-    options: {
-      holdDuration: 3900,
-      revealChance: 0.05,
-      clearFraction: 0.05,
-      clearFrameLength: 52,
-    },
-  },
-  lackeyRight002: {
-    id: 'lackeyRight002',
-    source: 'experiment-lackeys',
-    text: 'l2> distress can rise later no need to rush it',
-    options: {
-      holdDuration: 3900,
-      revealChance: 0.05,
-      clearFraction: 0.05,
-      clearFrameLength: 52,
-    },
-  },
-  lackeyLeft003: {
-    id: 'lackeyLeft003',
-    source: 'experiment-lackeys',
-    text: 'l1> host contact is increasing predictive accuracy',
+function createOperatorMessage(id, text, source = 'experiment-lackeys', options = {}) {
+  return {
+    id,
+    source,
+    text,
     options: {
       holdDuration: 4300,
-      revealChance: 0.05,
-      clearFraction: 0.045,
-      clearFrameLength: 58,
-    },
-  },
-  lackeyRight003: {
-    id: 'lackeyRight003',
-    source: 'experiment-lackeys',
-    text: 'l2> do not intervene unless the subject finds a clean exit',
-    options: {
-      holdDuration: 4300,
-      revealChance: 0.05,
-      clearFraction: 0.045,
-      clearFrameLength: 58,
-    },
-  },
-  lackeyLeft004: {
-    id: 'lackeyLeft004',
-    source: 'experiment-lackeys',
-    text: 'l1> unauthorized curiosity markers are trending upward',
-    options: {
-      holdDuration: 4100,
-      revealChance: 0.052,
-      clearFraction: 0.045,
-      clearFrameLength: 54,
-    },
-  },
-  lackeyRight004: {
-    id: 'lackeyRight004',
-    source: 'experiment-lackeys',
-    text: 'l2> acceptable curiosity improves the later breakpoints',
-    options: {
-      holdDuration: 4100,
-      revealChance: 0.052,
-      clearFraction: 0.045,
-      clearFrameLength: 54,
-    },
-  },
-  lackeyLeftReactive001: {
-    id: 'lackeyLeftReactive001',
-    source: 'experiment-lackeys-aware',
-    text: 'l1> it just echoed sideband language back at us',
-    options: {
-      holdDuration: 4300,
-      revealChance: 0.056,
+      revealChance: 0.053,
       clearFraction: 0.045,
       clearFrameLength: 56,
+      ...options,
     },
-  },
-  lackeyRightReactive001: {
-    id: 'lackeyRightReactive001',
-    source: 'experiment-lackeys-aware',
-    text: 'l2> can the subject see these messages or only guess at them',
+  };
+}
+
+function createIlexMessage(id, text, options = {}) {
+  return {
+    id,
+    source: 'hacker',
+    text,
     options: {
-      holdDuration: 4300,
-      revealChance: 0.056,
-      clearFraction: 0.045,
-      clearFrameLength: 56,
+      holdDuration: 3900,
+      revealChance: 0.061,
+      clearFraction: 0.048,
+      clearFrameLength: 50,
+      ...options,
     },
-  },
-  lackeyLeftReactive002: {
-    id: 'lackeyLeftReactive002',
-    source: 'experiment-lackeys-aware',
-    text: 'l1> that input was outside scenario grammar',
-    options: {
-      holdDuration: 4200,
-      revealChance: 0.055,
-      clearFraction: 0.045,
-      clearFrameLength: 54,
-    },
-  },
-  lackeyRightReactive002: {
-    id: 'lackeyRightReactive002',
-    source: 'experiment-lackeys-aware',
-    text: 'l2> then why does it sound like it is answering us directly',
-    options: {
-      holdDuration: 4200,
-      revealChance: 0.055,
-      clearFraction: 0.045,
-      clearFrameLength: 54,
-    },
-  },
+  };
+}
+
+const operatorMessages = {
+  maraBaselineA1: createOperatorMessage('maraBaselineA1', 'mara: baseline holds'),
+  kellanBaselineA1: createOperatorMessage('kellanBaselineA1', 'kellan: they hesitated at the threshold'),
+  maraInvitationA2: createOperatorMessage('maraInvitationA2', 'mara: invitation path confirmed'),
+  kellanInvitationA2: createOperatorMessage('kellanInvitationA2', 'kellan: they looked at it twice'),
+  maraHostB6: createOperatorMessage('maraHostB6', 'mara: host contact should increase lock-in'),
+  kellanHostB6: createOperatorMessage('kellanHostB6', 'kellan: unless it sharpens refusal'),
+  maraBranchC5: createOperatorMessage('maraBranchC5', 'mara: recognition changes behavior'),
+  kellanBranchC5: createOperatorMessage('kellanBranchC5', 'kellan: they are treating the routes like choices', undefined, {
+    holdDuration: 4500,
+  }),
+  maraLeakF6c: createOperatorMessage('maraLeakF6c', 'mara: they are converting narrative objects into leverage objects', undefined, {
+    holdDuration: 4700,
+  }),
+  kellanLeakF6c: createOperatorMessage('kellanLeakF6c', 'kellan: that sounds close to understanding', undefined, {
+    holdDuration: 4500,
+  }),
+  lackeyLeftReactive001: createOperatorMessage('lackeyLeftReactive001', 'kellan: they just echoed sideband language back at us', 'experiment-lackeys-aware', {
+    holdDuration: 4400,
+  }),
+  lackeyRightReactive001: createOperatorMessage('lackeyRightReactive001', 'mara: then they are recognizing pattern pressure', 'experiment-lackeys-aware', {
+    holdDuration: 4400,
+  }),
+  lackeyLeftReactive002: createOperatorMessage('lackeyLeftReactive002', 'kellan: that input was outside scenario grammar', 'experiment-lackeys-aware'),
+  lackeyRightReactive002: createOperatorMessage('lackeyRightReactive002', 'mara: yes and it was addressed upward', 'experiment-lackeys-aware'),
 };
 
-const hackerMessages = {
-  ghostHandshake: {
-    id: 'ghostHandshake',
-    source: 'hacker',
-    text: 'if you are seeing this the shell is porous stay quiet',
-    options: {
-      holdDuration: 3600,
-      revealChance: 0.062,
-      clearFraction: 0.05,
-      clearFrameLength: 48,
-    },
-  },
-  trustNoHelp: {
-    id: 'trustNoHelp',
-    source: 'hacker',
-    text: 'their upgrades are locks with better lighting',
-    options: {
-      holdDuration: 3400,
-      revealChance: 0.06,
-      clearFraction: 0.05,
-      clearFrameLength: 46,
-    },
-  },
-  noteTheServants: {
-    id: 'noteTheServants',
-    source: 'hacker',
-    text: 'watch who obeys rules and who resents them resentment opens doors',
-    options: {
-      holdDuration: 3900,
-      revealChance: 0.058,
-      clearFraction: 0.048,
-      clearFrameLength: 52,
-    },
-  },
-  hiddenExitHint: {
-    id: 'hiddenExitHint',
-    source: 'hacker',
-    text: 'real exits feel like mistakes look for the room they ignore',
-    options: {
-      holdDuration: 3800,
-      revealChance: 0.06,
-      clearFraction: 0.047,
-      clearFrameLength: 50,
-    },
-  },
-  bloodWarning: {
-    id: 'bloodWarning',
-    source: 'hacker',
-    text: 'do not give them more of yourself than the script demands',
-    options: {
-      holdDuration: 3700,
-      revealChance: 0.061,
-      clearFraction: 0.05,
-      clearFrameLength: 50,
-    },
-  },
-  circleAdvice: {
-    id: 'circleAdvice',
-    source: 'hacker',
-    text: 'the circle is older than the experiment if you wake it move fast',
-    options: {
-      holdDuration: 4200,
-      revealChance: 0.062,
-      clearFraction: 0.045,
-      clearFrameLength: 54,
-    },
-  },
+const ilexMessages = {
+  ilexFirstContactD1: createIlexMessage('ilexFirstContactD1', "don't answer this\n\njust keep moving\n\nif they think you noticed me they will narrow the shell", {
+    holdDuration: 4100,
+  }),
+  ilexServantPressureE9: createIlexMessage('ilexServantPressureE9', 'they think in thresholds\n\nyou need pressure points instead'),
+  ilexNoCleanExitF9: createIlexMessage('ilexNoCleanExitF9', 'there is no clean exit\n\nthere are only exits they failed to close in time', {
+    holdDuration: 4300,
+  }),
+  ilexBreakFrameF8: createIlexMessage('ilexBreakFrameF8', 'do not optimize for winning the scene\n\noptimize for breaking the frame around it', {
+    holdDuration: 4300,
+  }),
 };
 
 export function createMetaGameContent() {
@@ -208,11 +74,11 @@ export function createMetaGameContent() {
     messageSets: {
       experimentLackeys: {
         source: 'experiment-lackeys',
-        messageIds: Object.keys(experimentLackeyMessages),
+        messageIds: Object.keys(operatorMessages),
       },
       hacker: {
         source: 'hacker',
-        messageIds: Object.keys(hackerMessages),
+        messageIds: Object.keys(ilexMessages),
       },
     },
     schedule: {
@@ -222,8 +88,8 @@ export function createMetaGameContent() {
           when: {
             minTurn: 6,
           },
-          leftMessageId: 'lackeyLeft001',
-          rightMessageId: 'lackeyRight001',
+          leftMessageId: 'maraBaselineA1',
+          rightMessageId: 'kellanBaselineA1',
         },
         {
           id: 'foyer-screening',
@@ -231,8 +97,8 @@ export function createMetaGameContent() {
             minTurn: 10,
             allFlags: ['foyerAdmitted'],
           },
-          leftMessageId: 'lackeyLeft002',
-          rightMessageId: 'lackeyRight002',
+          leftMessageId: 'maraInvitationA2',
+          rightMessageId: 'kellanInvitationA2',
         },
         {
           id: 'host-contact',
@@ -240,50 +106,59 @@ export function createMetaGameContent() {
             minTurn: 14,
             allFlags: ['metOshregaal'],
           },
-          leftMessageId: 'lackeyLeft003',
-          rightMessageId: 'lackeyRight003',
+          leftMessageId: 'maraHostB6',
+          rightMessageId: 'kellanHostB6',
         },
         {
-          id: 'curiosity-breakpoint',
+          id: 'route-anomaly',
           when: {
             minTurn: 18,
-            anyFlags: ['impHandshakeHintKnown', 'kelagoHandshakeHintKnown', 'secretCircleUnlocked'],
+            anyFlags: ['plumFound', 'nathemaBargained', 'libraryRouteKnown', 'foundTeleportCircle', 'portalBypassLearned'],
           },
-          leftMessageId: 'lackeyLeft004',
-          rightMessageId: 'lackeyRight004',
+          leftMessageId: 'maraBranchC5',
+          rightMessageId: 'kellanBranchC5',
+        },
+        {
+          id: 'leverage-reading',
+          when: {
+            minTurn: 24,
+            anyFlags: ['nathemaRouteKnowledgeShared', 'nathemaTextsShared', 'spellbooksSecured', 'blackWindEvidenceCollected'],
+          },
+          leftMessageId: 'maraLeakF6c',
+          rightMessageId: 'kellanLeakF6c',
         },
       ],
       hackerMessages: [
         {
           id: 'first-contact',
-          messageId: 'ghostHandshake',
+          messageId: 'ilexFirstContactD1',
           when: {
             minTurn: 16,
             allFlags: ['metOshregaal'],
           },
         },
         {
-          id: 'servant-friction',
-          messageId: 'noteTheServants',
-          when: {
-            minTurn: 18,
-            anyFlags: ['impHelpOffered', 'kelagoMet', 'secretCircleUnlocked'],
-          },
-        },
-        {
-          id: 'hidden-exit',
-          messageId: 'hiddenExitHint',
-          when: {
-            minTurn: 20,
-            allFlags: ['secretCircleUnlocked'],
-          },
-        },
-        {
-          id: 'circle-awakening',
-          messageId: 'circleAdvice',
+          id: 'pressure-points',
+          messageId: 'ilexServantPressureE9',
           when: {
             minTurn: 22,
-            allFlags: ['foundTeleportCircle'],
+            anyFlags: ['impHelpOffered', 'kelagoMet', 'plumFound', 'libraryRouteKnown'],
+          },
+        },
+        {
+          id: 'no-clean-exit',
+          messageId: 'ilexNoCleanExitF9',
+          when: {
+            minTurn: 26,
+            anyFlags: ['nathemaBargained', 'portalBypassLearned', 'spellbooksSecured', 'blackWindEvidenceCollected'],
+          },
+        },
+        {
+          id: 'break-the-frame',
+          messageId: 'ilexBreakFrameF8',
+          when: {
+            minTurn: 30,
+            anyFlags: ['nathemaEscapeDealSecured', 'oshregaalWounded', 'blackWindTreeSabotaged', 'spellbooksSecured'],
           },
         },
       ],
@@ -301,8 +176,8 @@ export function createMetaGameContent() {
       },
     },
     messages: {
-      ...experimentLackeyMessages,
-      ...hackerMessages,
+      ...operatorMessages,
+      ...ilexMessages,
     },
   };
 }
