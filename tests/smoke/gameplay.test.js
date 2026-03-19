@@ -72,6 +72,12 @@ test('kitchen and secret circle interactions deepen the escape thread', () => {
   assert.match(session.submitCommand('east'), /Wrongus holds dominion here/i);
   assert.match(session.submitCommand('ask wrongus about blood'), /tiny red gentleman stand up in the pot/i);
   assert.equal(session.worldState.getFlag('kitchenBloodHintKnown'), true);
+  assert.match(session.submitCommand('search stew'), /darker red film|reducing more than broth/i);
+  assert.match(session.submitCommand('ask wrongus about timing'), /blood by the silver scrape|sequence stumbles/i);
+  assert.equal(session.worldState.getFlag('kitchenTimingKnown'), true);
+  assert.match(session.submitCommand('search prep table'), /laid out in a strict sequence|stage marks/i);
+  assert.match(session.submitCommand('sabotage stew'), /delay the silver cups|turn Wrongus from cook into alarm/i);
+  assert.equal(session.worldState.getFlag('kitchenSabotageOpportunityKnown'), true);
 
   assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
   assert.match(session.submitCommand('tell imp help'), /which piece of this room still remembers how to open/i);
@@ -133,6 +139,7 @@ test('foyer and feast hall social interactions respond correctly', () => {
   assert.equal(session.worldState.getFlag('hostContactEstablished'), true);
   assert.match(session.submitCommand('ask oshregaal about house'), /flatter its owner, intimidate its rivals/i);
   assert.match(session.submitCommand('ask imp about chain'), /decorative slavery/i);
+  assert.match(session.submitCommand('look'), /performance adjusting itself around a newly interesting guest|turned enough of his attention/i);
 });
 
 test('feast hall tracks blood refusal and sharper host scrutiny', () => {
@@ -149,6 +156,7 @@ test('feast hall tracks blood refusal and sharper host scrutiny', () => {
 
   assert.match(session.submitCommand('ask oshregaal about blood'), /guest may refuse a course|what sort of hunger/i);
   assert.match(session.submitCommand('ask imp about escape'), /He heard that|curtains may start looking like architecture/i);
+  assert.match(session.submitCommand('wait'), /nearest guests discover sudden fascinations in their plates|You wait for a moment/i);
   assert.match(session.submitCommand('look'), /silver cup keeps circling without you now|no longer being treated as background/i);
 });
 
@@ -246,8 +254,13 @@ test('the deeper private rooms now introduce Plum and the rescue branch', () => 
   const session = createTestSession();
 
   moveToGrandfatherRoom(session);
+  assert.match(session.submitCommand('search desk'), /guest-retention notes|move them deeper into the house/i);
+  assert.equal(session.worldState.getFlag('plumMaintenanceNotesKnown'), true);
+  assert.equal(session.worldState.getFlag('oshregaalNoDepartureKnown'), true);
+  assert.match(session.submitCommand('look at mirror'), /filing system for captivity|another guest being arranged|incriminates/i);
   assert.match(session.submitCommand('search vanity'), /wrapped plug of dark ear wax/i);
   assert.equal(session.worldState.getFlag('waxPlugFound'), true);
+  assert.match(session.submitCommand('search bed'), /warning dressed as luxury|making objections horizontal|silk ties/i);
   assert.match(session.submitCommand('use wax plug'), /voices would have to work harder/i);
   assert.match(session.submitCommand('north'), /iron hand waits upright/i);
   assert.match(session.submitCommand('shake hand'), /inside the wall, hidden catches withdraw/i);

@@ -148,6 +148,75 @@ test('scheduled events persist across save/load and fire on the correct turn', (
   assert.equal(restoredWorldState.hasScheduledEvent('bell-sequence'), false);
 });
 
+test('room scenes add phase text, advance on turns, and persist room-local state', () => {
+  const session = new GameSession({
+    id: 'room-scene-test',
+    startingRoomId: 'start',
+    flags: {
+      alert: false,
+    },
+    rooms: {
+      start: new Room({
+        id: 'start',
+        title: 'Start',
+        description: 'A plain test room.',
+        scene: {
+          getPhase: ({ getFlag }) => getFlag('alert') ? 'alert' : 'calm',
+          phases: {
+            calm: {
+              description: 'Calm scene.',
+              onTurn: ({ getRoomState, setRoomState }) => {
+                const nextCount = (getRoomState().sceneTurns ?? 0) + 1;
+                setRoomState({ sceneTurns: nextCount });
+                return nextCount === 2 ? 'The room settles into repetition.' : null;
+              },
+            },
+            alert: {
+              description: 'Alert scene.',
+            },
+          },
+        },
+        objects: {
+          bell: {
+            description: 'A small brass bell.',
+            actions: {
+              use({ setFlag }) {
+                setFlag('alert', true);
+                return 'The bell snaps the room to attention.';
+              },
+            },
+          },
+        },
+      }),
+    },
+  });
+
+  assert.match(session.start(), /Calm scene\./i);
+  assert.match(session.submitCommand('wait'), /You wait for a moment\./i);
+  assert.match(session.submitCommand('look'), /The room settles into repetition\./i);
+  assert.equal(session.worldState.getRoomState('start').sceneTurns, 2);
+
+  const restoredWorldState = new WorldState({
+    id: 'room-scene-test',
+    startingRoomId: 'start',
+    flags: {
+      alert: false,
+    },
+    rooms: {
+      start: new Room({
+        id: 'start',
+        title: 'Start',
+        description: 'A plain test room.',
+      }),
+    },
+  });
+  restoredWorldState.importSaveData(session.worldState.exportSaveData());
+
+  assert.equal(restoredWorldState.getRoomState('start').sceneTurns, 2);
+  assert.match(session.submitCommand('use bell'), /The bell snaps the room to attention\./i);
+  assert.match(session.submitCommand('look'), /Alert scene\./i);
+});
+
 test('generic action resolution supports using an item on a target object', () => {
   const key = new Item({
     id: 'test-key',

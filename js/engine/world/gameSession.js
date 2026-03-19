@@ -83,6 +83,7 @@ export class GameSession {
 
     const normalizedCommand = this.normalizeCommand(command);
     const consumeTurn = !this.isNonTurnCommand(normalizedCommand.verb);
+    const initialRoomId = this.worldState.currentRoomId;
     if (consumeTurn) {
       this.worldState.incrementTurn();
     }
@@ -106,11 +107,19 @@ export class GameSession {
       this.worldState.turns = Math.max(0, this.worldState.turns - 1);
     }
 
+    const sceneOutputs = consumeTurn && !clarificationPending && this.shouldAdvanceCurrentRoomScene(normalizedCommand, initialRoomId)
+      ? this.worldState.advanceCurrentRoomScene({
+        command: normalizedCommand,
+        actionResponse: primaryResponse,
+        initialRoomId,
+      })
+      : [];
+
     const scheduledOutputs = consumeTurn && !clarificationPending
       ? this.worldState.advanceScheduledEvents()
       : [];
 
-    const combinedResponse = [primaryResponse, ...scheduledOutputs].filter(Boolean).join('\n\n');
+    const combinedResponse = [primaryResponse, ...sceneOutputs, ...scheduledOutputs].filter(Boolean).join('\n\n');
 
     return this.createExecutionResult(this.finalizeResponse(combinedResponse), normalizedCommand, {
       consumeTurn: consumeTurn && !clarificationPending,
@@ -151,6 +160,14 @@ export class GameSession {
     });
 
     this.actionRegistry.registerGlobalVerbs(this.manifest.verbs ?? {});
+  }
+
+  shouldAdvanceCurrentRoomScene(command, initialRoomId) {
+    if (!command || this.worldState.currentRoomId !== initialRoomId) {
+      return false;
+    }
+
+    return !['go', 'save', 'load', 'inventory', 'map', 'help', 'exits'].includes(command.verb);
   }
 
   createActionContext(command, additionalContext = {}) {

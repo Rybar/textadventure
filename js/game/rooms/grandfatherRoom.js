@@ -14,7 +14,7 @@ export function createGrandfatherRoom() {
         return 'The thought of sleeping in Oshregaal\'s bed feels less like trespass than like entering his mouth voluntarily.';
       },
       look() {
-        return 'The bed curtains are embroidered with constellations, tusks, and banquets. One corner still smells faintly of perfume and medicinal wine.';
+        return 'The bed curtains are embroidered with constellations, tusks, and banquets. Beneath the perfume and medicinal wine is a subtler wrongness: compressed hollows in the coverlet and silk ties at the posts, as though hospitality here occasionally needed help becoming agreement.';
       },
     },
   });
@@ -46,7 +46,13 @@ On the north wall stands a black metal door fitted not with a knob but with an a
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('chamber') || target.includes('desk')) {
-          return 'You sift through guest lists, menu notes, and cruelly edited anecdotes prepared for dinner. Beneath them all is a thinner stack recording "corrections" to the Numerian scribe in the north room: memory lapses, mood compliance, component upkeep, and reminders to keep her grateful, legible, and near at hand.';
+          if (!getFlag('plumMaintenanceNotesKnown') || !getFlag('oshregaalNoDepartureKnown')) {
+            setFlag('plumMaintenanceNotesKnown', true);
+            setFlag('oshregaalNoDepartureKnown', true);
+            return 'You sift through guest lists, menu notes, and cruelly edited anecdotes prepared for dinner. Beneath them all is a thinner stack recording "corrections" to the Numerian scribe in the north room: memory lapses, mood compliance, component upkeep, and reminders to keep her grateful, legible, and near at hand. Worse are the guest-retention notes threaded between the menus: repeat the flattering story, refill the cup, reseat anyone who speaks too often of leaving, and if courtesy fails, move them deeper into the house until departure sounds impolite even to themselves.';
+          }
+
+          return 'The desk still offers the same ugly bookkeeping: Plum reduced to upkeep notes and guests reduced to retention strategy. Oshregaal does not merely host people; he edits them toward staying.';
         }
 
         if (target.includes('vanity') || target.includes('mirror') || target.includes('drawer')) {
@@ -56,6 +62,15 @@ On the north wall stands a black metal door fitted not with a knob but with an a
           }
 
           return 'The vanity drawers still hold powders, seals, and old narcotic perfumes, but the useful discovery remains the missing space where the wax plug had been tucked away.';
+        }
+
+        if (target.includes('bed') || target.includes('canopy') || target.includes('curtain') || target.includes('post')) {
+          if (!getFlag('oshregaalNoDepartureKnown')) {
+            setFlag('oshregaalNoDepartureKnown', true);
+            return 'Up close, the bed reads less as decadence than procedure. The silk ties are placed for wrists, not decoration, and one pillow still bears the faint dark crescent of old mascara or older panic. Whatever Oshregaal calls affection, it has a method for making objections horizontal.';
+          }
+
+          return 'The bed remains a warning dressed as luxury: too broad, too staged, and arranged for the kind of intimacy that survives on unequal permission.';
         }
 
         if (target.includes('door') || target.includes('hand')) {
@@ -87,11 +102,35 @@ On the north wall stands a black metal door fitted not with a knob but with an a
         when: ({ getFlag }) => getFlag('waxPlugFound'),
         text: 'The disturbed vanity drawer leaves the room looking less in control of itself than it intends.',
       },
+      {
+        when: ({ getFlag }) => getFlag('plumMaintenanceNotesKnown'),
+        text: 'The desk now reads less like vanity and more like maintenance: invitations, anecdotes, and a captive scribe all revised toward usefulness.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('oshregaalNoDepartureKnown'),
+        text: 'With the retention notes and staged luxury properly seen, the chamber makes one fact plain: Oshregaal does not imagine guests leaving so much as degrading into manageability.',
+      },
     ],
     objects: {
-      desk: 'The desk is littered with corrected invitations, revised anecdotes, and petty dominion preserved as paperwork.',
+      desk: {
+        description({ getFlag }) {
+          if (getFlag('plumMaintenanceNotesKnown') || getFlag('oshregaalNoDepartureKnown')) {
+            return 'The desk is littered with corrected invitations, revised anecdotes, and petty dominion preserved as paperwork. Now that you have read it properly, the whole surface feels like a filing system for captivity disguised as a host\'s preferences.';
+          }
+
+          return 'The desk is littered with corrected invitations, revised anecdotes, and petty dominion preserved as paperwork.';
+        },
+      },
       vanity: 'The mirrored vanity is crowded with perfumes, rings, powders, and small aids to self-invention.',
-      mirror: 'The mirror flatters the room and incriminates it at the same time.',
+      mirror: {
+        description({ getFlag }) {
+          if (getFlag('oshregaalNoDepartureKnown')) {
+            return 'The mirror flatters the room and incriminates it at the same time. With the retention notes in mind, even your own reflection looks briefly like another guest being arranged for easier keeping.';
+          }
+
+          return 'The mirror flatters the room and incriminates it at the same time.';
+        },
+      },
       hand: {
         name: 'iron hand',
         aliases: ['metal hand', 'door hand', 'iron hand'],

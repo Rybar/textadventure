@@ -28,7 +28,11 @@ export function createKitchenRoom() {
     aliases: ['stew'],
     description: 'An enormous cauldron of stew burbles over the fire with sinister culinary confidence.',
     actions: {
-      look() {
+      look({ getFlag }) {
+        if (getFlag('kitchenBloodHintKnown')) {
+          return 'Seen with the right context, the cauldron is not one stew but several courses negotiating custody. Beneath the spice and fish rides a thinner red reduction waiting for the scraped contents of the silver cups and the moment Wrongus decides the tiny red gentleman should stand up in public.';
+        }
+
         return 'The stew is crowded with expensive spices and at least one ingredient better left genetically unconfirmed.';
       },
       eat() {
@@ -76,6 +80,13 @@ export function createKitchenRoom() {
         reply: 'Wrongus snorts. "Little silver cups come back here, yes? Scrape them into the reduction, coax the proteins proper, let the tiny red gentleman stand up in the pot. Good body. Good color. Grandfather likes tradition."',
       },
       {
+        match: ['timing', 'course', 'courses', 'service', 'plating'],
+        effect: ({ setFlag }) => {
+          setFlag('kitchenTimingKnown', true);
+        },
+        reply: 'Wrongus taps the ladle against the cauldron in a cook\'s private arithmetic. "Wine first, reassurance second, blood by the silver scrape, then the little gentleman for applause," he says. "If the sequence stumbles, guest notices process instead of magic. Very embarrassing."',
+      },
+      {
         match: ['black wind', 'fruit', 'elixir', 'trade'],
         effect: ({ setFlag }) => {
           setFlag('blackWindEvidenceLeadKnown', true);
@@ -108,6 +119,12 @@ export function createKitchenRoom() {
         match: ['help', 'escape'],
         reply: 'Wrongus stares at you over the rim of the cauldron. "If I helped every guest leave, dinner would get thin," he says, not entirely joking.',
       },
+      {
+        match: ['timing', 'course', 'service'],
+        reply: ({ getFlag }) => getFlag('kitchenTimingKnown')
+          ? 'Wrongus squints at you. "Then keep out of the sequence," he says. "One wrong delay and the whole meal starts explaining itself."'
+          : 'Wrongus grunts. "Kitchen has sequence," he says. "Learn that before you offer opinions."',
+      },
     ],
     fallback: 'Wrongus grunts and keeps stirring.',
   });
@@ -122,12 +139,30 @@ export function createKitchenRoom() {
         return 'The kitchen is too active for a casual search. Wrongus, the cauldron, and the jars all seem capable of objecting in different ways.';
       }
 
+      if (getFlag('kitchenTimingKnown')) {
+        return 'You search the kitchen with more informed eyes and begin to see its stations as a system of ritual preparation rather than mere cooking: cups near the stove, reduction near the ladle, dessert held back until the room is too relieved to ask what stood up in the pot.';
+      }
+
       return 'You search the kitchen with more informed eyes and begin to see its stations as a system of ritual preparation rather than mere cooking.';
+    }
+
+    if (target.includes('cauldron') || target.includes('stew') || target.includes('pot')) {
+      return getFlag('kitchenBloodHintKnown')
+        ? 'A darker red film clings higher up the iron than ordinary stew would justify. Wrongus has been reducing more than broth here, and the ladle resting nearby is clean only in the suspicious sense.'
+        : 'From this close the cauldron smells of fish, spice, wine, and a richer metallic note you could almost mistake for enthusiasm.';
+    }
+
+    if (target.includes('table') || target.includes('prep') || target.includes('station') || target.includes('ladle')) {
+      if (!getFlag('kitchenTimingKnown')) {
+        return 'The prep stations are laid out in a strict sequence: cups nearest the stove, finishing salts by the ladle, dessert jars set well back, and plating trays already arranged by course. Whatever else Wrongus is, he cooks by ritual clock as much as appetite.';
+      }
+
+      return 'Now that you understand the rhythm, the stations read like stage marks. Delay the cups, thicken the reduction, move dessert early, and the meal would stop feeling inevitable and start feeling assembled.';
     }
 
     if (target.includes('silver') || target.includes('cups')) {
       return getFlag('kitchenBloodHintKnown')
-        ? 'The silver cups stay close to the stove for quick use, but they are not the kitchen\'s only private apparatus.'
+        ? 'The silver cups stay close to the stove for quick use, blackened at the rims from reheating and scraping. They are service ware only if one believes ritual and catering are separate professions.'
         : 'The cups look like service ware until you consider how little in this house is ever only one thing.';
     }
 
@@ -177,12 +212,38 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
           emitEvent,
         });
       },
+      sabotage({ command, getFlag, setFlag }) {
+        const target = command.directObject;
+
+        if (!target) {
+          return 'Sabotage what?';
+        }
+
+        if (target.includes('stew') || target.includes('cauldron') || target.includes('meal') || target.includes('service')) {
+          if (!getFlag('kitchenTimingKnown')) {
+            return 'Wrongus has the kitchen moving on a sequence you do not yet understand. Sabotage without that rhythm would just be noise with witnesses.';
+          }
+
+          setFlag('kitchenSabotageOpportunityKnown', true);
+          return 'You trace the kitchen\'s weak points: delay the silver cups, overwork the reduction, move dessert into the wrong course, and the evening would start explaining itself instead of enchanting. Useful knowledge, but attempting it here and now would turn Wrongus from cook into alarm.';
+        }
+
+        return `You do not see a workable way to sabotage the ${target} from here.`;
+      },
     },
     items: [spiceBundle, brandyPudding, cauldron, candyOozeJar],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('kitchenBloodHintKnown'),
         text: 'Now that you know what to notice, a rack of silver cups near the stove looks less ceremonial and more preparatory.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('kitchenTimingKnown'),
+        text: 'The room\'s bustle has resolved into sequence: prep stations laid out by course, not convenience, and Wrongus conducting the feast like a ritual that happens to be edible.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('kitchenSabotageOpportunityKnown'),
+        text: 'Having clocked the sequence, you can now see where the meal could be made to fail theatrically if someone survived long enough to try.',
       },
       {
         when: ({ getFlag }) => getFlag('alchemyStockroomFound'),
@@ -211,6 +272,25 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
       barrels: 'Half the barrels are wine. The rest are water pretending to be respectable company.',
       fish: 'Fresh cave fish lie stacked in readiness, all translucent flesh and milky eyes.',
       shelf: 'The shelf bows under jars of candy ooze, each one straining toward the room like a thought trying to become hunger.',
+      ladle: {
+        description({ getFlag }) {
+          if (getFlag('kitchenBloodHintKnown')) {
+            return 'The ladle is long-handled, scorched, and polished by repeated use. After Wrongus explains the blood work, it looks less like a utensil and more like specialist equipment disguised as one.';
+          }
+
+          return 'Wrongus\'s ladle is blackened iron with the authority of a ceremonial scepter.';
+        },
+      },
+      table: {
+        aliases: ['prep table', 'prep tables', 'station', 'stations'],
+        description({ getFlag }) {
+          if (getFlag('kitchenTimingKnown')) {
+            return 'The prep tables are arranged by course with almost liturgical precision. Once seen properly, they look like backstage marks for a ritual masquerading as dinner.';
+          }
+
+          return 'The prep tables are crowded with fish, herbs, salts, plating trays, and the disciplined clutter of a cook who believes in hierarchy.';
+        },
+      },
       pantry: {
         aliases: ['pantry shelf', 'shelf'],
         description({ getFlag }) {

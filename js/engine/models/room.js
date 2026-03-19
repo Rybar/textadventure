@@ -10,6 +10,7 @@ export class Room {
     items = [],
     objects = {},
     verbs = {},
+    scene = null,
     onEnter = [],
     onLook = [],
     triggers = {},
@@ -23,6 +24,7 @@ export class Room {
     this.items = items;
     this.objects = this.normalizeObjects(objects);
     this.verbs = verbs;
+    this.scene = scene;
     this.triggers = this.normalizeTriggers({ onEnter, onLook, triggers });
     this.onEnter = this.triggers.enter;
     this.onLook = this.triggers.look;
@@ -83,6 +85,81 @@ export class Room {
     }
 
     return this.description;
+  }
+
+  hasScene() {
+    return Boolean(this.scene);
+  }
+
+  resolveSceneValue(value, context = {}) {
+    if (typeof value === 'function') {
+      return value(context);
+    }
+
+    return value;
+  }
+
+  getScenePhase(context = {}) {
+    if (!this.scene) {
+      return null;
+    }
+
+    const resolver = this.scene.getPhase ?? this.scene.resolvePhase ?? this.scene.phase;
+    if (typeof resolver === 'function') {
+      return resolver(context);
+    }
+
+    return resolver ?? this.scene.defaultPhase ?? null;
+  }
+
+  getScenePhaseDefinition(phase) {
+    if (!phase || !this.scene?.phases) {
+      return null;
+    }
+
+    return this.scene.phases[phase] ?? null;
+  }
+
+  getSceneDescription(context = {}) {
+    if (!this.scene) {
+      return null;
+    }
+
+    const currentScenePhase = context.currentScenePhase ?? this.getScenePhase(context);
+    const scenePhaseDefinition = this.getScenePhaseDefinition(currentScenePhase);
+    const description = scenePhaseDefinition?.description ?? this.scene.description;
+
+    return this.resolveSceneValue(description, {
+      ...context,
+      currentScenePhase,
+      scenePhaseDefinition,
+    });
+  }
+
+  runSceneTurn(context = {}) {
+    if (!this.scene) {
+      return [];
+    }
+
+    const currentScenePhase = context.currentScenePhase ?? this.getScenePhase(context);
+    const scenePhaseDefinition = this.getScenePhaseDefinition(currentScenePhase);
+    const handler = scenePhaseDefinition?.onTurn ?? this.scene.onTurn;
+
+    if (!handler) {
+      return [];
+    }
+
+    const result = this.resolveSceneValue(handler, {
+      ...context,
+      currentScenePhase,
+      scenePhaseDefinition,
+    });
+
+    if (Array.isArray(result)) {
+      return result.filter(Boolean);
+    }
+
+    return result ? [result] : [];
   }
 
   getConditionalDescriptions(context = {}) {

@@ -17,6 +17,7 @@ export class WorldState {
     this.panelState = this.createDefaultPanelState();
     this.triggerState = this.createDefaultTriggerState();
     this.schedulerState = this.createDefaultSchedulerState();
+    this.roomState = this.createDefaultRoomState();
     this.turns = 0;
     this.roomVisits = {};
     this.outputBuffer = [];
@@ -79,6 +80,10 @@ export class WorldState {
     };
   }
 
+  createDefaultRoomState() {
+    return {};
+  }
+
   normalizeEventDefinitions(eventDefinitions = {}) {
     return Object.fromEntries(
       Object.entries(eventDefinitions ?? {}).map(([eventId, definition]) => {
@@ -127,6 +132,15 @@ export class WorldState {
       : [];
 
     return nextState;
+  }
+
+  normalizeRoomState(roomState = {}) {
+    return Object.fromEntries(
+      Object.entries(roomState ?? {}).filter(([, state]) => state && typeof state === 'object' && !Array.isArray(state)).map(([roomId, state]) => [
+        roomId,
+        { ...state },
+      ]),
+    );
   }
 
   static get MAP_DIRECTION_VECTORS() {
@@ -353,7 +367,7 @@ export class WorldState {
     const currentRoom = additionalContext.currentRoom ?? this.getCurrentRoom();
     const visitCount = currentRoom ? (this.roomVisits[currentRoom.id] ?? 0) : 0;
 
-    return {
+    const baseContext = {
       worldState: this,
       currentRoom,
       inventory: this.inventory,
@@ -377,9 +391,30 @@ export class WorldState {
       scheduleEvent: (eventId, scheduleOptions = {}) => this.scheduleEvent(eventId, scheduleOptions),
       cancelScheduledEvent: scheduleId => this.cancelScheduledEvent(scheduleId),
       hasScheduledEvent: scheduleId => this.hasScheduledEvent(scheduleId),
+      getRoomState: (roomId = currentRoom?.id) => this.getRoomState(roomId),
+      setRoomState: (updates, roomId = currentRoom?.id) => this.patchRoomState(roomId, updates),
       print: text => this.print(text),
       ...additionalContext,
     };
+
+    baseContext.getScenePhase = (roomId = currentRoom?.id, sceneContext = {}) => {
+      const room = typeof roomId === 'string'
+        ? this.rooms[roomId]
+        : roomId ?? currentRoom;
+
+      if (!room) {
+        return null;
+      }
+
+      return room.getScenePhase({
+        ...baseContext,
+        ...sceneContext,
+        currentRoom: room,
+      });
+    };
+
+    baseContext.currentScenePhase = currentRoom?.getScenePhase(baseContext) ?? null;
+    return baseContext;
   }
 
   getMetaMessage(messageId) {
@@ -409,6 +444,36 @@ export class WorldState {
 
     this.triggerState.firedEventIds = [...this.triggerState.firedEventIds, eventId];
     return true;
+  }
+
+  getRoomState(roomId = this.currentRoomId) {
+    if (!roomId) {
+      return {};
+    }
+
+    if (!this.roomState[roomId]) {
+      this.roomState[roomId] = {};
+    }
+
+    return this.roomState[roomId];
+  }
+
+  patchRoomState(roomId = this.currentRoomId, updates = {}) {
+    if (!roomId || !updates || typeof updates !== 'object' || Array.isArray(updates)) {
+      return this.getRoomState(roomId);
+    }
+
+    const nextState = {
+      ...this.getRoomState(roomId),
+      ...updates,
+    };
+
+    this.roomState = {
+      ...this.roomState,
+      [roomId]: nextState,
+    };
+
+    return nextState;
   }
 
   getEventStateId(eventId) {
@@ -1280,6 +1345,18 @@ export class WorldState {
     return [...printedOutput, ...hookText, description].filter(Boolean).join('\n\n');
   }
 
+  advanceCurrentRoomScene(additionalContext = {}) {
+    const currentRoom = this.getCurrentRoom();
+    if (!currentRoom?.hasScene()) {
+      return [];
+    }
+
+    return currentRoom.runSceneTurn(this.createContext({
+      currentRoom,
+      ...additionalContext,
+    })).filter(Boolean);
+  }
+
   removeVisibleItem(itemName) {
     const inventoryItem = this.findInventoryItem(itemName);
     if (inventoryItem) {
@@ -1293,6 +1370,11 @@ export class WorldState {
   describeCurrentRoom(context = this.createContext()) {
     const currentRoom = context.currentRoom ?? this.getCurrentRoom();
     let description = currentRoom.describe(context);
+
+    const sceneDescription = currentRoom.getSceneDescription(context);
+    if (sceneDescription) {
+      description += `\n${sceneDescription}`;
+    }
 
     const conditionalDescriptions = currentRoom.getConditionalDescriptions(context).join(' ');
     if (conditionalDescriptions) {
@@ -1773,6 +1855,7 @@ export class WorldState {
       flags: { ...this.flags },
       turns: this.turns,
       roomVisits: { ...this.roomVisits },
+      roomState: this.normalizeRoomState(this.roomState),
       metaState: { ...this.metaState },
       panelState: { ...this.panelState },
       triggerState: { ...this.triggerState },
@@ -1806,6 +1889,7 @@ export class WorldState {
     this.flags = saveData.flags ? { ...this.flags, ...saveData.flags } : { ...this.flags };
     this.turns = Number.isFinite(saveData.turns) ? saveData.turns : 0;
     this.roomVisits = saveData.roomVisits ? { ...saveData.roomVisits } : {};
+    this.roomState = this.normalizeRoomState(saveData.roomState ?? this.createDefaultRoomState());
     this.metaState = this.normalizeMetaState(saveData.metaState ?? this.createDefaultMetaState());
     this.panelState = this.normalizePanelState(saveData.panelState ?? this.createDefaultPanelState());
     this.triggerState = this.normalizeTriggerState(saveData.triggerState ?? this.createDefaultTriggerState());

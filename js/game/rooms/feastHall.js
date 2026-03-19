@@ -3,6 +3,62 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createFeastHall() {
+  const getFeastHallPhase = ({ getFlag }) => {
+    if (getFlag('oshregaalWounded')) {
+      return 'rupture';
+    }
+
+    if (getFlag('greyGrinShownToOshregaal')) {
+      return 'blade';
+    }
+
+    if (getFlag('bloodRefused') || getFlag('oshregaalSuspicious')) {
+      return 'scrutiny';
+    }
+
+    if (getFlag('gaveBlood')) {
+      return 'communion';
+    }
+
+    if (getFlag('hostContactEstablished')) {
+      return 'contact';
+    }
+
+    return 'service';
+  };
+
+  const advanceFeastHallScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+    const sceneState = getRoomState();
+    const lastPhase = sceneState.lastFeastScenePhase ?? null;
+    const nextPhaseTurns = lastPhase === currentScenePhase
+      ? (sceneState.feastScenePhaseTurns ?? 0) + 1
+      : 1;
+
+    setRoomState({
+      lastFeastScenePhase: currentScenePhase,
+      feastScenePhaseTurns: nextPhaseTurns,
+    });
+
+    if (nextPhaseTurns !== 2) {
+      return null;
+    }
+
+    switch (currentScenePhase) {
+      case 'service':
+        return 'A servant refills two goblets, retrieves a silver cup with professional calm, and the table resumes the exact conversational beat it had been pretending was spontaneous.';
+      case 'contact':
+        return 'Across the candle forest, Oshregaal laughs at someone else while keeping one bright eye on you. The effect is worse than direct address.';
+      case 'communion':
+        return 'Somewhere lower down the table, a toast lands too quickly after the silver cup passes. Nobody comments. Everybody hears it.';
+      case 'scrutiny':
+        return 'The nearest guests discover sudden fascinations in their plates. Only the imp looks pleased that the evening has developed an edge.';
+      case 'blade':
+        return 'No one stands yet. That restraint is what makes the feast feel breakable.';
+      default:
+        return null;
+    }
+  };
+
   const noteBloodRequest = ({ setFlag }) => {
     setFlag('feastBloodRequested', true);
   };
@@ -344,6 +400,34 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
           },
         },
       ],
+    },
+    scene: {
+      getPhase: getFeastHallPhase,
+      phases: {
+        service: {
+          description: 'The feast is still in its opening rhythm: servants smoothing the courses, silver circulating with false ease, and everyone pretending the table\'s appetite is ordinary.',
+          onTurn: advanceFeastHallScene,
+        },
+        contact: {
+          description: 'Now that Oshregaal has fixed on you, the feast feels less like a room than a performance adjusting itself around a newly interesting guest.',
+          onTurn: advanceFeastHallScene,
+        },
+        communion: {
+          description: 'Having given blood, you can feel the ritual accept you provisionally. The room behaves as though contribution were a kind of seating arrangement.',
+          onTurn: advanceFeastHallScene,
+        },
+        scrutiny: {
+          description: 'Refusal has entered the meal like grit in fine sauce. Even the nearest guests drink more carefully, waiting to see how Oshregaal seasons offense.',
+          onTurn: advanceFeastHallScene,
+        },
+        blade: {
+          description: 'The feast has tightened into ceremonial stillness. One stolen weapon has made every guest recalculate what part of dinner they are in.',
+          onTurn: advanceFeastHallScene,
+        },
+        rupture: {
+          description: 'The dinner has ceased pretending to be a dinner. Blood, panic, and broken ritual now compete openly for the room.',
+        },
+      },
     },
     exitGuards: {
       west({ getFlag }) {
