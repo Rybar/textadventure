@@ -203,8 +203,15 @@ body {
   min-width: 0;
   box-sizing: border-box;
   overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   transform: translateX(0);
   transition: transform 420ms ease, box-shadow 420ms ease;
+}
+
+#text-grid-container::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 #mobile-meta-overlay {

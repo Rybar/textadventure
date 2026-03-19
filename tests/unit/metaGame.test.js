@@ -183,3 +183,24 @@ test('lackeys react when the player addresses the shell after seeing their messa
   assert.equal(messages[0].placement, 'side-left');
   assert.equal(messages[1].placement, 'side-right');
 });
+
+test('lackeys react if the player starts using debug commands after operator chatter is visible', () => {
+  const session = createTestSession();
+
+  session.start();
+  for (let index = 0; index < 6; index += 1) {
+    session.submitCommand('look');
+  }
+  session.consumePendingMetaMessages();
+
+  const response = session.submitCommand('debugpanel map');
+  assert.match(response, /map panel unlocked/i);
+  assert.equal(session.worldState.turns, 6);
+
+  const messages = session.consumePendingMetaMessages();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].id, 'lackeyLeftReactive003');
+  assert.equal(messages[1].id, 'lackeyRightReactive003');
+  assert.equal(messages[0].placement, 'side-left');
+  assert.equal(messages[1].placement, 'side-right');
+});

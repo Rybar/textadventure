@@ -46,12 +46,26 @@ export class GameSession {
     return messages;
   }
 
+  appendWorldPendingMetaMessages() {
+    const messages = this.worldState.consumePendingMetaMessages();
+    if (messages.length === 0) {
+      return [];
+    }
+
+    this.pendingMetaMessages = [
+      ...this.pendingMetaMessages,
+      ...messages,
+    ];
+
+    return messages;
+  }
+
   submitCommand(rawInput) {
     const clarificationExecution = this.tryHandlePendingClarification(rawInput);
     if (clarificationExecution) {
       if (clarificationExecution.normalizedCommand?.type !== 'empty' && clarificationExecution.consumeTurn) {
         this.worldState.advanceMetaMessages();
-        this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
+        this.appendWorldPendingMetaMessages();
       }
 
       this.transcript.recordTurn(rawInput, clarificationExecution.response);
@@ -62,12 +76,16 @@ export class GameSession {
     const execution = this.execute(parsedCommand);
     const { normalizedCommand, response } = execution;
 
-    if (normalizedCommand.type !== 'empty' && execution.consumeTurn) {
-      this.worldState.advanceMetaMessages();
-      if (!execution.usedClarification) {
+    if (normalizedCommand.type !== 'empty' && !execution.usedClarification) {
+      if (execution.consumeTurn) {
+        this.worldState.advanceMetaMessages();
+      }
+
+      if (execution.consumeTurn || this.playerIssuedDebugCommand(normalizedCommand)) {
         this.collectReactiveLackeyMessages(rawInput, normalizedCommand);
       }
-      this.pendingMetaMessages = this.worldState.consumePendingMetaMessages();
+
+      this.appendWorldPendingMetaMessages();
     }
 
     this.transcript.recordTurn(rawInput, response);
@@ -364,6 +382,14 @@ export class GameSession {
     return shellAddressPatterns.some(pattern => pattern.test(normalizedInput));
   }
 
+  playerIssuedDebugCommand(command) {
+    if (command?.type !== 'command') {
+      return false;
+    }
+
+    return ['debugmeta', 'debughacker', 'debugpanel'].includes(command.verb);
+  }
+
   collectReactiveLackeyMessages(rawInput, normalizedCommand) {
     if (!this.worldState.hasSeenLackeyConversation()) {
       return [];
@@ -375,6 +401,10 @@ export class GameSession {
 
     if (normalizedCommand.type === 'command' && this.playerAddressedTheShell(rawInput)) {
       return this.worldState.triggerReactiveLackeyConversation('outside-scope-input');
+    }
+
+    if (this.playerIssuedDebugCommand(normalizedCommand)) {
+      return this.worldState.triggerReactiveLackeyConversation('debug-command-probe');
     }
 
     return [];

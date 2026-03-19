@@ -16,11 +16,13 @@ let activeTypingEntryId = null;
 let activeStatusMetaTimeoutId = null;
 let activeStatusMetaMessage = null;
 let stopActiveStatusMetaAnimation = null;
+let transcriptShouldSnapToBottom = true;
 const queuedStatusMetaMessages = [];
 const inputElement = document.getElementById('cli-input');
 const commandBarElement = document.getElementById('command-bar');
 const mobilePanelTabsElement = document.getElementById('mobile-panel-tabs');
 const mobilePanelTabElements = Array.from(document.querySelectorAll('.mobile-panel-tab'));
+const transcriptScrollContainerElement = document.getElementById('text-grid-container');
 const transcriptOutputElement = document.getElementById('transcript-output');
 const statusElements = {
     metaLine: document.getElementById('status-meta-line'),
@@ -316,9 +318,64 @@ function showNextStatusMetaMessage() {
     startStatusMetaMessage(message);
 }
 
-function scrollTranscriptToBottom() {
-    const container = transcriptOutputElement.parentElement;
+function isTranscriptNearBottom() {
+    const container = transcriptScrollContainerElement;
     if (!container) {
+        return true;
+    }
+
+    const remainingDistance = container.scrollHeight - container.clientHeight - container.scrollTop;
+    return remainingDistance <= 24;
+}
+
+function requestTranscriptSnapToBottom() {
+    transcriptShouldSnapToBottom = true;
+}
+
+function updateTranscriptScrollIntent() {
+    transcriptShouldSnapToBottom = isTranscriptNearBottom();
+}
+
+function getWheelDeltaInPixels(event) {
+    const lineHeight = 24;
+    const pageHeight = transcriptScrollContainerElement?.clientHeight ?? globalThis.innerHeight ?? 0;
+
+    if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        return event.deltaY * lineHeight;
+    }
+
+    if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        return event.deltaY * pageHeight;
+    }
+
+    return event.deltaY;
+}
+
+function handleTranscriptWheel(event) {
+    const container = transcriptScrollContainerElement;
+    if (!container) {
+        return;
+    }
+
+    const maxScrollTop = container.scrollHeight - container.clientHeight;
+    if (maxScrollTop <= 0) {
+        return;
+    }
+
+    const deltaY = getWheelDeltaInPixels(event);
+    if (deltaY === 0) {
+        return;
+    }
+
+    event.preventDefault();
+    const nextScrollTop = Math.max(0, Math.min(maxScrollTop, container.scrollTop + deltaY));
+    container.scrollTop = nextScrollTop;
+    updateTranscriptScrollIntent();
+}
+
+function scrollTranscriptToBottom() {
+    const container = transcriptScrollContainerElement;
+    if (!container || !transcriptShouldSnapToBottom) {
         return;
     }
 
@@ -426,6 +483,7 @@ function appendTranscriptEntry(entry) {
         };
         nextTranscriptEntryId += 1;
         transcriptEntries.push(transcriptEntry);
+        requestTranscriptSnapToBottom();
         renderScreen();
         startTypingAnimation(transcriptEntry);
         return;
@@ -439,6 +497,7 @@ function appendTranscriptEntry(entry) {
     };
     nextTranscriptEntryId += 1;
     transcriptEntries.push(transcriptEntry);
+    requestTranscriptSnapToBottom();
     renderScreen();
     startTypingAnimation(transcriptEntry);
 }
@@ -479,6 +538,7 @@ function updateMetaMessages(messages = []) {
 }
 
 inputElement.addEventListener('input', () => {
+    requestTranscriptSnapToBottom();
     renderScreen();
 });
 
@@ -514,6 +574,7 @@ function handleInputKeyDown(event, input = inputElement) {
             historyIndex = commandHistory.length;
             handleCommand(command);
             input.value = '';
+            requestTranscriptSnapToBottom();
             renderScreen();
             break;
         }
@@ -522,6 +583,7 @@ function handleInputKeyDown(event, input = inputElement) {
             if (historyIndex > 0) {
                 historyIndex -= 1;
                 input.value = commandHistory[historyIndex];
+                requestTranscriptSnapToBottom();
                 renderScreen();
             }
             break;
@@ -534,6 +596,7 @@ function handleInputKeyDown(event, input = inputElement) {
                 historyIndex = commandHistory.length;
                 input.value = '';
             }
+            requestTranscriptSnapToBottom();
             renderScreen();
             break;
         default:
@@ -556,6 +619,7 @@ commandBarElement.addEventListener('submit', event => {
     historyIndex = commandHistory.length;
     handleCommand(command);
     inputElement.value = '';
+    requestTranscriptSnapToBottom();
     renderScreen();
     focusCommandInput();
 });
@@ -583,6 +647,7 @@ document.addEventListener('keydown', event => {
         event.preventDefault();
         focusCommandInput();
         inputElement.value = inputElement.value.slice(0, -1);
+        requestTranscriptSnapToBottom();
         renderScreen();
         return;
     }
@@ -591,6 +656,7 @@ document.addEventListener('keydown', event => {
         event.preventDefault();
         focusCommandInput();
         inputElement.value += event.key;
+        requestTranscriptSnapToBottom();
         renderScreen();
     }
 });
@@ -629,6 +695,11 @@ globalThis.addEventListener('pointerdown', () => {
 globalThis.addEventListener('focus', renderScreen);
 globalThis.addEventListener('blur', renderScreen);
 globalThis.addEventListener('resize', applyDeviceTheme);
+
+if (transcriptScrollContainerElement) {
+    transcriptScrollContainerElement.addEventListener('scroll', updateTranscriptScrollIntent, { passive: true });
+    transcriptScrollContainerElement.addEventListener('wheel', handleTranscriptWheel, { passive: false });
+}
 
 if (globalThis.visualViewport) {
     globalThis.visualViewport.addEventListener('resize', updateViewportMetrics);

@@ -53,6 +53,12 @@ const operatorMessages = {
   }),
   lackeyLeftReactive002: createOperatorMessage('lackeyLeftReactive002', 'kellan: that input was outside scenario grammar', 'experiment-lackeys-aware'),
   lackeyRightReactive002: createOperatorMessage('lackeyRightReactive002', 'mara: yes and it was addressed upward', 'experiment-lackeys-aware'),
+  lackeyLeftReactive003: createOperatorMessage('lackeyLeftReactive003', 'kellan: they are typing maintenance verbs into the shell', 'experiment-lackeys-aware', {
+    holdDuration: 4500,
+  }),
+  lackeyRightReactive003: createOperatorMessage('lackeyRightReactive003', 'mara: do not reward that with cleaner interfaces', 'experiment-lackeys-aware', {
+    holdDuration: 4500,
+  }),
 };
 
 const ilexMessages = {
@@ -173,6 +179,11 @@ export function createMetaGameContent() {
         id: 'outside-scope-input',
         leftMessageId: 'lackeyLeftReactive002',
         rightMessageId: 'lackeyRightReactive002',
+      },
+      'debug-command-probe': {
+        id: 'debug-command-probe',
+        leftMessageId: 'lackeyLeftReactive003',
+        rightMessageId: 'lackeyRightReactive003',
       },
     },
     messages: {
