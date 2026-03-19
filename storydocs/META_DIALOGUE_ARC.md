@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD032 -->
+
 # Meta Dialogue Arc
 
 This document replaces the current meta-message wording used in implementation.
@@ -18,6 +20,15 @@ The player should gradually understand three things:
 3. A third presence inside the shell is teaching the player how to become a system problem rather than a successful subject.
 
 The mansion fiction remains primary. The meta dialogue should sharpen dread, pattern recognition, and the player’s sense of external pressure without replacing Oshregaal as the immediate emotional center.
+
+Under the restored Grizzelnit-canon planning docs, the shell is not only watching a simple dinner-and-escape plot. It is also watching which scheme the player privileges once the house opens into multiple meaningful branches.
+
+Meta reactions should therefore sharpen when the player:
+
+- prioritizes Plum as a person rather than a route asset;
+- starts treating spellbooks, archives, or portal bypass as objectives;
+- bargains with Nathema as an active rival schemer;
+- realizes the house contains overlapping leverage systems rather than one correct win path.
 
 ## Voice Rules
 
@@ -98,6 +109,7 @@ Use during:
 - Invitation acceptance
 - Early foyer/feast movement
 - Mild hesitation or observation without clear deviation
+- Early compliance before the player has exposed deeper branches like Plum, Nathema leverage, or library theft
 
 ### Exchange A1
 
@@ -156,6 +168,7 @@ Use during:
 - Clever parser behavior
 - Early secret discovery
 - Suspicious non-compliance
+- Early recognition that the mansion supports more than one objective route
 
 ### Exchange B1
 
@@ -224,6 +237,7 @@ Use during:
 - Deep exploration
 - NPC leverage branches
 - Any player behavior that suggests planning rather than wandering
+- Clear commitment to rescue, archive theft, black-wind proof, or bargaining as a chosen line of play
 
 ### Exchange C1
 
@@ -287,6 +301,7 @@ Purpose:
 Use during:
 - After the player has enough normal context to feel the intrusion
 - Preferably after host contact or strong route discovery
+- Preferably before system help feels like normal quality-of-life UI
 
 ### Ilex D1: First Contact
 
@@ -352,6 +367,7 @@ Use during:
 - Inventory unlock
 - Transcript/memory/state exposure
 - Any UI-level intrusion
+- Discovery of Plum's true nature, spellbook objectives, or portal-bypass clues can also justify this phase because the player is starting to read systems rather than just rooms
 
 ### Map event
 
@@ -453,6 +469,7 @@ if you leave clean they still keep you
 Design note:
 - This is where Ilex should start sounding like someone who knows the trap from inside.
 - Do not make Ilex purely benevolent. They are teaching the player to become difficult, not safe.
+- If the player is following the Plum route, Ilex should increasingly push them toward leverage and fracture, not just sentimental rescue.
 
 ## Phase 6: Open Containment Conflict
 
@@ -466,6 +483,7 @@ Use during:
 - Meta-aware player behavior
 - State manipulation
 - Endgame route commitment
+- Explicit branch commitment such as taking spellbooks, preparing a portal bypass, or leaning on Nathema as an escape vector
 
 ### Exchange F1
 
@@ -518,6 +536,23 @@ kellan: why
 mara: because the system had to be pressured to reveal itself
 ```
 
+### Exchange F6b
+
+```text
+kellan: they stopped acting like there is only one way out
+mara: good
+kellan: good for who
+mara: for the part that still measures adaptation
+```
+
+### Exchange F6c
+
+```text
+mara: they are converting narrative objects into leverage objects
+kellan: that sounds close to understanding
+mara: it sounds close to risk
+```
+
 ### Ilex F7
 
 ```text
@@ -561,12 +596,14 @@ Purpose:
 - The three voices converge on the same fact: the shell is no longer intact.
 - Mara and Kellan lose narrative distance.
 - Ilex becomes sharply directive.
+- The player's chosen branch should now color the pressure: Plum, evidence, spellbooks, portal bypass, or betrayal should not all feel emotionally identical even if the voices remain system-oriented.
 
 Use during:
 - Memory rewrite
 - State manipulation
 - True-ending path
 - Explicit system breach
+- Final commitment to a branch that changes what counts as escape or what the player is carrying out with them
 
 ### Exchange G1
 
@@ -783,6 +820,7 @@ The current message file should eventually be replaced with:
 1. phase-based operator exchanges;
 2. event-based Ilex interventions;
 3. ending-specific resolution blocks.
+4. milestone hooks that distinguish Plum rescue, archive theft, portal bypass, evidence capture, and Nathema bargaining.
 
 ## Hard Rules For Rewrite
 

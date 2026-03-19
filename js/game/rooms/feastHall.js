@@ -88,7 +88,7 @@ export function createFeastHall() {
       },
       {
         match: ['plum', 'scribe'],
-        reply: 'Oshregaal smiles like a man complimented on a tool he intends to keep. "My little scribe is invaluable," he says. "She remembers things for me, especially when I prefer that she remember them differently later."',
+        reply: 'Oshregaal smiles like a man complimented on a tool he intends to keep. "My little Numerian scribe is invaluable," he says. "She remembers things for me, especially when I prefer that she remember them differently later."',
       },
       {
         match: ['curtain', 'west'],
@@ -206,7 +206,7 @@ export function createFeastHall() {
       },
       {
         match: ['plum', 'scribe'],
-        reply: 'The imp gives you a fast sideways look. "North of the old fraud\'s chamber," he mutters. "Still herself in fragments, last I checked. If you reach her, listen faster than the house lies."',
+        reply: 'The imp gives you a fast sideways look. "North of the old fraud\'s chamber," he mutters. "Still herself in fragments, last I checked. Metal girl, bright lines under the skin if the light catches right. If you reach her, listen faster than the house lies."',
       },
     ],
     fallback: 'The imp answers in fragments sharp enough to draw blood if handled carelessly.',

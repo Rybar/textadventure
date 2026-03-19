@@ -839,7 +839,15 @@ export class GameSession {
 
     this.worldState.removeItemById(item.id);
     this.worldState.inventory.push(item);
-    return `You take the ${item.name}.`;
+
+    const takeText = item.hasAction('take')
+      ? item.performAction('take', this.createActionContext(command, {
+        item,
+        target: item,
+      }))
+      : null;
+
+    return [`You take the ${item.name}.`, takeText].filter(Boolean).join('\n\n');
   }
 
   handleDrop(command) {

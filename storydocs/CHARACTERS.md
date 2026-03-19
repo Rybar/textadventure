@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 -->
+
 # Characters
 
 This file records the important characters, what they want, how they pressure the player, and what engine support they imply.
@@ -104,6 +106,7 @@ This file records the important characters, what they want, how they pressure th
 - He should be one of the first characters to feel like he knows the rules are traps.
 - His help should come in evasions, tone, emphasis, and resentment.
 - He is ideal for hint delivery that still feels diegetic.
+- If the game shortens his name in dialogue, preserve Pazuzu as the full canonical identity rather than treating them as separate characters.
 
 ### Engine implications
 
@@ -177,7 +180,7 @@ This file records the important characters, what they want, how they pressure th
 
 ### Core identity
 
-- Vat-spawned copy of a dead empress.
+- Numerian construct built or repurposed into a scribe body.
 - Intelligent, empathetic, memory-damaged.
 - Maintains notes to herself because Oshregaal periodically wipes her memory.
 
@@ -193,12 +196,14 @@ This file records the important characters, what they want, how they pressure th
 - Continuity of self.
 - To kill Oshregaal if escape fails.
 - To be believed.
+- To understand what she is and where she came from.
 
 ### Best use in the adaptation
 
 - Plum should be the clearest emotional reason to keep pushing deeper.
 - Her notes should function as both lore and practical clue bundles.
 - She is also the most natural in-fiction source for anti-command techniques and escape planning.
+- Her body should support specific clues: seams, luminous lines, Silvermount references, and a concealed crystalline blade.
 
 ### Engine implications
 
@@ -206,6 +211,7 @@ This file records the important characters, what they want, how they pressure th
 - Rescue state.
 - Escort-light logic or post-rescue abstracted ally support.
 - Branching outcomes depending on whether she escapes, dies, or remembers enough.
+- Flags for discovery of her constructed nature, her hidden weapon, and any Silvermount-facing clue chain.
 
 ## Lady Nathema
 
@@ -214,6 +220,7 @@ This file records the important characters, what they want, how they pressure th
 - High-status tusk clan leader or near-leader.
 - Dangerous guest with her own agenda.
 - Interested in black wind fruit, leverage, and power.
+- More active and scheme-minded than a passive rival claimant.
 
 ### Story role
 
@@ -225,18 +232,21 @@ This file records the important characters, what they want, how they pressure th
 - Black wind fruit or elixir.
 - Political advantage.
 - Apprenticeship or influence with Oshregaal.
+- Access to the house's deeper leverage: archives, routes, and secrets that others will miss.
 
 ### Best use in the adaptation
 
 - She should offer the player morally compromised opportunities.
 - She should feel competent and impatient.
 - The player should be able to lie to her, bargain with her, or betray her.
+- She should feel like a parallel operator pursuing her own branch through the mansion rather than a single-room side quest.
 
 ### Engine implications
 
 - Alternative objective branches.
 - Social reputation changes.
 - Negotiation and trade flags.
+- State that tracks what category of leverage the player offers her: evidence, black-wind material, route knowledge, or texts.
 
 ## Slorum
 

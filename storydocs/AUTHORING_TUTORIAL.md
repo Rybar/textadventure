@@ -15,6 +15,8 @@ The feature is intentionally modest so it demonstrates the whole content pipelin
 
 The tutorial example is an `antechamber` attached to the foyer.
 
+This tutorial is intentionally engine-focused, not canon-critical. Use it to learn the content pipeline, then apply the same patterns to real Oshregaal content using the current storydocs as the narrative source of truth.
+
 ## What We Are Building
 
 The player enters an antechamber with:
@@ -34,6 +36,13 @@ This example is useful because it exercises the current engine in a realistic wa
 - global events,
 - the turn scheduler,
 - and WAIT.
+
+For real mansion content, the same workflow should usually attach to a concrete story function such as:
+
+- exposing a Plum clue;
+- opening a Nathema bargaining branch;
+- unlocking a library or portal-bypass lead;
+- or staging a hacker-delivered panel intrusion.
 
 ## Step 1: Add New Flags
 
@@ -55,6 +64,13 @@ Rule of thumb:
 - use flags for durable story state;
 - use scheduled events for delayed timing;
 - do not use raw turn numbers in content unless you really need exact turn math.
+
+For real Oshregaal features, prefer flags that encode story leverage clearly. Examples:
+
+- `plumNatureUnderstood`
+- `portalBypassLearned`
+- `nathemaArchiveDealOffered`
+- `spellbookBranchOpened`
 
 ## Step 2: Add Any Reusable Items
 
@@ -264,6 +280,8 @@ Important details:
 - `scheduleId` lets you avoid duplicate timers or cancel them later;
 - `scheduledData` travels into the later event so you can keep authored flavor tied to the source action.
 
+Use the same pattern in real story content when the house reacts after a delay, when a meta intervention arrives one turn later, or when a clue should visibly change another room's behavior.
+
 Because the scheduler is now part of the engine, this event will survive save/load automatically.
 
 ## Step 5: Wire The Room Into The Manifest
@@ -327,6 +345,8 @@ Examples:
 
 Do not add parser aliases for one-off flavor if a room verb or item action already solves the problem.
 
+In canon-sensitive content, be careful with aliases around folded-hall rituals, anti-command behaviors, and portal interactions. Reduce guess-the-verb friction, but do not flatten the intended eerie logic.
+
 ## Step 8: Add A Test
 
 Add a unit or smoke test depending on scope.
@@ -382,6 +402,15 @@ When deciding where code belongs:
 - use a room `verb` when the interaction is broad, fuzzy, or room-level;
 - use a global event when the consequence crosses room boundaries or should be reusable;
 - use the scheduler when something should happen after future turns rather than immediately.
+
+## Applying This To Real Story Branches
+
+When you move from this tutorial to real content, keep the same implementation discipline:
+
+- put branch-defining clues in explicit items, objects, flags, or events;
+- let Plum, Nathema, library, and portal content expose different kinds of leverage rather than rewording the same route;
+- keep meta panel unlocks authored as dramatic events rather than passive defaults;
+- make important story revelations testable through state, not only through prose.
 
 ## Tutorial Recap
 

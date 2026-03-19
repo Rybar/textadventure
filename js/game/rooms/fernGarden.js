@@ -19,14 +19,23 @@ export function createFernGardenRoom() {
       || worldState.findInventoryItem('black-wind-fruit')
       || worldState.findInventoryItem('black-wind-elixir')
     );
+    const carryingArchive = Boolean(
+      worldState.findInventoryItem('geometry-folio')
+      || worldState.findInventoryItem('threshold-spellbook')
+    );
     const acceptedMutation = getFlag('blackWindFruitConsumed') || getFlag('blackWindElixirConsumed');
     const acceptedService = getFlag('servantApronWorn');
     const strongEscape = getFlag('plumRescued') && (
       getFlag('blackWindEvidenceCollected')
       || getFlag('nathemaEvidenceShown')
       || getFlag('nathemaBlackWindSampleDelivered')
+      || getFlag('nathemaRouteKnowledgeShared')
+      || getFlag('nathemaTextsShared')
       || getFlag('blackWindTreeSabotaged')
+      || getFlag('portalBypassLearned')
+      || getFlag('spellbooksSecured')
       || carryingLeverage
+      || carryingArchive
       || carryingGreyGrin
     );
 
@@ -73,7 +82,7 @@ export function createFernGardenRoom() {
       return 'Plum is hidden, not yet fully gone. Leaving now would turn her rescue into a partial theft and trust into bad accounting.';
     }
 
-    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || carryingLeverage || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered')) {
+    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || getFlag('portalBypassLearned') || getFlag('spellbooksSecured') || carryingLeverage || carryingArchive || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered') || getFlag('nathemaRouteKnowledgeShared') || getFlag('nathemaTextsShared')) {
       setFlag('escapedMansion', true);
       return 'You slip away through the garden carrying proof or plunder, but without rescuing the person who made the house impossible to treat as scenery. This is a compromised escape.';
     }
@@ -112,6 +121,10 @@ export function createFernGardenRoom() {
       {
         match: ['oshregaal', 'grandfather'],
         reply: 'Plum looks toward the mansion wall with open fatigue. "He will turn my absence into an anecdote first," she says. "That buys us a little time. After that he will become industrious."',
+      },
+      {
+        match: ['silvermount', 'origin', 'numerian', 'android', 'construct'],
+        reply: 'Plum touches her forearm absently, as if checking whether it is still fully hers. "Numerian," she says. "Construct, certainly. Silvermount is the name that survives the wipes. I still do not know whether it is birthplace, workshop, ruin, or grave, but the blade and the body both answer to it more honestly than they answer to him."',
       },
     ],
     fallback: 'Plum answers in the clipped, practical tone of someone spending borrowed safety on only the most useful words.',
@@ -198,7 +211,7 @@ The safer path leads back southeast toward the cavern and the stairs.
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('plumRescued') && !getFlag('plumAllianceSecured'),
-        text: 'Plum stands among the gnome statues breathing cold garden air like someone relearning the existence of futures. The hidden culvert behind the ferns now looks less like trivia and more like the shape of a successful theft.',
+        text: 'Plum stands among the gnome statues breathing cold garden air like someone relearning the existence of futures. Dirt and exhaustion cannot quite hide the faint luminous tracery that shows beneath one forearm when she turns back toward the house. The hidden culvert behind the ferns now looks less like trivia and more like the shape of a successful theft.',
       },
       {
         when: ({ getFlag }) => getFlag('plumAllianceSecured'),
@@ -219,7 +232,7 @@ The safer path leads back southeast toward the cavern and the stairs.
           }
 
           if (getFlag('plumRescued')) {
-            return 'Plum looks stunned, filthy, and newly dangerous in the way exhausted people become once they have proof that escape is physically possible.';
+            return 'Plum looks stunned, filthy, and newly dangerous in the way exhausted people become once they have proof that escape is physically possible. In the garden light, faint luminous lines under one forearm are harder to dismiss as imagination.';
           }
 
           return 'Plum is not here.';

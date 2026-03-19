@@ -136,6 +136,7 @@ This slice already supports invitation logic, initial hospitality pressure, Oshr
 - Crucial because it converts vague suspicion into actionable escape possibility.
 - The room should feel older than Oshregaal's dinner performance.
 - Important affordances: inspect books, inspect circle, use scroll, discover portal logic.
+- It should also support a portal-bypass branch rather than implying that one scroll solves the entire problem cleanly.
 
 ## Deep Weird Layer
 
@@ -158,8 +159,9 @@ This slice already supports invitation logic, initial hospitality pressure, Oshr
 ### Library
 
 - Oshregaal's intellectual self-image made physical.
-- Good place for history, doctrine, keys, and clues about how he thinks.
+- Good place for history, doctrine, keys, spellbooks, and clues about how he thinks.
 - Should support reading, searching, and forbidden-knowledge risk.
+- In Grizzelnit terms, this room should be one of the clearest places to branch from simple escape into archive theft, portal bypass, or spellbook capture.
 
 ### Bathroom
 
@@ -178,12 +180,14 @@ This slice already supports invitation logic, initial hospitality pressure, Oshr
 
 - The place where the source of tusk power becomes material and stealable.
 - Strong objective room because it connects politics, mutation, and trade.
+- It should read as an active production layer, not just a single stash room.
 
 ### Black Wind Tree
 
 - One of the deepest source-truth rooms.
 - The tree should feel like the mansion's original sin made botanical.
 - Destroying or sampling it should be a major branch, not a side action.
+- The route into and out of this cluster should reinforce that the stockroom is only the commercial face of a deeper black-wind system.
 
 ## Impossible Geometry Cluster
 
@@ -193,7 +197,7 @@ This slice already supports invitation logic, initial hospitality pressure, Oshr
 - The impossible shape is one of the module's signature ideas.
 - In parser form, the hallway should be readable through repeated inspection and clue layering, not only through diagram shock.
 
-### Nyarlathotep Statue
+### Threshold Shrine / Folded Hall Mechanism
 
 - Mechanism for unfolding the hallway.
 - The current source solution assumes two living palms.
@@ -202,6 +206,7 @@ This slice already supports invitation logic, initial hospitality pressure, Oshr
   - use a body substitute;
   - unlock a later one-person ritual version;
   - or let the hacker/meta layer expose a workaround at cost.
+- When naming the associated deity or threshold logic, prefer Yog-Sothoth-style gate imagery over generic Nyarlathotep carryover unless implementation constraints require a simpler placeholder.
 
 ### Idol Room
 
@@ -219,6 +224,7 @@ This slice already supports invitation logic, initial hospitality pressure, Oshr
 - Emotional anchor of the deeper mansion.
 - The memory folder is one of the best clue bundles in the module.
 - This room should shift the player from mere escape to rescue-plus-escape.
+- It should also carry the strongest evidence that Plum is a constructed person with a concealed emergency weapon and ties to a wider Numerian history.
 
 ## Secret Design Rules
 

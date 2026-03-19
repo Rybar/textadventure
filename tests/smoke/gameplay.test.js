@@ -224,16 +224,29 @@ test('the deeper private rooms now introduce Plum and the rescue branch', () => 
   assert.equal(session.worldState.getFlag('metalHandDoorUnlocked'), true);
   assert.match(session.submitCommand('north'), /smaller chamber has the careful plainness/i);
   assert.equal(session.worldState.getFlag('plumFound'), true);
+  assert.match(session.submitCommand('look at plum'), /luminous lines|forearm/i);
+  assert.match(session.submitCommand('ask plum about numerian'), /Numerian|Silvermount/i);
   assert.match(session.submitCommand('ask plum about escape'), /circle behind the curtains is real|folded hall/i);
   assert.match(session.submitCommand('read memory folder'), /Wax in one ear blunts the host-voice/i);
+  assert.match(session.submitCommand('read memory folder'), /Silvermount|Left forearm seam/i);
   assert.equal(session.worldState.getFlag('plumMemoryRead'), true);
+  assert.equal(session.worldState.getFlag('plumBladeKnown'), true);
   assert.match(session.submitCommand('tell plum i will get you out'), /read the folder\. keep the wax/i);
   assert.equal(session.worldState.getFlag('plumEscapePlanned'), true);
+  assert.match(session.submitCommand('search plum'), /luminous lines|seam/i);
+  assert.match(session.submitCommand('open seam'), /crystal blade nested inside her arm/i);
+  assert.equal(session.worldState.getFlag('plumBladeRevealed'), true);
+  assert.match(session.submitCommand('look at crystal blade'), /slim, clear|Silvermount/i);
+  assert.match(session.submitCommand('use lamp'), /lamp wick up|faint lines beneath Plum's skin/i);
+  assert.equal(session.worldState.getFlag('plumLampLit'), true);
+  assert.match(session.submitCommand('use crystal blade on lamp'), /Silvermount|where someone expected this body to remember from/i);
+  assert.equal(session.worldState.getFlag('plumSilvermountHintSeen'), true);
 
   const secondSession = createTestSession();
   moveToPlumRoom(secondSession);
   assert.match(secondSession.submitCommand('ask plum about wax'), /keep it\. when he speaks in the voice/i);
   assert.match(secondSession.submitCommand('ask plum about folder'), /write to the next version of myself/i);
+  assert.match(secondSession.submitCommand('ask plum about silvermount'), /Silvermount|truer than anything Oshregaal tells me/i);
 });
 
 test('the library and folded hallway now extend the deep escape cluster', () => {
@@ -241,10 +254,14 @@ test('the library and folded hallway now extend the deep escape cluster', () => 
 
   moveToLibrary(session);
   assert.equal(session.worldState.currentRoomId, 'library');
-  assert.match(session.submitCommand('search shelves'), /obedient geometry|folded corridor/i);
+  assert.match(session.submitCommand('search shelves'), /obedient geometry|folded corridor|threshold spellbook/i);
   assert.equal(session.worldState.getFlag('libraryRouteKnown'), true);
   assert.match(session.submitCommand('read geometry folio'), /paired living contact|competent fraud/i);
   assert.equal(session.worldState.getFlag('foldedHallwayUnderstood'), true);
+  assert.equal(session.worldState.getFlag('portalBypassLearned'), true);
+  assert.match(session.submitCommand('take threshold spellbook'), /you take the threshold spellbook|archive theft/i);
+  assert.equal(session.worldState.getFlag('spellbooksSecured'), true);
+  assert.match(session.submitCommand('read threshold spellbook'), /threshold rites|better mathematics/i);
   assert.match(session.submitCommand('smell incense'), /cedar, dust, and the sort of disciplined breathing/i);
 
   assert.match(session.submitCommand('north'), /corridor beyond the library refuses to behave/i);
@@ -429,6 +446,25 @@ test('Nathema turns black-wind evidence or contraband into immediate leverage', 
   const thirdSession = createTestSession();
   moveToNathemaRoom(thirdSession);
   assert.match(thirdSession.submitCommand('tell nathema i have evidence'), /show me something i can sell/i);
+
+  const fourthSession = createTestSession();
+  moveToLibrary(fourthSession);
+  assert.match(fourthSession.submitCommand('take threshold spellbook'), /you take the threshold spellbook|archive theft/i);
+  assert.match(fourthSession.submitCommand('take geometry folio'), /you take the geometry folio/i);
+  assert.match(fourthSession.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(fourthSession.submitCommand('south'), /private chamber is all velvet excess/i);
+  assert.match(fourthSession.submitCommand('west'), /curtains of living silk|kelago/i);
+  assert.match(fourthSession.submitCommand('south'), /immense dinner table dominates/i);
+  assert.match(fourthSession.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(fourthSession.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(fourthSession.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(fourthSession.submitCommand('show threshold spellbook to nathema'), /stolen texts like this do not buy tonight|shape of whatever follows/i);
+  assert.equal(fourthSession.worldState.getFlag('nathemaTextsShared'), true);
+  assert.match(fourthSession.submitCommand('show geometry folio to nathema'), /competent fraud|absence reduced to procedure/i);
+  assert.equal(fourthSession.worldState.getFlag('nathemaRouteKnowledgeShared'), true);
+  assert.match(fourthSession.submitCommand('ask nathema about escape'), /route knowledge if you want quiet|stolen texts if you want tomorrow/i);
+  assert.match(fourthSession.submitCommand('ask nathema about spellbooks'), /stolen threshold text matters|alter succession/i);
+  assert.match(fourthSession.submitCommand('ask nathema about portal'), /route knowledge turns flight into scheduling|competent fraud/i);
 });
 
 test('the deeper black-wind source branch reveals the tree chamber and yields source proof', () => {
@@ -572,6 +608,42 @@ test('Nathema can convert delivered leverage into a dark-bargain escape', () => 
   assert.match(session.submitCommand('escape'), /dark bargain ending/i);
   assert.equal(session.worldState.getFlag('escapedMansion'), true);
   assert.equal(session.worldState.getFlag('strongerEscapeSecured'), false);
+});
+
+test('Nathema can also convert black-wind leverage plus portal knowledge into a dark-bargain escape', () => {
+  const session = createTestSession();
+
+  moveToAlchemyStockroom(session);
+  assert.match(session.submitCommand('take black wind fruit'), /you take the black wind fruit/i);
+  assert.match(session.submitCommand('west'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(session.submitCommand('give black wind fruit to nathema'), /alter decisions|turn leverage into alignment/i);
+  assert.equal(session.worldState.getFlag('nathemaBlackWindSampleDelivered'), true);
+
+  assert.match(session.submitCommand('south'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('down'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('north'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('north'), /Kelago's workroom-bedroom|crowded with knives/i);
+  assert.match(session.submitCommand('east'), /private chamber is all velvet excess/i);
+  assert.match(session.submitCommand('shake hand'), /hidden catches withdraw/i);
+  assert.match(session.submitCommand('north'), /smaller chamber has the careful plainness/i);
+  assert.match(session.submitCommand('east'), /library is less a scholarly refuge/i);
+  assert.match(session.submitCommand('take geometry folio'), /you take the geometry folio/i);
+
+  assert.match(session.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(session.submitCommand('south'), /private chamber is all velvet excess/i);
+  assert.match(session.submitCommand('west'), /Kelago's workroom-bedroom|crowded with knives/i);
+  assert.match(session.submitCommand('south'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(session.submitCommand('show geometry folio to nathema'), /competent fraud|absence reduced to procedure/i);
+  assert.equal(session.worldState.getFlag('nathemaRouteKnowledgeShared'), true);
+  assert.match(session.submitCommand('tell nathema escape'), /tomorrow's emergency|transfer of power|ugly, but it will work/i);
+  assert.equal(session.worldState.getFlag('nathemaEscapeDealSecured'), true);
 });
 
 test('accepting black-wind mutation can also produce a dark-bargain escape', () => {

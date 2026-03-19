@@ -18,14 +18,23 @@ export function createCavernRoom() {
       || worldState.findInventoryItem('black-wind-fruit')
       || worldState.findInventoryItem('black-wind-elixir')
     );
+    const carryingArchive = Boolean(
+      worldState.findInventoryItem('geometry-folio')
+      || worldState.findInventoryItem('threshold-spellbook')
+    );
     const acceptedMutation = getFlag('blackWindFruitConsumed') || getFlag('blackWindElixirConsumed');
     const acceptedService = getFlag('servantApronWorn');
     const strongEscape = getFlag('plumRescued') && (
       getFlag('blackWindEvidenceCollected')
       || getFlag('nathemaEvidenceShown')
       || getFlag('nathemaBlackWindSampleDelivered')
+      || getFlag('nathemaRouteKnowledgeShared')
+      || getFlag('nathemaTextsShared')
       || getFlag('blackWindTreeSabotaged')
+      || getFlag('portalBypassLearned')
+      || getFlag('spellbooksSecured')
       || carryingLeverage
+      || carryingArchive
       || carryingGreyGrin
     );
 
@@ -68,7 +77,7 @@ export function createCavernRoom() {
       return 'You withdraw from the cavern with Plum alive and the house behind you at last. It is not a total victory. Oshregaal still has rooms, servants, and schemes. But he does not have Plum, and tonight that is enough to call escape real. This is the minimum good ending.';
     }
 
-    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || carryingLeverage || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered')) {
+    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || getFlag('portalBypassLearned') || getFlag('spellbooksSecured') || carryingLeverage || carryingArchive || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered') || getFlag('nathemaRouteKnowledgeShared') || getFlag('nathemaTextsShared')) {
       setFlag('escapedMansion', true);
       return 'You leave the cavern alive with leverage, theft, or contraband in hand, but without Plum. The house has not beaten you. It has only made the cost of your priorities legible. This is a compromised escape.';
     }

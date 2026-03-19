@@ -33,6 +33,9 @@ In this game, items should usually do at least one of the following:
   - escape planning fragments;
   - evidence of Oshregaal's memory tampering;
   - emotional context for Plum.
+  - signs that Plum is a constructed Numerian being rather than an ordinary captive;
+  - clues about the seam and concealed crystalline blade in her arm;
+  - hints pointing toward Silvermount or a comparable lost origin site.
 
 ### Wax Plug
 
@@ -85,6 +88,7 @@ In this game, items should usually do at least one of the following:
 
 - Plum's escape-grade weapon.
 - Its fragility makes it narratively strong: a real tool, not a permanent combat solution.
+- It should be framed as part of Plum's body plan or emergency design, not just a loose treasure.
 
 ## Ritual And Escape Items
 
@@ -92,6 +96,12 @@ In this game, items should usually do at least one of the following:
 
 - Core hidden-exit item.
 - Should remain understandable once found: the player must know it matters, even if they do not know where to use it yet.
+
+### Portal Bypass Material
+
+- Grizzelnit pushes the portal route toward bypasses, constraints, and layered understanding rather than a single clean scroll solution.
+- This can take the form of a scroll, annotation, keyed note, or library-side instruction set.
+- The important story function is that a knowledgeable player can learn how Oshregaal's portals are constrained and how to cheat those constraints.
 
 ### Meditative Incense
 
@@ -152,6 +162,8 @@ In this game, items should usually do at least one of the following:
 
 - Important for tone, clue density, and future magical systems.
 - In the single-player parser adaptation, many such texts should reveal usable information before they reveal full spell functionality.
+- They should also count as a meaningful objective branch in their own right, not merely as background flavor.
+- If the player secures Oshregaal's spellbooks, that should materially affect endings, leverage, or future chapters.
 
 ### Living Or Cursed Books
 

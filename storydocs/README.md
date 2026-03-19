@@ -11,11 +11,12 @@ These docs are written for two audiences at once:
 
 When two ideas conflict, prefer them in this order:
 
+1. Treat Oshregaal's Feast, Grizzelnit Edition as the primary source canon for this adaptation.
 1. Preserve the feeling of entering a grotesque house where hospitality is coercion.
-2. Preserve strong parser interactions: invitation logic, conversation pressure, hidden doors, ritual actions, grotesque objects, and layered escape routes.
-3. Preserve the meta-story as interference and observation, not as a replacement for the mansion fiction.
-4. Reduce tabletop-combat density in favor of social danger, puzzle logic, and escalating entrapment.
-5. Keep engine systems reusable and content-facing APIs narrow.
+1. Preserve strong parser interactions: invitation logic, conversation pressure, hidden doors, ritual actions, grotesque objects, and layered escape routes.
+1. Preserve the meta-story as interference and observation, not as a replacement for the mansion fiction.
+1. Reduce tabletop-combat density in favor of social danger, puzzle logic, and escalating entrapment.
+1. Keep engine systems reusable and content-facing APIs narrow.
 
 ## How To Use This Folder
 
@@ -40,10 +41,12 @@ When two ideas conflict, prefer them in this order:
 ## Current Adaptation Baseline
 
 - The player is a single subject moving through a mansion-fiction scenario.
-- The visible story is an Oshregaal dinner invitation and attempted escape.
+- The visible story is an Oshregaal dinner invitation wrapped around multiple competing schemes.
 - The hidden story is that the player is trapped inside a monitored text-adventure experiment.
 - Early content should feel deniable: eerie, not explanatory.
-- The first robust playable arc should still be the scribe-rescue route with at least one viable hidden exit.
+- The first robust playable arc should still be the Plum-rescue route with at least one viable hidden exit.
+- Plum should be treated as a Numerian construct rather than a vat-grown empress duplicate.
+- Library and deep-house content should support a spellbook and portal-bypass branch, not only simple escape.
 
 ## Useful Authoring Heuristics
 

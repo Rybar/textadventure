@@ -156,6 +156,10 @@ Recommended flag families:
 - black wind fruit taken
 - tree damaged
 - evidence collected
+- spellbooks secured
+- portal bypass learned
+- nathema leverage category established
+- plum nature understood
 
 ### Meta state
 
@@ -204,6 +208,7 @@ For maintainable dialogue, each important NPC should define:
 - player can gain admission through the intended social route;
 - oshregaal scene sets host-contact state;
 - at least one hidden route can be unlocked through clues rather than brute force.
+- Plum rescue remains the first robust route, but at least one library or deep-house clue branch should also point toward spellbooks or portal bypass.
 
 ### Parser coverage
 
@@ -218,6 +223,12 @@ For maintainable dialogue, each important NPC should define:
 - map and inventory hacks are absent at game start and unlock only after intended milestones;
 - the memory panel appears later than the first utility hacks and remains clearly stranger than them;
 - debug tooling can preview scheduled meta beats.
+
+### Scheme coverage
+
+- tests should verify that the mansion still reads as a multi-scheme space even when only one route is fully playable;
+- evidence, spellbook, and portal-bypass clues should be representable as explicit state rather than buried only in prose;
+- Nathema and Plum branches should expose different kinds of leverage, not the same branch with different text.
 
 ## Suggested Content Workflow
 

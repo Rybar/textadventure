@@ -194,7 +194,7 @@ export function createGameEventDefinitions() {
           value: true,
         },
       ],
-      text: 'Plum looks up from her desk with the wary alertness of someone who has learned that every interruption carries edits with it. For the first time tonight, the mansion offers you someone worth rescuing rather than merely surviving.',
+      text: 'Plum looks up from her desk with the wary alertness of someone who has learned that every interruption carries edits with it. In the lamp\'s low light, faint luminous lines flicker beneath the skin of one forearm. For the first time tonight, the mansion offers you someone worth rescuing rather than merely surviving.',
     },
     planPlumEscape: {
       actions: [

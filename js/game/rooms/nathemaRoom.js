@@ -20,12 +20,20 @@ export function createNathemaRoom() {
   };
 
   const hasNathemaLeverage = getFlag => {
-    return getFlag('nathemaEvidenceShown') || getFlag('nathemaBlackWindSampleDelivered');
+    return getFlag('nathemaEvidenceShown')
+      || getFlag('nathemaBlackWindSampleDelivered')
+      || getFlag('nathemaRouteKnowledgeShared')
+      || getFlag('nathemaTextsShared');
   };
 
   const canSecureNathemaEscapeDeal = getFlag => {
     return getFlag('nathemaBlackWindSampleDelivered')
-      && (getFlag('greyGrinDeliveredToNathema') || getFlag('nathemaEvidenceShown'));
+      && (
+        getFlag('greyGrinDeliveredToNathema')
+        || getFlag('nathemaEvidenceShown')
+        || getFlag('nathemaRouteKnowledgeShared')
+        || getFlag('nathemaTextsShared')
+      );
   };
 
   const handleNathemaLedgerReview = ({ setFlag }) => {
@@ -67,6 +75,28 @@ export function createNathemaRoom() {
     return 'Nathema accepts the Grey Grin Blade without triumph, which makes the exchange feel more dangerous rather than less. She wraps it in black cloth and exhales once. "Good," she says. "Now we are no longer discussing escape as a moral wish. We are discussing leverage with edges."';
   };
 
+  const handleNathemaRouteKnowledgeReview = ({ setFlag }) => {
+    setFlag('nathemaBargained', true);
+    setFlag('nathemaRouteKnowledgeShared', true);
+
+    return 'Nathema reads the folio excerpt with fierce stillness. "Paired living contact, a competent fraud, and enough geometry to insult a gate into cooperation," she murmurs. "Good. That is not merely a route. That is absence reduced to procedure."';
+  };
+
+  const handleNathemaTextsReview = ({ setFlag }) => {
+    setFlag('nathemaBargained', true);
+    setFlag('nathemaTextsShared', true);
+
+    return 'Nathema lets the spellbook rest on her fingertips without quite opening it all the way. "Threshold rites, constraint notes, failure cases," she says. "Excellent. Stolen texts like this do not buy tonight. They buy the shape of whatever follows it."';
+  };
+
+  const handleNathemaTextsDelivery = ({ item, setFlag, worldState }) => {
+    setFlag('nathemaBargained', true);
+    setFlag('nathemaTextsShared', true);
+    worldState.removeItemById(item.id);
+
+    return 'Nathema accepts the threshold spellbook and folds it into her luggage as if she had planned the shelf space in advance. "Good," she says. "Archive theft is the sort of courtesy Oshregaal deserves to discover late."';
+  };
+
   const nathemaAsk = createTopicResponder({
     before: markNathemaMet,
     rules: [
@@ -84,7 +114,7 @@ export function createNathemaRoom() {
           setFlag('nathemaBargained', true);
         },
         reply: ({ getFlag }) => hasNathemaLeverage(getFlag)
-          ? 'Nathema smiles with all the warmth of a sharpened treaty. "Now you understand the scale of the thing," she says. "Fruit buys appetites. Elixir buys armies. Documents buy fear. Any of them can open a road if used at the correct angle."'
+          ? 'Nathema smiles with all the warmth of a sharpened treaty. "Now you understand the scale of the thing," she says. "Fruit buys appetites. Elixir buys armies. Documents buy fear. Routes buy absence. Texts buy futures. Any of them can open a road if used at the correct angle."'
           : 'Nathema studies you with sudden professional interest. "So you have heard useful words," she says. "Bring me anything from the black wind line and I may decide your survival has become strategically attractive."',
       },
       {
@@ -107,11 +137,11 @@ export function createNathemaRoom() {
           }
 
           if (canSecureNathemaEscapeDeal(getFlag)) {
-            return 'Nathema smiles with cold approval. "Now this is a departure I can respect," she says. "I have source leverage, and either proof or a succession-blade. Leave when you are ready. By dawn, Oshregaal will be too busy containing me to pursue you cleanly. You have secured a dark bargain."';
+            return 'Nathema smiles with cold approval. "Now this is a departure I can respect," she says. "I have source leverage, and either proof, a succession-blade, route mathematics, or stolen texts. Leave when you are ready. By dawn, Oshregaal will be too busy containing me to pursue you cleanly. You have secured a dark bargain."';
           }
 
           if (hasNathemaLeverage(getFlag)) {
-            return '"Now you have the beginnings of a real departure," Nathema says. "Evidence if you want scandal. Sample if you want bargaining power. Bring one more useful thing or one precise opportunity, and I can turn this from survival into negotiation."';
+            return '"Now you have the beginnings of a real departure," Nathema says. "Evidence if you want scandal. Sample if you want bargaining power. Route knowledge if you want quiet. Stolen texts if you want tomorrow. Bring one more useful thing or one precise opportunity, and I can turn this from survival into negotiation."';
           }
 
           if (getFlag('nathemaBargained')) {
@@ -126,6 +156,18 @@ export function createNathemaRoom() {
         reply: ({ getFlag }) => getFlag('nathemaEvidenceShown')
           ? 'Nathema taps one finger against her knee. "The ledger is excellent leverage," she says. "Not because it is true, but because it is legible to people who pay others to fear truth for them."'
           : 'Nathema tilts her head. "If you can produce written proof instead of tavern outrage, my interest improves dramatically," she says.',
+      },
+      {
+        match: ['library', 'archive', 'spellbook', 'spellbooks', 'text', 'texts'],
+        reply: ({ getFlag }) => getFlag('nathemaTextsShared')
+          ? 'Nathema allows herself a small satisfied breath. "The stolen threshold text matters," she says. "Blade and evidence alter tonight. Archives alter succession, ritual, and every ugly tomorrow after that."'
+          : 'Nathema glances toward the corridor. "Oshregaal keeps his most useful vanities in book form," she says. "If you can steal me a threshold text instead of a rumor, my interest becomes concrete."',
+      },
+      {
+        match: ['route', 'routes', 'portal', 'bypass', 'geometry', 'folio'],
+        reply: ({ getFlag }) => getFlag('nathemaRouteKnowledgeShared')
+          ? 'Nathema taps one finger against the arm of her chair. "Good route knowledge turns flight into scheduling," she says. "Once a gate can be cheated by competent fraud, everyone depending on its etiquette becomes vulnerable."'
+          : 'Nathema\'s eyes sharpen. "If the library has yielded portal constraints or route mathematics, bring them," she says. "Knowledge of how Oshregaal bypasses his own limitations is worth more than another frightened testimony."',
       },
       {
         match: ['grey grin', 'blade', 'trophy', 'weapon'],
@@ -282,6 +324,14 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
               return handleNathemaGreyGrinReview({ setFlag });
             }
 
+            if (item.id === 'geometry-folio') {
+              return handleNathemaRouteKnowledgeReview({ setFlag });
+            }
+
+            if (item.id === 'threshold-spellbook') {
+              return handleNathemaTextsReview({ setFlag });
+            }
+
             if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir' || item.id === 'black-wind-root-sample') {
               setFlag('nathemaBargained', true);
               return `Nathema studies the ${item.name} without touching it. "Good," she says. "Now either keep it as leverage or give it to me and turn leverage into alignment."`;
@@ -296,6 +346,14 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
 
             if (item.id === 'grey-grin-blade') {
               return handleNathemaGreyGrinDelivery({ item, setFlag, worldState });
+            }
+
+            if (item.id === 'geometry-folio') {
+              return handleNathemaRouteKnowledgeReview({ setFlag });
+            }
+
+            if (item.id === 'threshold-spellbook') {
+              return handleNathemaTextsDelivery({ item, setFlag, worldState });
             }
 
             if (item.id === 'black-wind-fruit' || item.id === 'black-wind-elixir' || item.id === 'black-wind-root-sample') {

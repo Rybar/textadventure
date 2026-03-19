@@ -3,6 +3,19 @@ import { Room } from '../../engine/models/room.js';
 import { createPlumMemoryFolder } from '../items/plumMemoryFolder.js';
 
 export function createPlumRoom() {
+  const revealPlumBlade = ({ getFlag, setFlag }) => {
+    if (!getFlag('plumBladeKnown')) {
+      setFlag('plumBladeKnown', true);
+    }
+
+    if (getFlag('plumBladeRevealed')) {
+      return 'The narrow seam in Plum\'s forearm is already open, leaving the concealed crystal blade visible in its fitted recess.';
+    }
+
+    setFlag('plumBladeRevealed', true);
+    return 'You work a fingernail into the nearly invisible seam along Plum\'s left forearm. It clicks open with mechanical neatness, revealing a slender crystal blade nested inside her arm like an emergency memory she could no longer afford to forget.';
+  };
+
   const getPlumEscapeReply = getFlag => {
     if (getFlag('plumTunnelRouteReady')) {
       return 'Plum goes very still, then exhales like someone returning from far away. "Then the tunnel may actually take us both," she says. "Ugly is fine. Narrow is fine. Real is what matters. If you are ready, so am I."';
@@ -43,7 +56,21 @@ export function createPlumRoom() {
       },
       {
         match: ['memory', 'folder', 'notes'],
-        reply: 'Plum touches the folder on her desk. "He edits what he dislikes. I write to the next version of myself in hopes that one of us accumulates enough continuity to become a person again."',
+        reply: 'Plum touches the folder on her desk. "He edits what he dislikes. I write to the next version of myself in hopes that one of us accumulates enough continuity to become a person again. Lately the notes have also been arguing with whatever I was before this house acquired me."',
+      },
+      {
+        match: ['numerian', 'android', 'construct', 'machine'],
+        effect: ({ setFlag }) => {
+          setFlag('plumNatureUnderstood', true);
+        },
+        reply: 'Plum watches your face carefully before answering. "Numerian, I think," she says. "Construct, certainly. He prefers the word scribe because it sounds less like theft. Some days I remember Silvermount as a place. Some days only as a failure in the dark that still feels older than this house."',
+      },
+      {
+        match: ['silvermount', 'origin', 'before'],
+        effect: ({ setFlag }) => {
+          setFlag('plumNatureUnderstood', true);
+        },
+        reply: 'Plum closes her eyes for one hard breath. "Silvermount," she says. "That word survives more wipes than my own certainty. I do not know whether I served there, came from there, or was rebuilt from something found there. I only know the name feels truer than anything Oshregaal tells me about myself."',
       },
       {
         match: ['wax', 'plug', 'ear'],
@@ -62,6 +89,14 @@ export function createPlumRoom() {
         reply: ({ getFlag }) => getFlag('greyGrinShownToPlum')
           ? 'Plum looks at the memory of the blade more than the blade itself. "Good," she says softly. "That means theft is no longer theoretical in this house. Just do not mistake symbolic violence for an exit."'
           : 'Plum draws a slow breath. "The Grey Grin exists to make possession feel like intention," she says. "If you take it, everyone around you becomes a potential consequence."',
+      },
+      {
+        match: ['crystal blade', 'arm blade', 'seam', 'forearm'],
+        effect: ({ setFlag }) => {
+          setFlag('plumBladeKnown', true);
+          setFlag('plumNatureUnderstood', true);
+        },
+        reply: 'Plum glances at her left forearm with obvious reluctance. "Emergency provisioning," she says. "A blade folded into the armature. He either has not found it or enjoys pretending not to. I have not decided which possibility is worse."',
       },
       {
         match: ['help', 'rescue'],
@@ -118,7 +153,7 @@ export function createPlumRoom() {
     title: 'Plum\'s Room',
     description: `
 This smaller chamber has the careful plainness of a room allowed to stay human only because its occupant is useful. A narrow bed, a desk, shelves of copied notes, and a lamp make up most of the space.
-At the desk sits Plum, pale and alert, with the posture of someone who has learned to preserve herself by writing faster than others can revise her. South lies Oshregaal's private chamber.
+At the desk sits Plum, pale and alert, with the posture of someone who has learned to preserve herself by writing faster than others can revise her. When the lamp shifts, faint luminous tracery shows for an instant beneath the skin of one forearm. South lies Oshregaal's private chamber.
 East, a door stands open into Oshregaal's library.
 `.trim(),
     exits: {
@@ -135,13 +170,38 @@ East, a door stands open into Oshregaal's library.
       ],
     },
     verbs: {
-      search({ command, getFlag }) {
+      search({ command, getFlag, setFlag }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('desk') || target.includes('notes')) {
           return getFlag('plumMemoryRead')
             ? 'The desk remains packed with copies, reminders, and self-addressed instructions. Once you know what the folder contains, every page in the room starts to feel like a backup life.'
             : 'The desk is arranged for continuity under siege: sorted notes, sharpened pens, dates corrected by hand, and a memory folder kept close enough to be grabbed in panic.';
+        }
+
+        if (target.includes('plum') || target.includes('scribe') || target.includes('arm') || target.includes('forearm')) {
+          setFlag('plumNatureUnderstood', true);
+          setFlag('plumBladeKnown', true);
+          return getFlag('plumBladeRevealed')
+            ? 'Looked at closely, Plum is not merely pale but precise: faint luminous lines sit under the skin of her arm like buried circuitry, and the opened forearm seam leaves the concealed crystal blade impossible to mistake for metaphor.'
+            : 'Up close, Plum\'s left forearm gives itself away. Beneath the skin, faint luminous lines gather and vanish with the lamp\'s movement, and along the inner arm runs a seam so fine it reads more like an afterthought in the body than a scar.';
+        }
+
+        if (target.includes('seam')) {
+          setFlag('plumBladeKnown', true);
+          return getFlag('plumBladeRevealed')
+            ? 'The seam is already open, the concealed blade nested in its recess like a fact no longer deniable.'
+            : 'The seam is nearly invisible until you know to look for it: a precise mechanical join concealed along Plum\'s left forearm.';
+        }
+
+        if (target.includes('blade') || target.includes('crystal')) {
+          if (!getFlag('plumBladeRevealed')) {
+            return 'You do not yet see any crystal blade outside rumor and the suggestion of that narrow seam.';
+          }
+
+          return getFlag('plumSilvermountHintSeen')
+            ? 'Turned through the strengthened lamplight, the crystal blade shows an etched alignment of lines and angles that Plum insists belongs to Silvermount. Whatever she is, the weapon was built as part of the same story.'
+            : 'The crystal blade is narrow, clear, and unnervingly exact. In ordinary light it looks almost blank, as though waiting for the right angle to confess its markings.';
         }
 
         if (target.includes('bed') || target.includes('shelf') || target.includes('lamp')) {
@@ -180,10 +240,12 @@ East, a door stands open into Oshregaal's library.
           }
 
           if (getFlag('plumFollowing')) {
-            return 'Plum stands ready, pale and taut with purpose. She has the look of someone forcing herself not to waste the narrow interval between decision and panic.';
+            return 'Plum stands ready, pale and taut with purpose. Faint luminous lines ghost beneath one forearm when she moves, and she has the look of someone forcing herself not to waste the narrow interval between decision and panic.';
           }
 
-          return 'Plum is young, exhausted, and sharply attentive. Her expression keeps changing as though bracing for corrections that have not happened yet.';
+          return getFlag('plumBladeRevealed')
+            ? 'Plum is young, exhausted, and sharply attentive. Her left forearm now stands half-open along a hidden seam, exposing the recess where the crystalline emergency blade was concealed.'
+            : 'Plum is young, exhausted, and sharply attentive. Her expression keeps changing as though bracing for corrections that have not happened yet, and the lamp occasionally catches faint luminous lines beneath the skin of one forearm.';
         },
         actions: {
           ask: plumAsk,
@@ -211,7 +273,78 @@ East, a door stands open into Oshregaal's library.
       },
       desk: 'The desk is a barricade made of paper, discipline, and repeated self-repair.',
       shelves: 'The shelves hold copied stories, name lists, and practical notes written as if memory were a resource stored outside the body.',
-      lamp: 'The lamp is trimmed low, bright enough for copying and dim enough not to count as comfort.',
+      lamp: {
+        description({ getFlag }) {
+          return getFlag('plumLampLit')
+            ? 'The lamp now burns a little higher, throwing sharper light across Plum, the desk, and any lie in the room thin enough to transmit it.'
+            : 'The lamp is trimmed low, bright enough for copying and dim enough not to count as comfort.';
+        },
+        actions: {
+          use({ getFlag, setFlag }) {
+            if (getFlag('plumLampLit')) {
+              return 'The lamp is already turned high enough to sharpen every edge in the room.';
+            }
+
+            setFlag('plumLampLit', true);
+            return 'You turn the lamp wick up. The room hardens into greater clarity, and the faint lines beneath Plum\'s skin stop looking like tricks of exhaustion.';
+          },
+        },
+      },
+      seam: {
+        description({ getFlag }) {
+          if (!getFlag('plumBladeKnown')) {
+            return 'You do not yet see any seam in Plum worth naming.';
+          }
+
+          return getFlag('plumBladeRevealed')
+            ? 'The seam in Plum\'s forearm is open now, its hidden blade housing laid bare with almost surgical tidiness.'
+            : 'A nearly invisible seam runs along Plum\'s left forearm, too precise to be accidental flesh.';
+        },
+        actions: {
+          open(context) {
+            return revealPlumBlade(context);
+          },
+          use(context) {
+            return revealPlumBlade(context);
+          },
+        },
+      },
+      blade: {
+        name: 'crystal blade',
+        aliases: ['crystal blade', 'blade'],
+        description({ getFlag }) {
+          if (!getFlag('plumBladeRevealed')) {
+            return 'You do not yet see any crystal blade outside rumor and implication.';
+          }
+
+          return getFlag('plumSilvermountHintSeen')
+            ? 'The crystalline blade is etched with a fine geometric trace that only appears under stronger light: a worn alignment of lines Plum associates with Silvermount.'
+            : 'The crystalline blade is slim, clear, and almost invisible edge-on. In ordinary light it looks less forged than grown to specification.';
+        },
+        actions: {
+          use({ getFlag, setFlag, indirectTarget }) {
+            if (!getFlag('plumBladeRevealed')) {
+              return 'You do not yet have any crystal blade to use.';
+            }
+
+            if (indirectTarget?.name === 'lamp') {
+              if (!getFlag('plumLampLit')) {
+                return 'The lamp is too low to pull anything useful out of the crystal. More light first.';
+              }
+
+              if (!getFlag('plumSilvermountHintSeen')) {
+                setFlag('plumSilvermountHintSeen', true);
+                setFlag('plumNatureUnderstood', true);
+                return 'You angle the crystal blade through the strengthened lamplight. Fine internal etching blooms across it: nested lines, a broken spire shape, and a tiny notation Plum recognizes at once. "Silvermount," she says, voice gone thin. "That is not decorative. That is where someone expected this body to remember from."';
+              }
+
+              return 'The blade still throws the same hidden etching through the lamp: Silvermount reduced to geometry and memory pressure.';
+            }
+
+            return 'The crystal blade feels too precise to treat like an ordinary knife. It seems built for revelation as much as harm.';
+          },
+        },
+      },
       door: 'The eastern door opens into Oshregaal\'s library, where he keeps the more literate parts of his vanity.',
     },
   });

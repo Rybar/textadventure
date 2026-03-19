@@ -2,18 +2,26 @@
 
 This file is the spoiler-heavy source summary for The Meal of Oshregaal plus the adaptation stance for this project.
 
+## Source Authority
+
+When the original Goblin Punch module and Oshregaal's Feast, Grizzelnit Edition disagree, prefer Grizzelnit unless there is a strong implementation reason not to.
+
+Use the original module as historical reference and tone support, not as the final tie-breaker.
+
 ## Source Premise
 
 Grandfather Oshregaal is an elderly chaos sorcerer living in a lavish mansion built into the wall of a gigantic cavern. He once created the black wind elixir, which transformed allied clans into tusk people and helped drive wars on the surface. In old age, he has withdrawn into decadent hospitality, nightly feasts, mutation, and entertainment.
 
-Visitors come to the mansion for dangerous reasons:
+Visitors come to the mansion for dangerous reasons, and Grizzelnit sharpens those reasons into overlapping schemes:
 
 - assassinate Lady Nathema;
 - kidnap Lady Nathema;
 - steal the Grey Grin Blade;
-- rescue the vat-spawned scribe;
+- rescue Plum, Oshregaal's captive Numerian scribe;
 - destroy the black wind tree;
 - assassinate Oshregaal.
+
+The Grizzelnit framing matters because the mansion is not just a deathtrap full of odd rooms. It is a place where several factions think they can exploit Oshregaal's appetites, his archives, his black-wind production, or his portals before becoming part of the meal.
 
 The module's strongest structural idea is simple: entering the mansion is easy; leaving is difficult.
 
@@ -36,6 +44,8 @@ These are the source truths worth preserving even when the implementation change
 - The black wind fruit became black wind elixir.
 - The elixir helped create the tusk people.
 - The great war stalled long ago; Oshregaal is now old, indulgent, and only intermittently political.
+- Plum is better treated as a Numerian construct or android scribe with damaged memory and concealed internal machinery, not as a mere vat-grown clone.
+- The house contains enough occult research and portal knowledge that stealing texts or bypass instructions can matter as much as stealing treasure.
 
 This backstory should surface through implication, artifacts, conversation, and rooms rather than by exposition dump.
 
@@ -62,6 +72,7 @@ This project is not adapting the PDF as a combat crawl. It is adapting it as a s
 - The black wind tree and elixir as core corruption imagery.
 - The teleport circle, folded hallway, cesspit route, and other escape logic.
 - The Grey Grin Blade as a coveted optional objective.
+- The stronger factional pressure around Nathema, the black-wind trade, and house secrets.
 
 ### Reduce Or Reframe
 
@@ -76,6 +87,8 @@ This project is not adapting the PDF as a combat crawl. It is adapting it as a s
 - Reactions to etiquette, lying, flattery, curiosity, and defiance.
 - Clue networks between rooms.
 - Internal politics of the household.
+- Library content that points toward spellbooks, portal bypass, and Oshregaal's intellectual vanity.
+- Plum's Numerian identity, Silvermount-facing clues, and concealed weapon logic.
 - The player's growing sense that the parser itself is compromised.
 
 ## Single-Player Adaptation Logic
@@ -93,9 +106,15 @@ That means:
 
 The strongest first playable full story remains:
 
-- primary mission: rescue Plum, Oshregaal's captive scribe;
-- secondary opportunities: steal the Grey Grin Blade, expose the black wind trade, or escape through forbidden routes;
+- primary mission: rescue Plum, Oshregaal's captive Numerian scribe;
+- secondary opportunities: steal the Grey Grin Blade, expose the black wind trade, secure Oshregaal's spellbooks, or escape through forbidden routes;
 - main emotional arc: the player enters as a guest, becomes prey, and learns that both the mansion and the interface are trying to keep them inside.
+
+The Grizzelnit edition also supports a broader canonical frame:
+
+- Nathema is a more active rival schemer, not just a dangerous guest.
+- The house's texts and portal knowledge are real objectives.
+- Shrine and threshold imagery should skew toward Yog-Sothoth-style gate logic rather than generic chaos-idol language when the distinction matters.
 
 ## Meta-Story Overlay
 
@@ -116,3 +135,4 @@ This overlay should change emphasis, not source identity:
 - Do not turn every grotesque object into loot; many should be clue objects, hazards, or mood anchors.
 - Do not let the hidden meta-story trivialize the mansion's stakes.
 - Do not make escape a single obvious command chain.
+- Do not reduce Grizzelnit's stronger scheme structure back into a single simple rescue-only reading, even if Plum rescue remains the first implementation baseline.

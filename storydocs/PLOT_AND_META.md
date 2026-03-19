@@ -46,6 +46,19 @@ Use this as the main authored route unless the project intentionally pivots.
 - Escape the mansion alive.
 - Discover enough of the experiment to understand that survival and freedom are different goals.
 
+This remains the first implementation baseline, not the full canonical scope.
+
+## Canonical Mission Baseline
+
+Under Grizzelnit canon, the mansion supports several overlapping agendas at once:
+
+- rescue Plum, the Numerian scribe;
+- escape through hidden, stolen, or bypassed routes;
+- secure black-wind evidence or source material;
+- steal the Grey Grin Blade;
+- capture spellbooks or portal knowledge before another faction does;
+- bargain with or betray Nathema depending on leverage.
+
 ## Optional Branches Worth Supporting
 
 - Steal the Grey Grin Blade and leave.
@@ -53,6 +66,7 @@ Use this as the main authored route unless the project intentionally pivots.
 - Expose black wind trade evidence.
 - Cut a bargain with Nathema.
 - Attempt to kill Oshregaal.
+- Steal Oshregaal's spellbooks or portal-bypass notes.
 
 ## Endings Framework
 
@@ -66,6 +80,7 @@ Use this as the main authored route unless the project intentionally pivots.
 
 - The player escapes with Plum and meaningful evidence, knowledge, or leverage.
 - They understand the experiment is still active.
+- They may also carry forward stolen texts, source samples, or faction leverage that changes later chapters.
 
 ### Dark bargain endings
 
@@ -130,6 +145,7 @@ There are at least three hidden forces:
 - first irreversible act of betrayal or sabotage;
 - first escape attempt;
 - discovery of the circle, folded space, or black wind source.
+- recovery of spellbooks, bypass notes, or proof of Plum's true origin.
 
 ## Recommended UI Upgrade Fiction
 

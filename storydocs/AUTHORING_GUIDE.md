@@ -7,6 +7,20 @@ The short version is:
 - engine code owns parsing, turn flow, saves, disambiguation, scheduling, and generic state helpers;
 - game code owns rooms, items, objects, dialogue, flags, events, map layout, and parser aliases for the specific story.
 
+## Canon Guardrails
+
+Before adding or rewriting content, check the relevant storydocs instead of inferring canon only from older room text.
+
+Current non-negotiable guardrails:
+
+- treat Oshregaal's Feast, Grizzelnit Edition as the primary source authority;
+- keep Plum as a Numerian construct with memory damage, bodily clues, and a rescue-driven first route;
+- preserve Nathema as an active schemer with her own leverage agenda;
+- treat library, spellbook, and portal-bypass content as real branches rather than optional flavor;
+- keep map and inventory panels as hacker-granted intrusions, not neutral baseline UI.
+
+If content needs to violate one of these, do it deliberately and update the storydocs.
+
 If you are adding new content, most work belongs under `js/game/`.
 
 ## Where Content Lives
@@ -33,14 +47,15 @@ The reusable engine pieces you will author against are:
 
 When adding a new feature, follow this order:
 
+1. Check the relevant storydocs first so the feature matches canon, route structure, and meta pacing.
 1. Add any new flags the feature needs in `js/game/manifest.js`.
-2. Add reusable items in `js/game/items/` if the room should not inline them.
-3. Add or update the room module in `js/game/rooms/`.
-4. Add a global event in `js/game/events.js` if the effect crosses room boundaries or should be reusable.
-5. Add parser aliases in `js/game/rules/verbs.js` only if a new phrasing should be globally supported.
-6. Add a map coordinate in `js/game/mapLayout.js` for any new room.
-7. Wire the room into `js/game/manifest.js`.
-8. Add tests under `tests/unit/` or `tests/smoke/`.
+1. Add reusable items in `js/game/items/` if the room should not inline them.
+1. Add or update the room module in `js/game/rooms/`.
+1. Add a global event in `js/game/events.js` if the effect crosses room boundaries or should be reusable.
+1. Add parser aliases in `js/game/rules/verbs.js` only if a new phrasing should be globally supported.
+1. Add a map coordinate in `js/game/mapLayout.js` for any new room.
+1. Wire the room into `js/game/manifest.js`.
+1. Add tests under `tests/unit/` or `tests/smoke/`.
 
 ## The Manifest
 
@@ -62,6 +77,8 @@ It currently provides:
 - `rooms`: room instances keyed by room id.
 
 If a room or event is not connected through the manifest, the engine cannot see it.
+
+If a story branch matters in planning, it should usually also exist as explicit flags, event hooks, or item states in the manifest-facing content graph. Do not leave major route identity buried only in prose.
 
 ## Rooms
 
@@ -370,6 +387,13 @@ Supported event action types currently include:
 - `cancelScheduledEvent`
 - `roomTrigger`
 
+For Oshregaal content, prefer global events when the result crosses branch boundaries, for example:
+
+- Plum rescue changing later room dialogue;
+- Nathema leverage changing bargaining options elsewhere;
+- spellbook or portal-bypass discovery reclassifying escape options;
+- hacker-granted panel unlocks following milestone discovery.
+
 `text`, `value`, `roomId`, `direction`, `targetRoomId`, `panelId`, `mode`, `itemId`, `destination`, `messages`, `eventId`, `delayTurns`, `scheduleId`, and `data` can all be literal values or functions of the current context.
 
 ## Turn Scheduler And WAIT
@@ -489,6 +513,8 @@ The current map metadata supports:
 - `region`
 - optional token inference from the room title if no explicit token is supplied
 
+Remember that authored room design should not assume the player has map support at first. The map panel is a later illicit unlock inside the fiction.
+
 ## Context Helpers Available In Authored Code
 
 Most authored functions receive a context assembled by `WorldState.createContext(...)`.
@@ -518,6 +544,16 @@ The most useful helpers are:
 - `scheduleEvent(eventId, options)`
 - `cancelScheduledEvent(scheduleId)`
 - `hasScheduledEvent(scheduleId)`
+
+## Canon-Sensitive Authoring Checks
+
+Before calling a feature done, verify these story-facing questions:
+
+- Does the room or item reinforce at least one active branch: Plum rescue, evidence, spellbooks, portal bypass, Nathema leverage, or black-wind sabotage?
+- If the content touches Plum, does it preserve her Numerian/constructed framing rather than older clone language?
+- If the content touches portals or folded space, does it support layered understanding rather than a one-scroll instant solution?
+- If the content touches UI or player affordances, does it respect hacker-granted panel fiction?
+- If the content adds lore, is that lore actionable enough to matter in play?
 - `print(text)`
 
 Depending on the call site, you may also receive:

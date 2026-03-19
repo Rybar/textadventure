@@ -46,7 +46,7 @@ On the north wall stands a black metal door fitted not with a knob but with an a
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('chamber') || target.includes('desk')) {
-          return 'You sift through guest lists, menu notes, and cruelly edited anecdotes prepared for dinner. Beneath them all is a thinner stack recording "corrections" to the scribe in the north room: memory lapses, mood compliance, and reminders to keep her grateful, legible, and near at hand.';
+          return 'You sift through guest lists, menu notes, and cruelly edited anecdotes prepared for dinner. Beneath them all is a thinner stack recording "corrections" to the Numerian scribe in the north room: memory lapses, mood compliance, component upkeep, and reminders to keep her grateful, legible, and near at hand.';
         }
 
         if (target.includes('vanity') || target.includes('mirror') || target.includes('drawer')) {

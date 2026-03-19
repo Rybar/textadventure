@@ -55,7 +55,7 @@ export function createKelagoRoom() {
       },
       {
         match: ['plum', 'scribe'],
-        reply: 'Kelago sighs with real irritation. "My brother keeps a clever scribe in his private rooms because admiration pleases him more when catalogued. Poor Plum writes notes to herself faster than he can become offended by them."',
+        reply: 'Kelago sighs with real irritation. "My brother keeps a clever Numerian scribe in his private rooms because admiration pleases him more when catalogued. Poor Plum writes notes to herself faster than he can become offended by them."',
       },
       {
         match: ['bed', 'crab'],
