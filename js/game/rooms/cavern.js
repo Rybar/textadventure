@@ -33,6 +33,7 @@ export function createCavernRoom() {
       || getFlag('blackWindTreeSabotaged')
       || getFlag('portalBypassLearned')
       || getFlag('spellbooksSecured')
+      || getFlag('containmentProtocolKnown')
       || carryingLeverage
       || carryingArchive
       || carryingGreyGrin
@@ -77,7 +78,7 @@ export function createCavernRoom() {
       return 'You withdraw from the cavern with Plum alive and the house behind you at last. It is not a total victory. Oshregaal still has rooms, servants, and schemes. But he does not have Plum, and tonight that is enough to call escape real. This is the minimum good ending.';
     }
 
-    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || getFlag('portalBypassLearned') || getFlag('spellbooksSecured') || carryingLeverage || carryingArchive || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered') || getFlag('nathemaRouteKnowledgeShared') || getFlag('nathemaTextsShared')) {
+    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || getFlag('portalBypassLearned') || getFlag('spellbooksSecured') || getFlag('containmentProtocolKnown') || carryingLeverage || carryingArchive || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered') || getFlag('nathemaRouteKnowledgeShared') || getFlag('nathemaTextsShared')) {
       setFlag('escapedMansion', true);
       return 'You leave the cavern alive with leverage, theft, or contraband in hand, but without Plum. The house has not beaten you. It has only made the cost of your priorities legible. This is a compromised escape.';
     }

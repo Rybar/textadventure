@@ -34,6 +34,7 @@ export function createFernGardenRoom() {
       || getFlag('blackWindTreeSabotaged')
       || getFlag('portalBypassLearned')
       || getFlag('spellbooksSecured')
+      || getFlag('containmentProtocolKnown')
       || carryingLeverage
       || carryingArchive
       || carryingGreyGrin
@@ -82,7 +83,7 @@ export function createFernGardenRoom() {
       return 'Plum is hidden, not yet fully gone. Leaving now would turn her rescue into a partial theft and trust into bad accounting.';
     }
 
-    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || getFlag('portalBypassLearned') || getFlag('spellbooksSecured') || carryingLeverage || carryingArchive || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered') || getFlag('nathemaRouteKnowledgeShared') || getFlag('nathemaTextsShared')) {
+    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || getFlag('portalBypassLearned') || getFlag('spellbooksSecured') || getFlag('containmentProtocolKnown') || carryingLeverage || carryingArchive || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered') || getFlag('nathemaRouteKnowledgeShared') || getFlag('nathemaTextsShared')) {
       setFlag('escapedMansion', true);
       return 'You slip away through the garden carrying proof or plunder, but without rescuing the person who made the house impossible to treat as scenery. This is a compromised escape.';
     }

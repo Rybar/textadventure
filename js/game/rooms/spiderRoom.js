@@ -25,6 +25,12 @@ function getChariadulschaTruth({ topic, getFlag, setFlag }) {
     return 'The web canopy trembles. "When guests become troublesome," the god-shade whispers, "they are stored where even echoes must be counted." A faint tapping answers from beyond the north wall.';
   }
 
+  if (topic.includes('portal') || topic.includes('bypass') || topic.includes('folded hall') || topic.includes('geometry') || topic.includes('spellbook')) {
+    setFlag('portalBypassLearned', true);
+    setFlag('spiderTruthClaimed', true);
+    return 'The corpse in the web shifts as if accounting for a gate. "He cheats thresholds through etiquette and fraud," it rasps. "Follow the library mathematics, not the dining-room theatrics. A gate that expects paired life can be bullied by a convincing substitute if the insult is precise enough."';
+  }
+
   return null;
 }
 
@@ -116,6 +122,10 @@ Below the cocooned corpse stands a counting frame of black beads, finger bones, 
     },
     conditionalDescriptions: [
       {
+        when: ({ getFlag }) => getFlag('spiderDebtResolved'),
+        text: 'The webwork now hangs in a calmer pattern. Somewhere in the room, an old account seems to have been marked paid in full.',
+      },
+      {
         when: ({ getFlag }) => getFlag('spiderPromiseMade') && !getFlag('spiderTruthClaimed'),
         text: 'The dead god hangs with new, unpleasant attention. Having been promised future disorder, it is now prepared to spend one answer on you.',
       },
@@ -155,7 +165,12 @@ Below the cocooned corpse stands a counting frame of black beads, finger bones, 
               || topic.includes('sealed')
               || topic.includes('prisoner')
               || topic.includes('containment')
-              || topic.includes('north wall');
+              || topic.includes('north wall')
+              || topic.includes('portal')
+              || topic.includes('bypass')
+              || topic.includes('folded hall')
+              || topic.includes('geometry')
+              || topic.includes('spellbook');
 
             if (qualifyingTopic && getFlag('spiderPromiseMade') && !getFlag('spiderTruthClaimed')) {
               const truth = getChariadulschaTruth({ topic, getFlag, setFlag });
@@ -180,6 +195,10 @@ Below the cocooned corpse stands a counting frame of black beads, finger bones, 
           },
           tell({ topic, getFlag, setFlag }) {
             setFlag('chariadulschaMet', true);
+
+            if (getFlag('spiderDebtResolved')) {
+              return 'Chariadulscha clicks softly in the webbing. "Yes," it whispers. "I heard the correction in the house. Our number is closed."';
+            }
 
             if (getFlag('spiderPromiseMade')) {
               if (getFlag('spiderTruthClaimed')) {

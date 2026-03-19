@@ -691,6 +691,7 @@ test('the Grey Grin can open a violent Oshregaal confrontation if you blunt his 
   assert.match(session.submitCommand('tell chariadulscha promise chaos'), /future disturbance properly spoken|Ask, and I will spend one answer on you/i);
   assert.match(session.submitCommand('ask chariadulscha about oshregaal'), /Interrupt appetite, ownership, or applause/i);
   assert.equal(session.worldState.getFlag('oshregaalWeaknessKnown'), true);
+  assert.equal(session.worldState.getFlag('spiderDebtPending'), true);
   assert.match(session.submitCommand('west'), /private gallery feels more prosecutorial/i);
   assert.match(session.submitCommand('west'), /library is less a scholarly refuge/i);
   assert.match(session.submitCommand('west'), /At the desk sits Plum|pale and alert/i);
@@ -704,6 +705,8 @@ test('the Grey Grin can open a violent Oshregaal confrontation if you blunt his 
   assert.match(session.submitCommand('use grey grin blade on oshregaal'), /attempted to kill Oshregaal|violent margin of escape/i);
   assert.equal(session.worldState.getFlag('oshregaalAssassinationAttempted'), true);
   assert.equal(session.worldState.getFlag('oshregaalWounded'), true);
+  assert.equal(session.worldState.getFlag('spiderDebtPending'), false);
+  assert.equal(session.worldState.getFlag('spiderDebtResolved'), true);
   assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
   assert.match(session.submitCommand('south'), /white marble stair rises in a broad ceremonial sweep/i);
   assert.match(session.submitCommand('south'), /vast natural cavern/i);
@@ -817,6 +820,17 @@ test('the Spider Room can also seed Grey Grin and sealed-room leads', () => {
   assert.equal(session.worldState.getFlag('greyGrinLeadKnown'), true);
 });
 
+test('the Spider Room can also seed portal-bypass knowledge through Chariadulscha', () => {
+  const session = createTestSession();
+
+  moveToSpiderRoom(session);
+  assert.match(session.submitCommand('ask chariadulscha about portal'), /Answers cost disorder|promise me one clean act of future chaos/i);
+  assert.match(session.submitCommand('tell chariadulscha promise chaos'), /Ask, and I will spend one answer on you/i);
+  assert.match(session.submitCommand('ask chariadulscha about portal'), /cheats thresholds through etiquette and fraud|convincing substitute/i);
+  assert.equal(session.worldState.getFlag('portalBypassLearned'), true);
+  assert.equal(session.worldState.getFlag('spiderTruthClaimed'), true);
+});
+
 test('escaping with rescued Plum now resolves to a minimum good ending', () => {
   const session = createTestSession();
 
@@ -886,6 +900,13 @@ test('the black-wind source can be calmed and sabotaged through the buried spine
 
   moveToTrophyRoom(session);
   assert.match(session.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+  assert.match(session.submitCommand('search plaques'), /incorrect count|hidden seam leading east/i);
+  assert.match(session.submitCommand('east'), /silk-draped, and arranged with a precision/i);
+  assert.match(session.submitCommand('ask chariadulscha about black wind'), /Answers cost disorder|promise me one clean act of future chaos/i);
+  assert.match(session.submitCommand('tell chariadulscha promise chaos'), /future disturbance properly spoken|Ask, and I will spend one answer on you/i);
+  assert.match(session.submitCommand('ask chariadulscha about black wind'), /Follow cold stock downward|living arithmetic under the house/i);
+  assert.equal(session.worldState.getFlag('spiderDebtPending'), true);
+  assert.match(session.submitCommand('west'), /private gallery feels more prosecutorial/i);
   assert.match(session.submitCommand('west'), /library is less a scholarly refuge/i);
   assert.match(session.submitCommand('take meditative incense'), /you take the meditative incense/i);
   assert.match(session.submitCommand('west'), /smaller chamber has the careful plainness/i);
@@ -905,7 +926,42 @@ test('the black-wind source can be calmed and sabotaged through the buried spine
   assert.match(session.submitCommand('search spine'), /looks cuttable|original blasphemy feeding it/i);
   assert.match(session.submitCommand('use grey grin blade on spine'), /sabotaged the black-wind source/i);
   assert.equal(session.worldState.getFlag('blackWindTreeSabotaged'), true);
+  assert.equal(session.worldState.getFlag('spiderDebtPending'), false);
+  assert.equal(session.worldState.getFlag('spiderDebtResolved'), true);
   assert.match(session.submitCommand('look'), /split now mars the buried spine|supply line trying not to admit it has been cut/i);
+});
+
+test('returning to the Spider Room after honoring the chaos bargain closes the account explicitly', () => {
+  const session = createTestSession();
+
+  moveToTrophyRoom(session);
+  session.submitCommand('take grey grin blade');
+  session.submitCommand('search plaques');
+  session.submitCommand('east');
+  session.submitCommand('ask chariadulscha about oshregaal');
+  session.submitCommand('tell chariadulscha promise chaos');
+  session.submitCommand('ask chariadulscha about oshregaal');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('search vanity');
+  session.submitCommand('take wax plug');
+  session.submitCommand('use wax plug');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('use grey grin blade on oshregaal');
+  assert.equal(session.worldState.getFlag('spiderDebtResolved'), true);
+
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('east');
+  session.submitCommand('east');
+  assert.match(session.submitCommand('look'), /account seems to have been marked paid in full/i);
+  assert.match(session.submitCommand('tell chariadulscha i kept my promise'), /number is closed/i);
 });
 
 test('sabotaging the source can also secure a stronger escape with Plum', () => {
@@ -962,9 +1018,42 @@ test('the Sealed Room branch yields the correction bell code', () => {
   assert.equal(session.worldState.currentRoomId, 'sealedRoom');
   assert.equal(session.worldState.getFlag('sealedRoomEntered'), true);
   assert.match(session.submitCommand('search room'), /folded service card|hidden it/i);
+  assert.match(session.submitCommand('search roster'), /workflow for turning guests into manageable problems/i);
+  assert.equal(session.worldState.getFlag('containmentProtocolKnown'), true);
+  assert.match(session.submitCommand('take correction roster'), /you take the correction roster/i);
+  assert.match(session.submitCommand('read correction roster'), /GUEST MISALIGNED|downgraded before transfer/i);
   assert.match(session.submitCommand('take correction bell card'), /you take the correction bell card/i);
   assert.match(session.submitCommand('read correction bell card'), /double ring for correction staff|remove front-of-house attendants/i);
   assert.equal(session.worldState.getFlag('correctionBellCodeKnown'), true);
+});
+
+test('rescued Plum plus correction protocol knowledge now also counts as a stronger escape', () => {
+  const session = createTestSession();
+
+  moveToSealedRoom(session);
+  session.submitCommand('take correction roster');
+  session.submitCommand('read correction roster');
+  assert.equal(session.worldState.getFlag('containmentProtocolKnown'), true);
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('take meditative incense');
+  session.submitCommand('take wax palm');
+  session.submitCommand('north');
+  session.submitCommand('use wax palm on idol');
+  session.submitCommand('north');
+  session.submitCommand('light incense');
+  session.submitCommand('south');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('tell plum come now');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('crawl tunnel');
+
+  assert.match(session.submitCommand('escape'), /strong vanilla ending/i);
+  assert.equal(session.worldState.getFlag('strongerEscapeSecured'), true);
 });
 
 test('the correction bell code can pull the butlers off the foyer long enough to bypass admission', () => {
