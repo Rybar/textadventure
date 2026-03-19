@@ -23,6 +23,11 @@ export function createNathemaRoom() {
     return getFlag('nathemaEvidenceShown') || getFlag('nathemaBlackWindSampleDelivered');
   };
 
+  const canSecureNathemaEscapeDeal = getFlag => {
+    return getFlag('nathemaBlackWindSampleDelivered')
+      && (getFlag('greyGrinDeliveredToNathema') || getFlag('nathemaEvidenceShown'));
+  };
+
   const handleNathemaLedgerReview = ({ setFlag }) => {
     setFlag('nathemaBargained', true);
     setFlag('nathemaEvidenceShown', true);
@@ -97,6 +102,14 @@ export function createNathemaRoom() {
       {
         match: ['escape', 'leave', 'outside'],
         reply: ({ getFlag }) => {
+          if (getFlag('nathemaEscapeDealSecured')) {
+            return 'Nathema gives you the look of a woman already spending tomorrow. "Go when you like," she says. "Oshregaal will wake to a missing guest and an altered balance of power. He will have larger fires than your footprints."';
+          }
+
+          if (canSecureNathemaEscapeDeal(getFlag)) {
+            return 'Nathema smiles with cold approval. "Now this is a departure I can respect," she says. "I have source leverage, and either proof or a succession-blade. Leave when you are ready. By dawn, Oshregaal will be too busy containing me to pursue you cleanly. You have secured a dark bargain."';
+          }
+
           if (hasNathemaLeverage(getFlag)) {
             return '"Now you have the beginnings of a real departure," Nathema says. "Evidence if you want scandal. Sample if you want bargaining power. Bring one more useful thing or one precise opportunity, and I can turn this from survival into negotiation."';
           }
@@ -156,10 +169,24 @@ export function createNathemaRoom() {
       },
       {
         match: ['i want to leave', 'i need to leave', 'escape'],
-        effect: ({ triggerEvent }) => {
+        effect: ({ getFlag, setFlag, triggerEvent }) => {
           triggerEvent('startNathemaBargain');
+
+          if (canSecureNathemaEscapeDeal(getFlag)) {
+            setFlag('nathemaEscapeDealSecured', true);
+          }
         },
-        reply: 'Nathema folds one hand over the other. "Then stop treating departure as a confession," she says. "Make it a bargain, a theft, or an insult. Houses like this understand those better."',
+        reply: ({ getFlag }) => {
+          if (getFlag('nathemaEscapeDealSecured')) {
+            return 'Nathema inclines her head. "Then keep your nerve and your distance from my name," she says. "You are no longer escaping alone. You are exiting during a transfer of power."';
+          }
+
+          if (canSecureNathemaEscapeDeal(getFlag)) {
+            return 'Nathema folds one hand over the other and decides. "Very well," she says. "Leave while I make myself into tomorrow\'s emergency. Oshregaal will not be able to chase you and contain what you have handed me. Our bargain is ugly, but it will work."';
+          }
+
+          return 'Nathema folds one hand over the other. "Then stop treating departure as a confession," she says. "Make it a bargain, a theft, or an insult. Houses like this understand those better."';
+        },
       },
       {
         match: ['i can help', 'we can help'],
@@ -232,6 +259,10 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
       {
         when: ({ getFlag }) => hasNathemaLeverage(getFlag),
         text: 'The room has shifted from speculative intrigue to active negotiation. Nathema is no longer evaluating whether you might matter, only what price your usefulness can command.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('nathemaEscapeDealSecured'),
+        text: 'The negotiation has hardened into something worse than trust: a usable arrangement. Nathema now regards Oshregaal\'s house less as a place to survive than as a balance to tip.',
       },
     ],
     objects: {

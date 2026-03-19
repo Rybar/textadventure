@@ -10,7 +10,11 @@ export function createWaxPlug() {
       look() {
         return 'The wax is denser than candle-grease and smells faintly of incense and bitter herbs. It was made for listening less, not for decoration.';
       },
-      use() {
+      use({ getFlag, setFlag }) {
+        if (!getFlag('waxPlugReadied')) {
+          setFlag('waxPlugReadied', true);
+        }
+
         return 'You test the wax against one ear and feel the room dim around the edges, as though certain voices would have to work harder to reach you. You keep it for when the need is less theoretical.';
       },
       wear() {

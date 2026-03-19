@@ -193,6 +193,10 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
           return null;
         }
 
+        if (getFlag('butlerDiversionActive')) {
+          return null;
+        }
+
         return 'One of the ogre butlers steps neatly into your path. "The feast receives invited guests," he says. The implication is that unverified guests may be received differently.';
       },
     },
@@ -237,6 +241,10 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
       {
         when: ({ getFlag }) => getFlag('foyerSurveillanceNoticed'),
         text: 'The room now reads less like ornament and more like a checkpoint dressed as a welcome.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('butlerDiversionActive') && !getFlag('foyerAdmitted'),
+        text: 'For once the center of the foyer stands unwatched. The butlers have been called elsewhere by some deeper domestic emergency.',
       },
     ],
     objects: {

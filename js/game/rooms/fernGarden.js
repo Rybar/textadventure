@@ -3,6 +3,84 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createFernGardenRoom() {
+  const getGardenEscapeEnding = ({ getFlag, worldState, setFlag }) => {
+    if (getFlag('escapedMansion')) {
+      return 'The garden has already served as your threshold out. There is no second first escape hiding in the ferns.';
+    }
+
+    if (getFlag('absorbedIntoRoutine')) {
+      return 'By the time you imagine using the garden as an exit, the house has already taught you to return to the next course instead. Escape has become one more thought the routine absorbs before it can stand up.';
+    }
+
+    const carryingGreyGrin = Boolean(worldState.findInventoryItem('grey-grin-blade'));
+    const carryingLeverage = Boolean(
+      worldState.findInventoryItem('black-wind-ledger')
+      || worldState.findInventoryItem('black-wind-root-sample')
+      || worldState.findInventoryItem('black-wind-fruit')
+      || worldState.findInventoryItem('black-wind-elixir')
+    );
+    const acceptedMutation = getFlag('blackWindFruitConsumed') || getFlag('blackWindElixirConsumed');
+    const acceptedService = getFlag('servantApronWorn');
+    const strongEscape = getFlag('plumRescued') && (
+      getFlag('blackWindEvidenceCollected')
+      || getFlag('nathemaEvidenceShown')
+      || getFlag('nathemaBlackWindSampleDelivered')
+      || getFlag('blackWindTreeSabotaged')
+      || carryingLeverage
+      || carryingGreyGrin
+    );
+
+    if (getFlag('nathemaEscapeDealSecured')) {
+      setFlag('escapedMansion', true);
+      return getFlag('plumRescued')
+        ? 'You and Plum disappear through the fern-dark while Nathema remains behind as a more deliberate disaster. Oshregaal will have to spend dawn containing the rival you armed instead of reclaiming the captives he lost. The rescue holds. The consequences do not improve. This is a dark bargain ending.'
+        : 'You slip into the fern-dark because Nathema is now poised to turn Oshregaal\'s own house into his next negotiation crisis. She bought your margin of escape with the leverage you handed her, and the night becomes survivable by becoming someone else\'s impending war. This is a dark bargain ending.';
+    }
+
+    if (getFlag('oshregaalWounded')) {
+      setFlag('escapedMansion', true);
+      return getFlag('plumRescued')
+        ? 'You and Plum vanish through the fern-dark while the house behind you tries to reassemble itself around a bleeding host. Whatever Oshregaal remains, he no longer remains unchallenged. This is a violent ending.'
+        : 'You slip through the ferns on the strength of a dinner you turned into a wound. Oshregaal is not cleanly dead, but the house will spend the rest of the night pretending it was always built for panic. This is a violent ending.';
+    }
+
+    if (acceptedMutation || acceptedService) {
+      setFlag('escapedMansion', true);
+
+      if (acceptedMutation) {
+        return getFlag('plumRescued')
+          ? 'You and Plum vanish through the fern-dark, but the black wind has already made a quieter claim on what kind of future you can inhabit. Escape holds. So does corruption. This is a dark bargain ending.'
+          : 'You slip into the fern-dark having used mutation as your private exit tax. The mansion does not reclaim you, but the chemistry you swallowed refuses to remain a temporary tactic. This is a dark bargain ending.';
+      }
+
+      return getFlag('plumRescued')
+        ? 'You and Plum get clear, but only because you learned how to move through the house as service rather than self: ignored, lowered, and efficient. Survival arrived wearing livery. This is a dark bargain ending.'
+        : 'You escape through the garden by keeping the servant posture the house rewarded: useful, forgettable, and already half-edited for someone else\'s convenience. The ferns release you more easily than your habits do. This is a dark bargain ending.';
+    }
+
+    if (strongEscape) {
+      setFlag('escapedMansion', true);
+      setFlag('strongerEscapeSecured', true);
+      return 'You and Plum vanish through the fern-dark with enough leverage, proof, or theft to make Oshregaal\'s hospitality expensive in retrospect. The mansion remains in the cavern, but its secrecy no longer does. This is a strong vanilla ending.';
+    }
+
+    if (getFlag('plumRescued')) {
+      setFlag('escapedMansion', true);
+      return 'The garden becomes your line out of the story Oshregaal meant to keep. Plum survives, the house loses one of its captive continuities, and for now that is victory enough. This is the minimum good ending.';
+    }
+
+    if (getFlag('plumAllianceSecured')) {
+      return 'Plum is hidden, not yet fully gone. Leaving now would turn her rescue into a partial theft and trust into bad accounting.';
+    }
+
+    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || carryingLeverage || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered')) {
+      setFlag('escapedMansion', true);
+      return 'You slip away through the garden carrying proof or plunder, but without rescuing the person who made the house impossible to treat as scenery. This is a compromised escape.';
+    }
+
+    return 'The ferns offer concealment, not closure. If you leave now, you leave mostly empty-handed.';
+  };
+
   const plumAsk = createTopicResponder({
     rules: [
       {
@@ -85,9 +163,13 @@ Eight gnome statues squat between them in attitudes of bliss or revelation. Some
 The safer path leads back southeast toward the cavern and the stairs.
 `.trim(),
     exits: {
+      west: 'fishingShack',
       southeast: 'cavern',
     },
     verbs: {
+      escape(context) {
+        return getGardenEscapeEnding(context);
+      },
       search({ command, getFlag, setFlag }) {
         const target = command.directObject;
 
@@ -162,6 +244,7 @@ The safer path leads back southeast toward the cavern and the stairs.
       ferns: 'The fronds are slick and cold to the touch. Between them, the darkness looks deeper than the cavern really is.',
       peafowl: 'You glimpse a length of impossible plumage and then nothing at all. Whatever nests here is not entirely concerned with remaining in one plane.',
       statues: 'Each gnome is uniquely mutated and improbably serene, as though the sculptor admired both ecstasy and deformity.',
+      shack: 'A low fishing shack squats west of the garden, kept just far enough from the formal approach to avoid embarrassing the architecture.',
       culvert: {
         description({ getFlag }) {
           if (!getFlag('fernCulvertNoticed')) {

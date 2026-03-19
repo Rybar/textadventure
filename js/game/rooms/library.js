@@ -39,13 +39,26 @@ export function createLibraryRoom() {
       smell() {
         return 'The incense smells of cedar, dust, and the sort of disciplined breathing practiced by people expecting metaphysical weather.';
       },
-      light({ currentRoom, getFlag, emitEvent }) {
+      light({ currentRoom, getFlag, setFlag, emitEvent }) {
         if (currentRoom?.id === 'tunnel') {
           if (getFlag('plumTunnelRouteReady')) {
             return 'The incense already burns its thin steady line through the tunnel air. The route is as calm as it is likely to become tonight.';
           }
 
           return emitEvent('prepareTunnelRescueRoute');
+        }
+
+        if (currentRoom?.id === 'blackWindTreeChamber') {
+          if (getFlag('blackWindTreeSabotaged')) {
+            return 'The chamber already smells of incense and wounded sap. Whatever damage could be done here tonight has already been done.';
+          }
+
+          if (getFlag('blackWindTreeCalmed')) {
+            return 'The incense already burns through the chamber in thin disciplined strands, keeping the black-wind draft just calm enough to study the buried seam beneath the roots.';
+          }
+
+          setFlag('blackWindTreeCalmed', true);
+          return 'You light the meditative incense and set it near the buried book. The chamber\'s bitter draft narrows at once. For a few breaths the roots stop reading as wild growth and start reading as a system anchored to the trapped spine beneath them.';
         }
 
         return 'You stop short of lighting the incense here. Filling Oshregaal\'s library with ritual smoke seems like a way to announce your reading habits to the worst possible audience.';

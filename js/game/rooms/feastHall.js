@@ -128,8 +128,23 @@ export function createFeastHall() {
         reply: 'Oshregaal places one hand over his heart and looks briefly sincere. "At last," he says, "someone with architectural gratitude."',
       },
       {
+        match: ['you are awful', 'you are monstrous', 'i hate you', 'you are a monster'],
+        effect: ({ setFlag }) => {
+          setFlag('insultedOshregaal', true);
+        },
+        reply: 'Oshregaal lets the insult settle over the table like a napkin dropped into blood. Then he smiles. "Good," he says. "Guests who stop pretending are almost always more interesting for at least one course."',
+      },
+      {
         match: ['leave', 'escape'],
         reply: 'Oshregaal rests one jeweled finger against his goblet and smiles at you like a patient executioner. "You persist in treating chronology as a personal right," he says.',
+      },
+      {
+        match: ['i will stay', 'i will remain', 'i accept your hospitality', 'i will be a good guest'],
+        effect: ({ setFlag }) => {
+          setFlag('agreedToStay', true);
+          setFlag('absorbedIntoRoutine', true);
+        },
+        reply: 'Oshregaal softens with genuine pleasure, which is the worst thing he has yet done to you. One course becomes another, then another. You laugh where the room laughs, drink when the cups return, and begin to understand how repetition can be made to feel like belonging from the inside. By the time you notice the pattern closing, you are already one more moving piece inside it. This is a failure ending: absorption into Oshregaal\'s routines.',
       },
     ],
     fallback: 'Oshregaal receives your words as though deciding whether they are worth keeping.',
@@ -364,6 +379,10 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       {
         when: ({ getFlag }) => getFlag('greyGrinShownToOshregaal'),
         text: 'The table no longer feels merely ceremonial. After Oshregaal has seen the stolen blade, the room carries the brittle poise of a host deciding whether insult should become entertainment or punishment.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('oshregaalWounded'),
+        text: 'Blood and panic now interrupt the feast\'s choreography. Oshregaal is still alive, which is bad, but the room has finally forgotten how to behave.',
       },
     ],
     objects: {

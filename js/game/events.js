@@ -141,6 +141,32 @@ export function createGameEventDefinitions() {
       ],
       text: 'The false genealogy index yields with a soft click, and one library case swings inward to expose a concealed eastern gallery where Oshregaal keeps victories polished into furniture.',
     },
+    triggerButlerDiversion: {
+      actions: [
+        {
+          type: 'setFlag',
+          flag: 'butlerDiversionActive',
+          value: true,
+        },
+        {
+          type: 'scheduleEvent',
+          eventId: 'endButlerDiversion',
+          delayTurns: 2,
+          scheduleId: 'butler-diversion',
+        },
+      ],
+      text: 'You pull the bell in the coded double-ring pattern from the correction card. Somewhere in the house, two heavy sets of formal footsteps answer at once, moving away from the foyer with urgent professional annoyance.',
+    },
+    endButlerDiversion: {
+      actions: [
+        {
+          type: 'setFlag',
+          flag: 'butlerDiversionActive',
+          value: false,
+        },
+      ],
+      text: 'From below comes the sound of disciplined footsteps returning to their proper stations. The butlers have corrected the interruption.',
+    },
     discoverKitchenBloodRitual: {
       actions: [
         {

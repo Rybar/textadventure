@@ -9,7 +9,11 @@ export function createOgreBedsRoom() {
     aliases: ['apron', 'livery'],
     description: 'A grease-stiff apron marked with old kitchen stains and newer knife-wipes. It carries the authority of being ignored on purpose.',
     actions: {
-      wear() {
+      wear({ getFlag, setFlag }) {
+        if (!getFlag('servantApronWorn')) {
+          setFlag('servantApronWorn', true);
+        }
+
         return 'You tie on the servant apron. It smells of stew, sweat, and the sort of invisibility earned through labor.';
       },
     },

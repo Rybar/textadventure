@@ -4,7 +4,9 @@ import assert from 'node:assert/strict';
 import {
   createTestSession,
   moveToAlchemyStockroom,
+  moveToBathroom,
   moveToBlackWindTreeChamber,
+  moveToCesspool,
   moveToFeastHall,
   moveToFoyer,
   moveToGrandfatherRoom,
@@ -13,6 +15,8 @@ import {
   moveToKitchen,
   moveToLibrary,
   moveToTrophyRoom,
+  moveToSpiderRoom,
+  moveToSealedRoom,
   moveToPlumRoom,
   moveToFoldedHallway,
   moveToTunnel,
@@ -521,4 +525,395 @@ test('the Grey Grin Blade now changes how key NPCs react to the player', () => {
   assert.match(oshregaalSession.submitCommand('show blade to oshregaal'), /guest with initiative|reconsider the seating chart/i);
   assert.equal(oshregaalSession.worldState.getFlag('greyGrinShownToOshregaal'), true);
   assert.match(oshregaalSession.submitCommand('look'), /host deciding whether insult should become entertainment or punishment/i);
+});
+
+test('Nathema can convert delivered leverage into a dark-bargain escape', () => {
+  const session = createTestSession();
+
+  moveToAlchemyStockroom(session);
+  assert.match(session.submitCommand('take black wind fruit'), /you take the black wind fruit/i);
+  assert.match(session.submitCommand('west'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(session.submitCommand('give black wind fruit to nathema'), /alter decisions|turn leverage into alignment/i);
+  assert.equal(session.worldState.getFlag('nathemaBlackWindSampleDelivered'), true);
+  assert.match(session.submitCommand('ask nathema about grey grin'), /concealed trophy gallery off the library/i);
+
+  assert.match(session.submitCommand('south'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('down'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('north'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('north'), /Kelago's workroom-bedroom|crowded with knives/i);
+  assert.match(session.submitCommand('east'), /private chamber is all velvet excess/i);
+  assert.match(session.submitCommand('shake hand'), /hidden catches withdraw/i);
+  assert.match(session.submitCommand('north'), /smaller chamber has the careful plainness/i);
+  assert.match(session.submitCommand('east'), /library is less a scholarly refuge/i);
+  assert.match(session.submitCommand('search cabinet'), /false genealogy index yields|concealed eastern gallery/i);
+  assert.match(session.submitCommand('east'), /private gallery feels more prosecutorial/i);
+  assert.match(session.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+
+  assert.match(session.submitCommand('west'), /library is less a scholarly refuge/i);
+  assert.match(session.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(session.submitCommand('south'), /private chamber is all velvet excess/i);
+  assert.match(session.submitCommand('west'), /Kelago's workroom-bedroom|crowded with knives/i);
+  assert.match(session.submitCommand('south'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('up'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('north'), /forcefully improved by its current occupant/i);
+  assert.match(session.submitCommand('give grey grin blade to nathema'), /leverage with edges/i);
+  assert.match(session.submitCommand('tell nathema escape'), /tomorrow's emergency|transfer of power|ugly, but it will work/i);
+  assert.equal(session.worldState.getFlag('nathemaEscapeDealSecured'), true);
+
+  assert.match(session.submitCommand('south'), /guest room is almost offensively normal/i);
+  assert.match(session.submitCommand('down'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('south'), /white marble stair rises in a broad ceremonial sweep/i);
+  assert.match(session.submitCommand('south'), /vast natural cavern/i);
+  assert.match(session.submitCommand('escape'), /dark bargain ending/i);
+  assert.equal(session.worldState.getFlag('escapedMansion'), true);
+  assert.equal(session.worldState.getFlag('strongerEscapeSecured'), false);
+});
+
+test('accepting black-wind mutation can also produce a dark-bargain escape', () => {
+  const session = createTestSession();
+
+  moveToAlchemyStockroom(session);
+  assert.match(session.submitCommand('take black wind fruit'), /you take the black wind fruit/i);
+  assert.match(session.submitCommand('eat black wind fruit'), /thoughts feel dangerously well-aligned/i);
+  assert.equal(session.worldState.getFlag('blackWindFruitConsumed'), true);
+  assert.match(session.submitCommand('west'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('south'), /white marble stair rises in a broad ceremonial sweep/i);
+  assert.match(session.submitCommand('south'), /vast natural cavern/i);
+  assert.match(session.submitCommand('escape'), /dark bargain ending/i);
+  assert.equal(session.worldState.getFlag('escapedMansion'), true);
+  assert.equal(session.worldState.getFlag('strongerEscapeSecured'), false);
+});
+
+test('accepting servant invisibility can produce a service-flavored dark-bargain escape', () => {
+  const session = createTestSession();
+
+  moveToKitchen(session);
+  assert.match(session.submitCommand('north'), /servants' dormitory is a long, low room/i);
+  assert.match(session.submitCommand('wear servant apron'), /smells of stew, sweat, and the sort of invisibility/i);
+  assert.equal(session.worldState.getFlag('servantApronWorn'), true);
+  assert.match(session.submitCommand('south'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('west'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('south'), /white marble stair rises in a broad ceremonial sweep/i);
+  assert.match(session.submitCommand('south'), /vast natural cavern/i);
+  assert.match(session.submitCommand('escape'), /dark bargain ending/i);
+  assert.equal(session.worldState.getFlag('escapedMansion'), true);
+  assert.equal(session.worldState.getFlag('strongerEscapeSecured'), false);
+});
+
+test('the Grey Grin can open a violent Oshregaal confrontation if you blunt his command and learn his weakness', () => {
+  const session = createTestSession();
+
+  moveToTrophyRoom(session);
+  assert.match(session.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+  assert.match(session.submitCommand('search plaques'), /incorrect count|hidden seam leading east/i);
+  assert.match(session.submitCommand('east'), /silk-draped, and arranged with a precision/i);
+  assert.match(session.submitCommand('ask chariadulscha about oshregaal'), /Answers cost disorder|promise me one clean act of future chaos/i);
+  assert.match(session.submitCommand('tell chariadulscha promise chaos'), /future disturbance properly spoken|Ask, and I will spend one answer on you/i);
+  assert.match(session.submitCommand('ask chariadulscha about oshregaal'), /Interrupt appetite, ownership, or applause/i);
+  assert.equal(session.worldState.getFlag('oshregaalWeaknessKnown'), true);
+  assert.match(session.submitCommand('west'), /private gallery feels more prosecutorial/i);
+  assert.match(session.submitCommand('west'), /library is less a scholarly refuge/i);
+  assert.match(session.submitCommand('west'), /At the desk sits Plum|pale and alert/i);
+  assert.match(session.submitCommand('south'), /private chamber is all velvet excess/i);
+  assert.match(session.submitCommand('search vanity'), /wrapped plug of dark ear wax/i);
+  assert.match(session.submitCommand('take wax plug'), /you take the wax plug/i);
+  assert.match(session.submitCommand('use wax plug'), /certain voices would have to work harder/i);
+  assert.equal(session.worldState.getFlag('waxPlugReadied'), true);
+  assert.match(session.submitCommand('west'), /Kelago's workroom-bedroom|crowded with knives/i);
+  assert.match(session.submitCommand('south'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('use grey grin blade on oshregaal'), /attempted to kill Oshregaal|violent margin of escape/i);
+  assert.equal(session.worldState.getFlag('oshregaalAssassinationAttempted'), true);
+  assert.equal(session.worldState.getFlag('oshregaalWounded'), true);
+  assert.match(session.submitCommand('south'), /foyer is all red carpet/i);
+  assert.match(session.submitCommand('south'), /white marble stair rises in a broad ceremonial sweep/i);
+  assert.match(session.submitCommand('south'), /vast natural cavern/i);
+  assert.match(session.submitCommand('escape'), /violent ending/i);
+});
+
+test('agreeing to stay with Oshregaal yields absorption into his routines', () => {
+  const session = createTestSession();
+
+  moveToFeastHall(session);
+  assert.match(session.submitCommand('tell oshregaal i will stay'), /failure ending: absorption into Oshregaal's routines/i);
+  assert.equal(session.worldState.getFlag('agreedToStay'), true);
+  assert.equal(session.worldState.getFlag('absorbedIntoRoutine'), true);
+});
+
+test('the fishing shack extends the approach with servant-route clues and ugly practical loot', () => {
+  const session = createTestSession();
+
+  assert.match(session.start(), /vast natural cavern/i);
+  assert.match(session.submitCommand('northwest'), /old garden has gone feral/i);
+  assert.match(session.submitCommand('west'), /low fishing shack squats/i);
+  assert.equal(session.worldState.currentRoomId, 'fishingShack');
+  assert.match(session.submitCommand('search shack'), /east stair runoff checks before dinner/i);
+  assert.equal(session.worldState.getFlag('shackSearched'), true);
+  assert.equal(session.worldState.getFlag('eastRunoffNoted'), true);
+  assert.equal(session.worldState.getFlag('pitRouteHintKnown'), true);
+  assert.match(session.submitCommand('read rota'), /EAST STAIR RUNOFF BEFORE DINNER/i);
+  assert.match(session.submitCommand('take shark polymorph vial'), /you take the shark polymorph vial/i);
+  assert.match(session.submitCommand('smell vial'), /brine, copper, and a confidence/i);
+  assert.match(session.submitCommand('take weighted line'), /you take the weighted line/i);
+  assert.match(session.submitCommand('east'), /old garden has gone feral/i);
+  assert.match(session.submitCommand('southeast'), /vast natural cavern/i);
+  assert.match(session.submitCommand('north'), /white marble stair/i);
+  assert.match(session.submitCommand('down'), /narrow maintenance ledge clings to the mansion wall/i);
+  assert.equal(session.worldState.currentRoomId, 'pitLedge');
+});
+
+test('the bathroom exposes the house underside and the cesspool route can be civilized through Slorum', () => {
+  const session = createTestSession();
+
+  moveToBathroom(session);
+  assert.equal(session.worldState.currentRoomId, 'bathroom');
+  assert.match(session.submitCommand('search tile'), /scrape marks around a decorative cistern panel/i);
+  assert.equal(session.worldState.getFlag('bathroomRouteKnown'), true);
+  assert.match(session.submitCommand('take scented soap'), /you take the scented soap/i);
+  assert.match(session.submitCommand('open panel'), /concealed cistern panel swings free/i);
+  assert.equal(session.worldState.getFlag('bathroomPanelOpened'), true);
+  assert.match(session.submitCommand('down'), /digestive underside spreads out in a stone cistern/i);
+  assert.equal(session.worldState.currentRoomId, 'cesspool');
+  assert.equal(session.worldState.getFlag('cesspoolEntered'), true);
+  assert.match(session.submitCommand('search table'), /hosting with it/i);
+  assert.match(session.submitCommand('ask slorum about party'), /proper dinner requires place settings/i);
+  assert.equal(session.worldState.getFlag('slorumMet'), true);
+  assert.match(session.submitCommand('west'), /western ledge run directly past Slorum/i);
+  assert.match(session.submitCommand('tell slorum your party is lovely'), /upstairs guest with eyes/i);
+  assert.equal(session.worldState.getFlag('slorumFlattered'), true);
+  assert.match(session.submitCommand('give soap to slorum'), /accepts the scented soap with trembling delight/i);
+  assert.equal(session.worldState.getFlag('slorumGifted'), true);
+  assert.equal(session.worldState.getFlag('cesspoolCrossingSafe'), true);
+  assert.equal(session.worldState.getItemLocation('scented-soap'), null);
+  assert.match(session.submitCommand('west'), /Below the eastern side of the grand stair/i);
+  assert.equal(session.worldState.currentRoomId, 'pitLedge');
+  assert.match(session.submitCommand('west'), /vast natural cavern/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+});
+
+test('the cesspool branch also supports the silver-mirror variant and reconnects to the stairs', () => {
+  const session = createTestSession();
+
+  moveToCesspool(session);
+  assert.equal(session.worldState.currentRoomId, 'cesspool');
+  assert.match(session.submitCommand('up'), /guest bathroom is absurdly luxurious/i);
+  assert.match(session.submitCommand('take silver mirror'), /you take the silver mirror/i);
+  assert.match(session.submitCommand('down'), /digestive underside spreads out in a stone cistern/i);
+  assert.match(session.submitCommand('show mirror to slorum'), /accompany it with better manners/i);
+  assert.match(session.submitCommand('tell slorum lovely dinner'), /An upstairs guest with eyes/i);
+  assert.match(session.submitCommand('give mirror to slorum'), /takes the silver mirror and props it beside the place of honor/i);
+  assert.match(session.submitCommand('west'), /narrow maintenance ledge clings to the mansion wall/i);
+  assert.match(session.submitCommand('up'), /white marble stair rises in a broad ceremonial sweep/i);
+  assert.equal(session.worldState.currentRoomId, 'grandStairs');
+});
+
+test('the Spider Room offers a one-promise bargain for black-wind truth', () => {
+  const session = createTestSession();
+
+  moveToTrophyRoom(session);
+  assert.match(session.submitCommand('east'), /eastern wall appears to be only more trophies/i);
+  assert.match(session.submitCommand('search plaques'), /incorrect count|hidden seam leading east/i);
+  assert.equal(session.worldState.getFlag('spiderRoomFound'), true);
+  assert.match(session.submitCommand('east'), /silk-draped, and arranged with a precision/i);
+  assert.equal(session.worldState.currentRoomId, 'spiderRoom');
+  assert.match(session.submitCommand('ask chariadulscha about black wind'), /Answers cost disorder|promise me one clean act of future chaos/i);
+  assert.match(session.submitCommand('tell chariadulscha i will break something for you'), /future disturbance properly spoken/i);
+  assert.equal(session.worldState.getFlag('spiderPromiseMade'), true);
+  assert.equal(session.worldState.getFlag('spiderDebtPending'), true);
+  assert.match(session.submitCommand('ask chariadulscha about black wind'), /Follow cold stock downward|living arithmetic under the house/i);
+  assert.equal(session.worldState.getFlag('blackWindSourceLeadKnown'), true);
+  assert.equal(session.worldState.getFlag('spiderTruthClaimed'), true);
+  assert.match(session.submitCommand('ask chariadulscha about grey grin'), /number is spent/i);
+});
+
+test('the Spider Room can also seed Grey Grin and sealed-room leads', () => {
+  const session = createTestSession();
+
+  moveToSpiderRoom(session);
+  assert.match(session.submitCommand('search wall'), /seam hidden under silk|once stored nearby/i);
+  assert.equal(session.worldState.getFlag('sealedRoomLeadKnown'), true);
+  assert.match(session.submitCommand('ask chariadulscha about grey grin'), /Answers cost disorder|promise me one clean act of future chaos/i);
+  assert.match(session.submitCommand('tell chariadulscha promise chaos'), /Ask, and I will spend one answer on you/i);
+  assert.match(session.submitCommand('ask chariadulscha about grey grin'), /laughing blade sits near his trophies/i);
+  assert.equal(session.worldState.getFlag('greyGrinLeadKnown'), true);
+});
+
+test('escaping with rescued Plum now resolves to a minimum good ending', () => {
+  const session = createTestSession();
+
+  preparePlumTunnelRoute(session);
+  session.submitCommand('south');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('tell plum come now');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('crawl tunnel');
+
+  assert.match(session.submitCommand('escape'), /minimum good ending/i);
+  assert.equal(session.worldState.getFlag('escapedMansion'), true);
+});
+
+test('escaping with Plum plus leverage now resolves to a stronger vanilla ending', () => {
+  const session = createTestSession();
+
+  moveToAlchemyStockroom(session);
+  session.submitCommand('take ledger');
+  session.submitCommand('read ledger');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('up');
+  session.submitCommand('east');
+  session.submitCommand('take scented soap');
+  session.submitCommand('open panel');
+  session.submitCommand('down');
+  session.submitCommand('tell slorum your party is lovely');
+  session.submitCommand('give soap to slorum');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('give invitation to oggaf');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('shake hand');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('take meditative incense');
+  session.submitCommand('take wax palm');
+  session.submitCommand('north');
+  session.submitCommand('use wax palm on idol');
+  session.submitCommand('north');
+  session.submitCommand('light incense');
+  session.submitCommand('south');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('tell plum come now');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('crawl tunnel');
+
+  assert.match(session.submitCommand('escape'), /strong vanilla ending/i);
+  assert.equal(session.worldState.getFlag('escapedMansion'), true);
+  assert.equal(session.worldState.getFlag('strongerEscapeSecured'), true);
+});
+
+test('the black-wind source can be calmed and sabotaged through the buried spine', () => {
+  const session = createTestSession();
+
+  moveToTrophyRoom(session);
+  assert.match(session.submitCommand('take grey grin blade'), /you take the Grey Grin Blade/i);
+  assert.match(session.submitCommand('west'), /library is less a scholarly refuge/i);
+  assert.match(session.submitCommand('take meditative incense'), /you take the meditative incense/i);
+  assert.match(session.submitCommand('west'), /smaller chamber has the careful plainness/i);
+  assert.match(session.submitCommand('south'), /private chamber is all velvet excess/i);
+  assert.match(session.submitCommand('west'), /curtains of living silk|kelago/i);
+  assert.match(session.submitCommand('south'), /immense dinner table dominates/i);
+  assert.match(session.submitCommand('east'), /Wrongus holds dominion here/i);
+  assert.match(session.submitCommand('ask wrongus about black wind'), /black wind|root|stock/i);
+  assert.match(session.submitCommand('search shelf'), /hidden stockroom|black-wind trade/i);
+  assert.match(session.submitCommand('east'), /hidden stockroom crouches behind the kitchen wall/i);
+  assert.match(session.submitCommand('read ledger'), /active trade book/i);
+  assert.match(session.submitCommand('search drain'), /service hatch and a narrow stair descending/i);
+  assert.match(session.submitCommand('down'), /truth of the black-wind trade stops pretending/i);
+  assert.match(session.submitCommand('search spine'), /messy and imprecise/i);
+  assert.match(session.submitCommand('light incense'), /set it near the buried book|roots stop reading as wild growth/i);
+  assert.equal(session.worldState.getFlag('blackWindTreeCalmed'), true);
+  assert.match(session.submitCommand('search spine'), /looks cuttable|original blasphemy feeding it/i);
+  assert.match(session.submitCommand('use grey grin blade on spine'), /sabotaged the black-wind source/i);
+  assert.equal(session.worldState.getFlag('blackWindTreeSabotaged'), true);
+  assert.match(session.submitCommand('look'), /split now mars the buried spine|supply line trying not to admit it has been cut/i);
+});
+
+test('sabotaging the source can also secure a stronger escape with Plum', () => {
+  const session = createTestSession();
+
+  moveToTrophyRoom(session);
+  session.submitCommand('take grey grin blade');
+  session.submitCommand('west');
+  session.submitCommand('take meditative incense');
+  session.submitCommand('take wax palm');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('east');
+  session.submitCommand('ask wrongus about black wind');
+  session.submitCommand('search shelf');
+  session.submitCommand('east');
+  session.submitCommand('read ledger');
+  session.submitCommand('search drain');
+  session.submitCommand('down');
+  session.submitCommand('light incense');
+  session.submitCommand('use grey grin blade on spine');
+  session.submitCommand('up');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('use wax palm on idol');
+  session.submitCommand('north');
+  session.submitCommand('light incense');
+  session.submitCommand('south');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('tell plum come now');
+  session.submitCommand('east');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('crawl tunnel');
+
+  assert.match(session.submitCommand('escape'), /strong vanilla ending/i);
+  assert.equal(session.worldState.getFlag('blackWindTreeSabotaged'), true);
+  assert.equal(session.worldState.getFlag('strongerEscapeSecured'), true);
+});
+
+test('the Sealed Room branch yields the correction bell code', () => {
+  const session = createTestSession();
+
+  moveToSealedRoom(session);
+
+  assert.equal(session.worldState.currentRoomId, 'sealedRoom');
+  assert.equal(session.worldState.getFlag('sealedRoomEntered'), true);
+  assert.match(session.submitCommand('search room'), /folded service card|hidden it/i);
+  assert.match(session.submitCommand('take correction bell card'), /you take the correction bell card/i);
+  assert.match(session.submitCommand('read correction bell card'), /double ring for correction staff|remove front-of-house attendants/i);
+  assert.equal(session.worldState.getFlag('correctionBellCodeKnown'), true);
+});
+
+test('the correction bell code can pull the butlers off the foyer long enough to bypass admission', () => {
+  const session = createTestSession();
+
+  moveToSealedRoom(session);
+  session.submitCommand('take correction bell card');
+  session.submitCommand('read correction bell card');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('south');
+  session.submitCommand('up');
+  assert.equal(session.worldState.currentRoomId, 'guestRoom');
+  assert.match(session.submitCommand('pull bell pull'), /coded double-ring pattern|urgent professional annoyance/i);
+  assert.equal(session.worldState.getFlag('butlerDiversionActive'), true);
+  assert.match(session.submitCommand('down'), /foyer/i);
+  assert.match(session.submitCommand('north'), /immense dinner table dominates/i);
+  assert.equal(session.worldState.currentRoomId, 'feastHall');
 });

@@ -5,9 +5,12 @@ import { createMetaGameContent } from './meta game/messages.js';
 import { createGameParserOptions, createGameVerbs } from './rules/verbs.js';
 import { createAlchemyStockroom } from './rooms/alchemyStockroom.js';
 import { createBlackWindTreeChamber } from './rooms/blackWindTreeChamber.js';
+import { createBathroomRoom } from './rooms/bathroom.js';
 import { createCavernRoom } from './rooms/cavern.js';
+import { createCesspoolRoom } from './rooms/cesspool.js';
 import { createFeastHall } from './rooms/feastHall.js';
 import { createFernGardenRoom } from './rooms/fernGarden.js';
+import { createFishingShackRoom } from './rooms/fishingShack.js';
 import { createFoyerRoom } from './rooms/foyer.js';
 import { createGrandfatherRoom } from './rooms/grandfatherRoom.js';
 import { createGrandStairsRoom } from './rooms/grandStairs.js';
@@ -18,8 +21,11 @@ import { createLibraryRoom } from './rooms/library.js';
 import { createNathemaRoom } from './rooms/nathemaRoom.js';
 import { createOgreBedsRoom } from './rooms/ogreBeds.js';
 import { createPlumRoom } from './rooms/plumRoom.js';
+import { createPitLedgeRoom } from './rooms/pitLedge.js';
 import { createSecretCircleRoom } from './rooms/secretCircle.js';
+import { createSealedRoom } from './rooms/sealedRoom.js';
 import { createSittingRoom } from './rooms/sittingRoom.js';
+import { createSpiderRoom } from './rooms/spiderRoom.js';
 import { createFoldedHallwayRoom } from './rooms/foldedHallway.js';
 import { createTrophyRoom } from './rooms/trophyRoom.js';
 import { createTunnelRoom } from './rooms/tunnel.js';
@@ -38,8 +44,12 @@ export function createGameManifest() {
   const kitchen = createKitchenRoom();
   const alchemyStockroom = createAlchemyStockroom();
   const blackWindTreeChamber = createBlackWindTreeChamber();
+  const bathroom = createBathroomRoom();
   const library = createLibraryRoom();
+  const cesspool = createCesspoolRoom();
+  const fishingShack = createFishingShackRoom();
   const ogreBeds = createOgreBedsRoom();
+  const pitLedge = createPitLedgeRoom();
   const plumRoom = createPlumRoom();
   const foldedHallway = createFoldedHallwayRoom();
   const trophyRoom = createTrophyRoom();
@@ -48,6 +58,8 @@ export function createGameManifest() {
   const events = createGameEventDefinitions();
   const map = createGameMapDefinition();
   const secretCircle = createSecretCircleRoom();
+  const sealedRoom = createSealedRoom();
+  const spiderRoom = createSpiderRoom();
 
   return {
     id: 'meal-of-oshregaal',
@@ -76,6 +88,8 @@ export function createGameManifest() {
       hasInvitation: true,
       foyerAdmitted: false,
       metOshregaal: false,
+      insultedOshregaal: false,
+      agreedToStay: false,
       feastStarted: false,
       gaveBlood: false,
       impSuspicious: false,
@@ -101,8 +115,11 @@ export function createGameManifest() {
       nathemaContrabandKnown: false,
       nathemaEvidenceShown: false,
       nathemaBlackWindSampleDelivered: false,
+      nathemaEscapeDealSecured: false,
+      servantApronWorn: false,
       greyGrinLeadKnown: false,
       trophyRoomUnlocked: false,
+      spiderRoomFound: false,
       greyGrinShownToNathema: false,
       greyGrinDeliveredToNathema: false,
       greyGrinShownToPlum: false,
@@ -113,6 +130,7 @@ export function createGameManifest() {
       escapeRouteUnlocked: false,
       metalHandDoorUnlocked: false,
       waxPlugFound: false,
+      waxPlugReadied: false,
       plumFound: false,
       plumTrustEarned: false,
       plumMemoryRead: false,
@@ -138,10 +156,39 @@ export function createGameManifest() {
       blackWindTreeFound: false,
       blackWindFruitConsumed: false,
       blackWindElixirConsumed: false,
+      blackWindTreeCalmed: false,
+      blackWindTreeSabotaged: false,
+      escapedMansion: false,
+      strongerEscapeSecured: false,
+      absorbedIntoRoutine: false,
+      oshregaalAssassinationAttempted: false,
+      oshregaalWounded: false,
+      chariadulschaMet: false,
+      spiderPromiseMade: false,
+      spiderTruthClaimed: false,
+      spiderDebtPending: false,
+      oshregaalWeaknessKnown: false,
+      sealedRoomLeadKnown: false,
+      sealedRoomUnlocked: false,
+      sealedRoomEntered: false,
+      correctionBellCodeKnown: false,
+      butlerDiversionActive: false,
+      shackSearched: false,
+      eastRunoffNoted: false,
+      bathroomRouteKnown: false,
+      bathroomPanelOpened: false,
+      cesspoolEntered: false,
+      slorumMet: false,
+      slorumFlattered: false,
+      slorumGifted: false,
+      cesspoolCrossingSafe: false,
     },
     rooms: {
+      bathroom,
       cavern,
+      cesspool,
       fernGarden,
+      fishingShack,
       grandStairs,
       foyer,
       sittingRoom,
@@ -155,8 +202,11 @@ export function createGameManifest() {
       blackWindTreeChamber,
       library,
       ogreBeds,
+      pitLedge,
       plumRoom,
+      sealedRoom,
       foldedHallway,
+      spiderRoom,
       trophyRoom,
       tunnel,
       secretCircle,

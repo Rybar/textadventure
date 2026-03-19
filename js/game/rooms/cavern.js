@@ -2,6 +2,80 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createCavernRoom() {
+  const getEscapeEnding = ({ getFlag, worldState, setFlag }) => {
+    if (getFlag('escapedMansion')) {
+      return 'You have already broken from the house once tonight. Lingering in the cavern now feels less like survival and more like an argument with finality.';
+    }
+
+    if (getFlag('absorbedIntoRoutine')) {
+      return 'You are already lost to the house\'s rhythm. Any later thought of escape is only a gesture performed by someone Oshregaal has taught to mistake repetition for choice.';
+    }
+
+    const carryingGreyGrin = Boolean(worldState.findInventoryItem('grey-grin-blade'));
+    const carryingLeverage = Boolean(
+      worldState.findInventoryItem('black-wind-ledger')
+      || worldState.findInventoryItem('black-wind-root-sample')
+      || worldState.findInventoryItem('black-wind-fruit')
+      || worldState.findInventoryItem('black-wind-elixir')
+    );
+    const acceptedMutation = getFlag('blackWindFruitConsumed') || getFlag('blackWindElixirConsumed');
+    const acceptedService = getFlag('servantApronWorn');
+    const strongEscape = getFlag('plumRescued') && (
+      getFlag('blackWindEvidenceCollected')
+      || getFlag('nathemaEvidenceShown')
+      || getFlag('nathemaBlackWindSampleDelivered')
+      || getFlag('blackWindTreeSabotaged')
+      || carryingLeverage
+      || carryingGreyGrin
+    );
+
+    if (getFlag('nathemaEscapeDealSecured')) {
+      setFlag('escapedMansion', true);
+      return getFlag('plumRescued')
+        ? 'You leave the cavern with Plum alive, but not clean. Behind you, Nathema now holds enough black-wind leverage and stolen succession to turn Oshregaal\'s household into a political wound. Your escape will stick because hers is not an escape at all, but an ascent. Plum survives; the world worsens anyway. This is a dark bargain ending.'
+        : 'You leave the cavern alive by making Nathema more dangerous than the house can comfortably contain. Behind you, Oshregaal inherits a crisis shaped like a guest he underestimated and a rival you armed on purpose. Freedom bought this way is real, ugly, and politically contagious. This is a dark bargain ending.';
+    }
+
+    if (getFlag('oshregaalWounded')) {
+      setFlag('escapedMansion', true);
+      return getFlag('plumRescued')
+        ? 'You leave the cavern with Plum alive while Oshregaal howls somewhere behind the marble and panic. He may not be dead, but the wound, the stolen blade, and the broken dinner have turned escape into a violent fact instead of a polite hope. This is a violent ending.'
+        : 'You leave the cavern through the space your own violence opened. Oshregaal still lives somewhere behind you, but not with the same authority, not with the same blood, and not with dinner intact. This is a violent ending.';
+    }
+
+    if (acceptedMutation || acceptedService) {
+      setFlag('escapedMansion', true);
+
+      if (acceptedMutation) {
+        return getFlag('plumRescued')
+          ? 'You leave the cavern with Plum alive, but the black-wind bargain has already entered the body you are using to flee. Every breath of freedom now carries the memory of choosing corruption for capacity. Plum survives; your future no longer belongs entirely to you. This is a dark bargain ending.'
+          : 'You leave the cavern alive by letting Oshregaal\'s black-wind commerce revise you from the inside. The house does not keep you, but it leaves with you in appetite, chemistry, and possibility. This is a dark bargain ending.';
+      }
+
+      return getFlag('plumRescued')
+        ? 'You leave the cavern with Plum alive, but only after teaching yourself the house\'s servant logic: lower the head, move when ignored, survive by becoming administratively invisible. You escape, yet part of you is still organized around permission. This is a dark bargain ending.'
+        : 'You leave the cavern alive because you accepted the house\'s oldest lesson about service: invisibility is a wage, obedience a route, and self-erasure a tool. You are outside now, but not cleanly outside its habits. This is a dark bargain ending.';
+    }
+
+    if (strongEscape) {
+      setFlag('escapedMansion', true);
+      setFlag('strongerEscapeSecured', true);
+      return 'You leave the mansion behind with more than survival: Plum alive, the house publicly indictable, or theft heavy enough to bend tomorrow around it. Behind you, Oshregaal still owns his table. Ahead of you, he now has to fear the story that escaped it. This is a strong vanilla ending.';
+    }
+
+    if (getFlag('plumRescued')) {
+      setFlag('escapedMansion', true);
+      return 'You withdraw from the cavern with Plum alive and the house behind you at last. It is not a total victory. Oshregaal still has rooms, servants, and schemes. But he does not have Plum, and tonight that is enough to call escape real. This is the minimum good ending.';
+    }
+
+    if (getFlag('blackWindEvidenceCollected') || getFlag('blackWindTreeSabotaged') || carryingLeverage || carryingGreyGrin || getFlag('nathemaBlackWindSampleDelivered')) {
+      setFlag('escapedMansion', true);
+      return 'You leave the cavern alive with leverage, theft, or contraband in hand, but without Plum. The house has not beaten you. It has only made the cost of your priorities legible. This is a compromised escape.';
+    }
+
+    return 'You could leave the cavern, but right now it would only count as survival, not victory. If you mean to finish the night properly, there is still more house to answer.';
+  };
+
   const puddle = new Item({
     id: 'puddle',
     name: 'puddle',
@@ -28,6 +102,9 @@ The main stair rises to the mansion doors, while a narrower path wanders northwe
       northwest: 'fernGarden',
     },
     verbs: {
+      escape(context) {
+        return getEscapeEnding(context);
+      },
       search({ command, getFlag, setFlag }) {
         const target = command.directObject;
 

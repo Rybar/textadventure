@@ -47,6 +47,18 @@ export function createGuestRoom() {
     description: 'A tasseled bell pull hangs beside the bed in case a guest requires comfort, service, or a witness.',
     actions: {
       use(context) {
+        if (context.getFlag('correctionBellCodeKnown')) {
+          if (context.getFlag('butlerDiversionActive')) {
+            return 'The bell mechanism is already committed to the correction signal. Ringing again now would only waste the interval you bought.';
+          }
+
+          if (!context.getFlag('guestBellRung')) {
+            context.setFlag('guestBellRung', true);
+          }
+
+          return context.emitEvent('triggerButlerDiversion');
+        }
+
         if (!context.getFlag('guestBellRung')) {
           context.setFlag('guestBellRung', true);
           return 'You tug the bell pull. Somewhere deep in the house, a polite bell answers once. No one comes. The delay feels less negligent than intentional.';
@@ -83,12 +95,20 @@ The stair leads back down to the foyer.
 `.trim(),
     exits: {
       north: 'nathemaRoom',
+      east: 'bathroom',
       down: 'foyer',
     },
+    conditionalDescriptions: [
+      {
+        when: ({ getFlag }) => getFlag('butlerDiversionActive'),
+        text: 'Somewhere beyond the room, the house sounds fractionally less supervised than usual. Oggaf and Zamzam are attending to the correction signal instead of their normal stations.',
+      },
+    ],
     items: [lamp, bed, chest, bellPull, guestCard],
     objects: {
       nightstand: 'The nightstand is polished, ordinary, and therefore one of the more suspicious objects in the house.',
       sheets: 'The sheets smell faintly of lavender and old dust.',
+      door: 'A lacquered eastern door leads to a guest bathroom lavish enough to suggest that Oshregaal considers hygiene part of the performance.',
     },
   });
 }

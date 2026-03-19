@@ -24,6 +24,16 @@ One of them has been draped with a fine red cloak, as though even the statuary m
     exits: {
       south: 'cavern',
       north: 'foyer',
+      down: 'pitLedge',
+    },
+    exitGuards: {
+      down({ getFlag }) {
+        if (getFlag('pitRouteHintKnown') || getFlag('eastRunoffNoted')) {
+          return null;
+        }
+
+        return 'The stair looks ceremonially complete from here. If there is a way down the eastern side, you have not yet found it.';
+      },
     },
     verbs: {
       search({ command, getFlag, setFlag }) {

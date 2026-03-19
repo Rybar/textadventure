@@ -61,6 +61,18 @@ export function moveToGuestWing(session) {
   session.submitCommand('up');
 }
 
+export function moveToBathroom(session) {
+  moveToGuestWing(session);
+  session.submitCommand('east');
+}
+
+export function moveToCesspool(session) {
+  moveToBathroom(session);
+  session.submitCommand('search tile');
+  session.submitCommand('open panel');
+  session.submitCommand('down');
+}
+
 export function moveToNathemaRoom(session) {
   moveToGuestWing(session);
   session.submitCommand('north');
@@ -123,6 +135,18 @@ export function moveToTrophyRoom(session) {
   session.submitCommand('east');
   session.submitCommand('search cabinet');
   session.submitCommand('east');
+}
+
+export function moveToSpiderRoom(session) {
+  moveToTrophyRoom(session);
+  session.submitCommand('search plaques');
+  session.submitCommand('east');
+}
+
+export function moveToSealedRoom(session) {
+  moveToSpiderRoom(session);
+  session.submitCommand('search north wall');
+  session.submitCommand('north');
 }
 
 export function moveToFoldedHallway(session) {

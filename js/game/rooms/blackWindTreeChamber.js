@@ -33,7 +33,7 @@ The roots have broken the floor into ridges and channels that feed an iron drain
       ],
     },
     verbs: {
-      search({ command, getFlag, worldState }) {
+      search({ command, getFlag, setFlag, worldState }) {
         const target = command.directObject;
         const rootSampleTaken = hasTakenRootSample(worldState);
 
@@ -50,7 +50,16 @@ The roots have broken the floor into ridges and channels that feed an iron drain
         }
 
         if (target.includes('book') || target.includes('spine') || target.includes('pages')) {
-          return 'Only the warped spine and a few fused page edges remain visible beneath the roots. The tree has not merely grown above the buried book. It has incorporated it.';
+          if (getFlag('blackWindTreeSabotaged')) {
+            return 'The buried spine is split now, leaking dark sap where root and text were forced to become one thing. The tree has begun failing from the idea outward.';
+          }
+
+          if (!getFlag('blackWindTreeCalmed')) {
+            return 'Only the warped spine and a few fused page edges remain visible beneath the roots. The tree has not merely grown above the buried book. It has incorporated it. In the chamber\'s current agitation, getting at that seam would be messy and imprecise.';
+          }
+
+          setFlag('blackWindSourceLeadKnown', true);
+          return 'With the chamber calmed by incense, the buried spine shows its role clearly: the roots knot around it like a wound around a blade. A precise cut there might injure not just the tree\'s body, but the original blasphemy feeding it.';
         }
 
         if (target.includes('fruit') || target.includes('branch')) {
@@ -63,6 +72,17 @@ The roots have broken the floor into ridges and channels that feed an iron drain
 
         return `You search the ${target} and come away colder, dirtier, and much less able to pretend the stockroom was the whole crime.`;
       },
+      sabotage({ getFlag }) {
+        if (getFlag('blackWindTreeSabotaged')) {
+          return 'The source has already been wounded as badly as you can manage tonight. Further damage would be theatrics rather than strategy.';
+        }
+
+        if (!getFlag('blackWindTreeCalmed')) {
+          return 'You need the chamber calmer first. Right now the roots, drafts, and sap all conspire to turn sabotage into panic.';
+        }
+
+        return 'If you mean to sabotage the source properly, the buried spine beneath the roots is the only target that looks central enough to matter.';
+      },
     },
     items: [rootSample],
     conditionalDescriptions: [
@@ -74,10 +94,22 @@ The roots have broken the floor into ridges and channels that feed an iron drain
         when: ({ getFlag }) => getFlag('blackWindEvidenceCollected'),
         text: 'Seen after the ledger, the chamber resolves into supply chain rather than myth: this is where product becomes inevitability.',
       },
+      {
+        when: ({ getFlag }) => getFlag('blackWindTreeCalmed') && !getFlag('blackWindTreeSabotaged'),
+        text: 'Incense now threads through the chamber in narrow disciplined lines, making the buried book-and-root seam look less mystical and more vulnerable.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('blackWindTreeSabotaged'),
+        text: 'A split now mars the buried spine beneath the roots, and the whole chamber feels like a supply line trying not to admit it has been cut at the level of principle.',
+      },
     ],
     objects: {
       tree: {
         description({ worldState }) {
+          if (worldState.getFlag('blackWindTreeSabotaged')) {
+            return 'The black wind tree still stands, but no longer with the same confidence. Something central beneath it has been cut, and now the trunk carries itself like a conspiracy forced to limp.';
+          }
+
           if (hasTakenRootSample(worldState)) {
             return 'The black wind tree rises from the broken floor like a principle the house built itself around. One lower root shows the fresh wound where you cut away a sample.';
           }
@@ -94,8 +126,55 @@ The roots have broken the floor into ridges and channels that feed an iron drain
           return 'The roots are thick, wet, and infrastructural. They do not merely grow here; they organize the room.';
         },
       },
-      book: 'The buried book is mostly consumed by root and stone, but enough remains to show that the tree rose exactly where text was interred.',
-      spine: 'What remains of the buried spine is warped, blackened, and half-fused into the wood above it.',
+      book: {
+        description({ getFlag }) {
+          if (getFlag('blackWindTreeSabotaged')) {
+            return 'The buried book has been split where root and text fused together. It looks less discovered than deliberately injured.';
+          }
+
+          if (getFlag('blackWindTreeCalmed')) {
+            return 'The buried book is mostly consumed by root and stone, but the calmed chamber makes one ugly truth plain: the tree is anchored to this trapped text like doctrine turned botanical.';
+          }
+
+          return 'The buried book is mostly consumed by root and stone, but enough remains to show that the tree rose exactly where text was interred.';
+        },
+      },
+      spine: {
+        description({ getFlag }) {
+          if (getFlag('blackWindTreeSabotaged')) {
+            return 'What remains of the buried spine is split and leaking dark sap where wood and text were forced to share a single wound.';
+          }
+
+          if (getFlag('blackWindTreeCalmed')) {
+            return 'With the incense taming the chamber air, the buried spine reads as the tree\'s anchoring blasphemy rather than mere debris. The seam where book becomes root looks cuttable.';
+          }
+
+          return 'What remains of the buried spine is warped, blackened, and half-fused into the wood above it.';
+        },
+        actions: {
+          use({ item, getFlag, setFlag }) {
+            if (!item) {
+              return 'The buried spine looks like a point of failure, but not one your bare hands should volunteer for.';
+            }
+
+            if (item.id !== 'grey-grin-blade') {
+              return `The ${item.name} does not look equal to the kind of blasphemy rooted here.`;
+            }
+
+            if (getFlag('blackWindTreeSabotaged')) {
+              return 'The Grey Grin has already done its work here. The spine is split and the roots are panicking around the wound.';
+            }
+
+            if (!getFlag('blackWindTreeCalmed')) {
+              return 'The chamber\'s bitter draft keeps the root-book seam in restless motion. You need a calmer line on the cut before committing the blade.';
+            }
+
+            setFlag('blackWindTreeSabotaged', true);
+            setFlag('blackWindSourceLeadKnown', true);
+            return 'You drive the Grey Grin Blade into the buried spine where root and text have fused. The cut lands with horrible correctness. Dark sap bursts into the channels, the trunk convulses, and the whole chamber answers with the sound of an enterprise being wounded at its idea rather than its inventory. You have sabotaged the black-wind source.';
+          },
+        },
+      },
       drain: 'Iron drains and channels carry seepage upward toward the stockroom, reducing miracle into warehousing with unforgivable efficiency.',
       stair: 'A narrow maintenance stair climbs back up toward the hidden stockroom and the house that profits from what grows below it.',
       fruit: 'The fruit hanging above the chamber is the same black-wind produce packaged upstairs, only here it still looks like part of a living accusation.',
