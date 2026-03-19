@@ -3,6 +3,22 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createSecretCircleRoom() {
+  const roadAnnotation = new Item({
+    id: 'road-annotation',
+    name: 'road annotation',
+    aliases: ['annotation', 'margin note', 'road note', 'portal note'],
+    description: 'A clipped annotation tucked into the older transit books, written by a more practical hand than Oshregaal\'s.',
+    actions: {
+      read({ getFlag, setFlag }) {
+        if (!getFlag('portalBypassLearned')) {
+          setFlag('portalBypassLearned', true);
+        }
+
+        return 'The note reads: "The circle is a borrowed road, not a sovereign gate. Activation opens the prepared route only. If the host closes his hand on the road, bypass the etiquette elsewhere: the geometry can still be insulted into compliance by someone who understands the constraint."';
+      },
+    },
+  });
+
   const teleportScroll = new Item({
     id: 'teleport-scroll',
     name: 'teleport scroll',
@@ -15,11 +31,11 @@ export function createSecretCircleRoom() {
         }
 
         if (context.worldState.getFlag('escapeRouteUnlocked')) {
-          return 'The circle is already humming with restrained possibility. One more step, later, could carry you out.';
+          return 'The circle is already humming with restrained possibility. The scroll can only wake this prepared road; if you wanted a bypass rather than an activation, you would need the underlying route mathematics, not more ceremony.';
         }
 
         context.worldState.setFlag('escapeRouteUnlocked', true);
-        return 'You read the scroll within the circle. The floor-runes brighten in a slow ring of pale fire, and the chamber acquires the unmistakable feeling of a possible exit.';
+        return 'You read the scroll within the circle. The floor-runes brighten in a slow ring of pale fire, and the chamber acquires the unmistakable feeling of a possible exit. But the working is narrow, not sovereign: this is one prepared road, not mastery over all of Oshregaal\'s thresholds.';
       },
       use(context) {
         return this.performAction('read', context);
@@ -51,7 +67,11 @@ export function createSecretCircleRoom() {
     rules: [
       {
         match: ['circle', 'rune', 'portal'],
-        reply: 'The skulls drift in a slow shared arc. One clicks its teeth and emits a whisper thin as chalk: "ROAD, NOT SUMMONING."',
+        reply: 'The skulls drift in a slow shared arc. One clicks its teeth and emits a whisper thin as chalk: "ROAD, NOT SUMMONING. PREPARED WAY, NOT FREE PASSAGE."',
+      },
+      {
+        match: ['bypass', 'constraint', 'geometry', 'road'],
+        reply: 'A skull turns in a tiny annoyed circle. "HOST KEEPS ACTIVATION HERE," it whispers. "BYPASS LIVES IN THE INSULT, NOT THE CHALK."',
       },
       {
         match: ['oshregaal', 'grandfather'],
@@ -103,11 +123,11 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('chamber')) {
-          return 'A careful search turns up three important facts at once: the bookshelf holds older transit lore than Oshregaal\'s household should possess, the cabinet stores practical escape reagents, and the circle itself has seen far more departures than this room\'s dust would suggest.';
+          return 'A careful search turns up three important facts at once: the bookshelf holds older transit lore than Oshregaal\'s household should possess, the cabinet stores practical escape reagents, and the circle itself has seen far more departures than this room\'s dust would suggest. A clipped road annotation hidden among the books makes it plain that activation and bypass are not the same problem.';
         }
 
         if (target.includes('books') || target.includes('bookshelf') || target.includes('shelf')) {
-          return 'Several books bear shelf marks older than the rest of the manor. One margin note describes the circle as "a borrowed road dressed in newer chalk," which makes the room feel borrowed as well.';
+          return 'Several books bear shelf marks older than the rest of the manor. One clipped annotation describes the circle as "a borrowed road dressed in newer chalk" and warns that activation only wakes the prepared route, while true bypass requires understanding the host\'s constraints.';
         }
 
         if (target.includes('cabinet')) {
@@ -121,11 +141,15 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
         return `You search the ${target} and find dust, wax, and the sense that more useful people have already taken what mattered most.`;
       },
     },
-    items: [teleportScroll, mutationPotion, portalRing],
+    items: [roadAnnotation, teleportScroll, mutationPotion, portalRing],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('escapeRouteUnlocked'),
         text: 'The circular rune now holds a quiet ring of pale readiness, as if the room itself has admitted the possibility of departure.',
+      },
+      {
+        when: ({ getFlag }) => getFlag('portalBypassLearned'),
+        text: 'Once you understand the annotation\'s warning, the chamber feels less like a complete answer and more like one useful segment in a larger escape grammar.',
       },
     ],
     objects: {
@@ -136,7 +160,7 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
           tell: skullsTell,
         },
       },
-      bookshelf: 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader.',
+      bookshelf: 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader. A clipped road annotation sits hidden among the older transit texts.',
       cabinet: 'The cabinet contains reagents, vials, and the sort of practical magic a man keeps near an emergency exit.',
       runes: 'The runes are for travel, not summoning. They are patient, old, and absolutely real.',
     },

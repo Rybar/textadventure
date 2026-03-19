@@ -32,8 +32,15 @@ export function createKelagoRoom() {
     aliases: ['book', 'eye book'],
     description: 'A spellbook with a single wet eye set in the cover. It seems capable of closing itself when stared at too hard.',
     actions: {
+      take({ getFlag, setFlag }) {
+        if (!getFlag('spellbooksSecured')) {
+          setFlag('spellbooksSecured', true);
+        }
+
+        return 'The eye in the cover rolls once in offended recognition as you take the spellbook. Whatever Kelago intended to keep near at hand now counts as stolen text.';
+      },
       read() {
-        return 'The book crawls unpleasantly against your hands. Its pages concern flesh, growth, and transformation in a tone of domestic practicality.';
+        return 'The book crawls unpleasantly against your hands. Its pages concern flesh, growth, and transformation in a tone of domestic practicality, with side notes about preserving beauty through controlled alteration and never trusting threshold work to people who think bodies are simpler than doors.';
       },
     },
   });
@@ -62,6 +69,14 @@ export function createKelagoRoom() {
         reply: 'Kelago rests her fingertips on the living bed with proprietary affection. "It used to pinch," she says. "Now it only judges. Improvement is often a matter of editing temperament."',
       },
       {
+        match: ['spellbook', 'book', 'notes', 'ink'],
+        reply: 'Kelago glances at the eye-bound spellbook with real fondness. "Domestic biomancy," she says. "A little threshold etiquette, a little flesh correction, and several solutions to the problem of furniture that insists on remembering it was once alive. My brother hoards gates. I improve inhabitants."',
+      },
+      {
+        match: ['mutation', 'flesh', 'biomancy', 'transformation'],
+        reply: 'Kelago smiles as if the question has better posture than most guests. "Mutation is such a vulgar word," she says. "Most bodies are merely under-edited. The trick is to improve them without flattening their personality. My brother is better at appetite than restraint."',
+      },
+      {
         match: ['knife', 'knives', 'workspace'],
         reply: '"Each blade has a social purpose," Kelago says. "A host should never confuse incision, refinement, and insult."',
       },
@@ -83,6 +98,10 @@ export function createKelagoRoom() {
       {
         match: ['room', 'door', 'private chamber'],
         reply: 'Kelago gestures east with one elegant hand. "My brother keeps his private chamber through that door," she says. "If you go bothering his north door, remember that he adores manners even in his hardware."',
+      },
+      {
+        match: ['library', 'portal', 'threshold', 'gate'],
+        reply: 'Kelago waves the topic away with graceful irritation. "The library is where my brother keeps the sort of knowledge that likes hearing itself obeyed," she says. "Thresholds, folded corridors, and all the tedious romance of doors pretending to be philosophy. Useful, if you enjoy escape more than beauty."',
       },
     ],
     fallback: 'Kelago answers with cordial precision, as though deciding how much of you might eventually become decorative.',
@@ -123,6 +142,29 @@ An ornate private door stands to the east.
       south: 'feastHall',
       east: 'grandfatherRoom',
     },
+    verbs: {
+      search({ command, getFlag, setFlag }) {
+        const target = command.directObject;
+
+        if (!target || target.includes('room') || target.includes('workspace') || target.includes('table')) {
+          if (!getFlag('kelagoPraised')) {
+            return 'The workspace holds knives sorted by impossible specializations, wizard ink, and an eye-bound spellbook left close enough to imply frequent use. Kelago notices your interest with the pleased caution of an artist catching someone almost worthy of a studio tour.';
+          }
+
+          return 'With Kelago no longer treating curiosity as an insult, the workspace reads more clearly: biomantic tools, disciplined notes, and a spellbook concerned with edited flesh and controlled threshold etiquette.';
+        }
+
+        if (target.includes('spellbook') || target.includes('book') || target.includes('ink')) {
+          return 'The eye-bound spellbook and wizard ink sit where Kelago can reach them without rising. Between them they suggest a practice that treats living bodies as draftable texts.';
+        }
+
+        if (target.includes('bed') || target.includes('crab')) {
+          return 'The crab-bed is expensive, sentient, and only barely willing to admit it was once a design problem. Its black eyes track the room with offended patience.';
+        }
+
+        return `You search the ${target} and find evidence that Kelago's idea of domestic life depends heavily on blades and revisions.`;
+      },
+    },
     items: [livingBed, wizardInk, eyeSpellbook],
     objects: {
       kelago: {
@@ -146,7 +188,7 @@ An ornate private door stands to the east.
       },
       knives: 'There are knives everywhere: long, hooked, delicate, ribbed, and unmistakably specialized.',
       tortoises: 'Three headless tortoises shuffle through the clutter with patient, chest-like dignity.',
-      workspace: 'The central workspace is suspiciously clean, suggesting that whatever was last done here concluded successfully.',
+      workspace: 'The central workspace is suspiciously clean, suggesting that whatever was last done here concluded successfully and may already be learning new habits.',
       door: 'An ornate side door leads east into Oshregaal\'s private rooms. Even from here it looks overconfident.',
     },
   });

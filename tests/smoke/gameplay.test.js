@@ -78,8 +78,12 @@ test('kitchen and secret circle interactions deepen the escape thread', () => {
   assert.match(session.submitCommand('ask imp about curtains'), /hidden brass hand/i);
   assert.match(session.submitCommand('shake hand'), /hidden brass hand sewn into the curtain folds/i);
   assert.match(session.submitCommand('west'), /hidden chamber lies behind heavy red curtains/i);
-  assert.match(session.submitCommand('search bookshelf'), /borrowed road dressed in newer chalk/i);
-  assert.match(session.submitCommand('read scroll'), /floor-runes brighten/i);
+  assert.match(session.submitCommand('search bookshelf'), /borrowed road dressed in newer chalk|activation only wakes the prepared route/i);
+  assert.match(session.submitCommand('take road annotation'), /you take the road annotation/i);
+  assert.match(session.submitCommand('read road annotation'), /borrowed road, not a sovereign gate|activation opens the prepared route only/i);
+  assert.equal(session.worldState.getFlag('portalBypassLearned'), true);
+  assert.match(session.submitCommand('ask skulls about bypass'), /HOST KEEPS ACTIVATION HERE|BYPASS LIVES IN THE INSULT/i);
+  assert.match(session.submitCommand('read scroll'), /floor-runes brighten|one prepared road/i);
   assert.equal(session.worldState.getFlag('escapeRouteUnlocked'), true);
 });
 
@@ -133,9 +137,15 @@ test('kelago clue path can unlock the secret circle handshake puzzle', () => {
 
   moveToFeastHall(session);
   session.submitCommand('north');
+  assert.match(session.submitCommand('search workspace'), /eye-bound spellbook|wizard ink|studio tour/i);
   assert.match(session.submitCommand('tell kelago your work is beautiful'), /kind and accurate/i);
   assert.match(session.submitCommand('ask kelago about brother'), /glutton, a genius, a sentimentalist/i);
+  assert.match(session.submitCommand('ask kelago about spellbook'), /Domestic biomancy|threshold etiquette/i);
+  assert.match(session.submitCommand('ask kelago about library'), /thresholds, folded corridors|escape more than beauty/i);
   assert.match(session.submitCommand('ask kelago about curtains'), /brass hand/i);
+  assert.match(session.submitCommand('take spellbook'), /you take the spellbook|stolen text/i);
+  assert.equal(session.worldState.getFlag('spellbooksSecured'), true);
+  assert.match(session.submitCommand('read spellbook'), /controlled threshold etiquette|bodies are simpler than doors/i);
 
   session.submitCommand('south');
   assert.match(session.submitCommand('shake hand'), /hidden brass hand/i);
