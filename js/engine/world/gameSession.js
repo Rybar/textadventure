@@ -23,9 +23,17 @@ export class GameSession {
   }
 
   start() {
+    const openingPreface = this.getOpeningPreface();
     const openingText = this.worldState.enterCurrentRoom();
-    this.transcript.recordSystem(openingText);
+    this.transcript.recordSystem([openingPreface, openingText].filter(Boolean).join('\n\n'));
     return this.transcript.getLatestPrintableEntry();
+  }
+
+  getOpeningPreface() {
+    return [
+      'FEAST OF OSHREGAAL',
+      'A text adventure based on a Pathfinder campaign of the same name by Grizzelnit.',
+    ].join('\n');
   }
 
   getMetaMessage(messageId) {

@@ -17,6 +17,17 @@ import {
   moveToTrophyRoom,
 } from '../helpers/testSession.js';
 
+test('game start prints the title and attribution before the opening room description', () => {
+  const session = createTestSession();
+
+  const openingText = session.start();
+
+  assert.match(openingText, /FEAST OF OSHREGAAL/i);
+  assert.match(openingText, /A text adventure based on a Pathfinder campaign of the same name by Grizzelnit\./i);
+  assert.match(openingText, /You stand in a vast natural cavern/i);
+  assert.ok(openingText.indexOf('FEAST OF OSHREGAAL') < openingText.indexOf('You stand in a vast natural cavern'));
+});
+
 test('foyer blocks feast-hall access until invitation is shown', () => {
   const session = createTestSession();
 
