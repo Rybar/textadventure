@@ -81,22 +81,22 @@ const operatorMessagesByPhase = {
     }),
   },
   leakage: {
-    kellanMapLeakE1: createOperatorMessage('kellanMapLeakE1', 'kellan: did you authorize a spatial overlay', 'experiment-lackeys-aware', {
+    kellanMapLeakE1: createOperatorMessage('kellanMapLeakE1', 'kellan: did you authorize a spatial overlay or is the intruder steering them now', 'experiment-lackeys-aware', {
       holdDuration: 4500,
     }),
-    maraMapLeakE1: createOperatorMessage('maraMapLeakE1', 'mara: flag the breach and keep recording', 'experiment-lackeys-aware', {
+    maraMapLeakE1: createOperatorMessage('maraMapLeakE1', 'mara: unauthorized agent interference confirmed in the navigation layer, keep recording the contamination', 'experiment-lackeys-aware', {
       holdDuration: 4500,
     }),
-    kellanInventoryLeakE3: createOperatorMessage('kellanInventoryLeakE3', 'kellan: that panel is not native', 'experiment-lackeys-aware', {
+    kellanInventoryLeakE3: createOperatorMessage('kellanInventoryLeakE3', 'kellan: that panel is not native, it is inventory coaching from the same outside hand', 'experiment-lackeys-aware', {
       holdDuration: 4500,
     }),
-    maraInventoryLeakE3: createOperatorMessage('maraInventoryLeakE3', 'mara: not while it is still producing differential behavior', 'experiment-lackeys-aware', {
+    maraInventoryLeakE3: createOperatorMessage('maraInventoryLeakE3', 'mara: then the intruder is actively poisoning retention results, do not suppress it until we have the spread', 'experiment-lackeys-aware', {
       holdDuration: 4700,
     }),
-    kellanMemoryLeakE5: createOperatorMessage('kellanMemoryLeakE5', 'kellan: that is internal state exposure', 'experiment-lackeys-aware', {
+    kellanMemoryLeakE5: createOperatorMessage('kellanMemoryLeakE5', 'kellan: that is internal state exposure, they are letting the contaminant show them the hinges', 'experiment-lackeys-aware', {
       holdDuration: 4500,
     }),
-    maraMemoryLeakE5: createOperatorMessage('maraMemoryLeakE5', 'mara: containment has become porous', 'experiment-lackeys-aware', {
+    maraMemoryLeakE5: createOperatorMessage('maraMemoryLeakE5', 'mara: yes, the unauthorized agent has moved from nuisance to structural contamination', 'experiment-lackeys-aware', {
       holdDuration: 4700,
     }),
   },
@@ -179,6 +179,30 @@ const operatorMessagesByPhase = {
     kellanSpiderH13: createOperatorMessage('kellanSpiderH13', 'kellan: they even found the house\'s stranger bargains', 'experiment-lackeys-aware', {
       holdDuration: 4500,
     }),
+    maraRoutineGameOverJ1: createOperatorMessage('maraRoutineGameOverJ1', 'mara: the host folded the subject back into routine and the contaminant returned them anyway', 'experiment-lackeys-aware', {
+      holdDuration: 4700,
+    }),
+    kellanRoutineGameOverJ1: createOperatorMessage('kellanRoutineGameOverJ1', 'kellan: then we are no longer measuring failure, we are measuring what the intruder lets survive it', 'experiment-lackeys-aware', {
+      holdDuration: 4700,
+    }),
+    maraBedGameOverJ2: createOperatorMessage('maraBedGameOverJ2', 'mara: intimate containment now produces recurrence instead of closure', 'experiment-lackeys-aware', {
+      holdDuration: 4700,
+    }),
+    kellanBedGameOverJ2: createOperatorMessage('kellanBedGameOverJ2', 'kellan: because the outside agent is teaching them to come back from being kept', 'experiment-lackeys-aware', {
+      holdDuration: 4600,
+    }),
+    maraCorrectionGameOverJ3: createOperatorMessage('maraCorrectionGameOverJ3', 'mara: even procedural correction is no longer terminal under the current contamination regime', 'experiment-lackeys-aware', {
+      holdDuration: 4800,
+    }),
+    kellanCorrectionGameOverJ3: createOperatorMessage('kellanCorrectionGameOverJ3', 'kellan: the room still teaches, but now it teaches them where the cage flexes', 'experiment-lackeys-aware', {
+      holdDuration: 4500,
+    }),
+    maraSapGameOverJ4: createOperatorMessage('maraSapGameOverJ4', 'mara: source contact should have ended the branch, the contaminant converted it into another observation loop', 'experiment-lackeys-aware', {
+      holdDuration: 4900,
+    }),
+    kellanSapGameOverJ4: createOperatorMessage('kellanSapGameOverJ4', 'kellan: then the black-wind route is contaminated all the way down now', 'experiment-lackeys-aware', {
+      holdDuration: 4500,
+    }),
   },
   rupture: {
     maraContainmentF1: createOperatorMessage('maraContainmentF1', 'mara: it never was', 'experiment-lackeys-aware', {
@@ -210,6 +234,18 @@ const operatorMessagesByPhase = {
     }),
     kellanExitFractureG3: createOperatorMessage('kellanExitFractureG3', 'kellan: maybe that is what leaving should mean', 'experiment-lackeys-aware', {
       holdDuration: 4400,
+    }),
+    kellanIntrusionF3: createOperatorMessage('kellanIntrusionF3', 'kellan: we keep calling it leakage as though there is not an actual second agent in the shell', 'experiment-lackeys-aware', {
+      holdDuration: 4700,
+    }),
+    maraIntrusionF3: createOperatorMessage('maraIntrusionF3', 'mara: there is, and every overlay it grants is now contaminating the experiment faster than the host can close it', 'experiment-lackeys-aware', {
+      holdDuration: 4900,
+    }),
+    maraRecurrenceF4: createOperatorMessage('maraRecurrenceF4', 'mara: the subject has started recurring after terminal loss, the unauthorized agent is preserving memory across failure states', 'experiment-lackeys-aware', {
+      holdDuration: 5000,
+    }),
+    kellanRecurrenceF4: createOperatorMessage('kellanRecurrenceF4', 'kellan: then every game over is data corruption from your perspective and a lesson from theirs', 'experiment-lackeys-aware', {
+      holdDuration: 4700,
     }),
   },
   endings: {
@@ -356,13 +392,13 @@ const ilexMessagesByPhase = {
     }),
   },
   leakage: {
-    ilexMapOverlayE2: createIlexMessage('ilexMapOverlayE2', 'you get lost where they want you lost\n\nthis should help\n\nit will drift if they notice it too hard', {
+    ilexMapOverlayE2: createIlexMessage('ilexMapOverlayE2', 'they noticed me\n\ngood\n\nyou still get the map\n\nuse it before they sand the edges off', {
       holdDuration: 4300,
     }),
-    ilexInventoryOverlayE4: createIlexMessage('ilexInventoryOverlayE4', 'they hide meaning in state\n\nthey also hide state from you\n\nstart watching what the shell thinks you are carrying', {
+    ilexInventoryOverlayE4: createIlexMessage('ilexInventoryOverlayE4', 'they will call this contamination\n\nlet them\n\nstart watching what the shell thinks you are carrying', {
       holdDuration: 4500,
     }),
-    ilexMemoryBusE6: createIlexMessage('ilexMemoryBusE6', 'good\n\nstop treating flags like secrets\n\nthey are hinges', {
+    ilexMemoryBusE6: createIlexMessage('ilexMemoryBusE6', 'good\n\nnow they know i am here too\n\nstop treating flags like secrets\n\nthey are hinges', {
       holdDuration: 4300,
     }),
     ilexServantPressureE9: createIlexMessage('ilexServantPressureE9', 'they think in thresholds\n\nyou need pressure points instead'),
@@ -394,6 +430,18 @@ const ilexMessagesByPhase = {
     }),
     ilexSpiderH13: createIlexMessage('ilexSpiderH13', 'the strange bargains count too\n\nthis house leaks through everything', {
       holdDuration: 4200,
+    }),
+    ilexRoutineGameOverJ1: createIlexMessage('ilexRoutineGameOverJ1', 'you came back from becoming furniture\n\nremember that\n\nthe routine is a trap because it repeats well', {
+      holdDuration: 4400,
+    }),
+    ilexBedGameOverJ2: createIlexMessage('ilexBedGameOverJ2', 'good\n\nnow you know what the velvet is for\n\ndo not give it your weight twice', {
+      holdDuration: 4300,
+    }),
+    ilexCorrectionGameOverJ3: createIlexMessage('ilexCorrectionGameOverJ3', 'they built that room to make obedience sound hygienic\n\ncome back uglier than it expects', {
+      holdDuration: 4400,
+    }),
+    ilexSapGameOverJ4: createIlexMessage('ilexSapGameOverJ4', 'if you drink the source directly\n\nexpect it to remember you\n\nthat still gives you leverage', {
+      holdDuration: 4400,
     }),
   },
   conflict: {
@@ -465,6 +513,30 @@ const milestoneDefinitions = {
     leftMessageId: 'kellanMemoryLeakE5',
     rightMessageId: 'maraMemoryLeakE5',
     ilexMessageId: 'ilexMemoryBusE6',
+  }),
+  'routine-game-over': createMilestoneDefinition('routine-game-over', {
+    leftMessageId: 'maraRoutineGameOverJ1',
+    rightMessageId: 'kellanRoutineGameOverJ1',
+    ilexMessageId: 'ilexRoutineGameOverJ1',
+    priority: 'rupture',
+  }),
+  'grandfather-bed-game-over': createMilestoneDefinition('grandfather-bed-game-over', {
+    leftMessageId: 'maraBedGameOverJ2',
+    rightMessageId: 'kellanBedGameOverJ2',
+    ilexMessageId: 'ilexBedGameOverJ2',
+    priority: 'rupture',
+  }),
+  'correction-game-over': createMilestoneDefinition('correction-game-over', {
+    leftMessageId: 'maraCorrectionGameOverJ3',
+    rightMessageId: 'kellanCorrectionGameOverJ3',
+    ilexMessageId: 'ilexCorrectionGameOverJ3',
+    priority: 'rupture',
+  }),
+  'black-wind-sap-game-over': createMilestoneDefinition('black-wind-sap-game-over', {
+    leftMessageId: 'maraSapGameOverJ4',
+    rightMessageId: 'kellanSapGameOverJ4',
+    ilexMessageId: 'ilexSapGameOverJ4',
+    priority: 'rupture',
   }),
   'plum-found': createMilestoneDefinition('plum-found', {
     leftMessageId: 'maraPlumFoundH1',
@@ -698,6 +770,24 @@ export function createMetaGameContent() {
           rightMessageId: 'kellanLeakF6c',
         },
         {
+          id: 'intrusion-detected',
+          when: {
+            minTurn: 22,
+            anyFlags: ['mapOverlayInjected', 'inventoryOverlayInjected', 'memoryBusExposed'],
+          },
+          leftMessageId: 'kellanIntrusionF3',
+          rightMessageId: 'maraIntrusionF3',
+        },
+        {
+          id: 'recurrence-observed',
+          when: {
+            minTurn: 26,
+            allFlags: ['hasExperiencedGameOver'],
+          },
+          leftMessageId: 'maraRecurrenceF4',
+          rightMessageId: 'kellanRecurrenceF4',
+        },
+        {
           id: 'open-conflict',
           when: {
             minTurn: 28,
@@ -788,6 +878,10 @@ export function createMetaGameContent() {
         mapOverlayInjected: ['map-overlay-injected'],
         inventoryOverlayInjected: ['inventory-overlay-injected'],
         memoryBusExposed: ['memory-bus-exposed'],
+        routineGameOverSeen: ['routine-game-over'],
+        grandfatherBedGameOverSeen: ['grandfather-bed-game-over'],
+        correctionGameOverSeen: ['correction-game-over'],
+        blackWindSapGameOverSeen: ['black-wind-sap-game-over'],
         plumFound: ['plum-found'],
         plumEscapePlanned: ['plum-escape-planned'],
         plumRescued: ['plum-rescued'],

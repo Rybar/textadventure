@@ -2,7 +2,7 @@
   --cga-amber: #ffbf00;
   --cga-amber-dim: #8a6700;
   --cga-background: #000000;
-  --terminal-font-size: clamp(13px, min(1.28vw, 1.5vh), 20px);
+  --terminal-font-size: clamp(16px, min(1.28vw + 3px, 1.5vh + 3px), 23px);
   --screen-shell-padding: clamp(8px, 1.5vh, 24px);
   --terminal-frame-padding: clamp(8px, 1.2vh, 14px);
   --panel-width: clamp(220px, 24vw, 320px);
@@ -416,7 +416,7 @@ body {
 body[data-device-theme="mobile"] {
   display: block;
   overflow: auto;
-  --terminal-font-size: clamp(12px, 1vw + 0.42rem, 15px);
+  --terminal-font-size: clamp(15px, 1vw + 0.607rem, 18px);
 }
 
 body[data-device-theme="mobile"] #screen-shell {
@@ -705,7 +705,7 @@ body[data-device-theme="mobile"][data-mobile-input-active="true"] #terminal-stag
     --screen-shell-padding: max(8px, env(safe-area-inset-left));
     --terminal-frame-padding: 8px;
     --panel-gap: 8px;
-    --terminal-font-size: clamp(8px, 1.8vw + 0.1rem, 10px);
+    --terminal-font-size: clamp(11px, 1.8vw + 0.2875rem, 13px);
   }
 
   #screen-shell {
@@ -790,7 +790,7 @@ body[data-device-theme="mobile"][data-mobile-input-active="true"] #terminal-stag
 
 @media (max-width: 420px) {
   :root {
-    --terminal-font-size: clamp(8px, 2vw + 0.08rem, 9px);
+    --terminal-font-size: clamp(11px, 2vw + 0.2675rem, 12px);
   }
 
   #status-bar {

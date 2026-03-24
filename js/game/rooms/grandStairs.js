@@ -65,6 +65,7 @@ ${cloakLine}
       },
     ],
     objects: {
+      stairs: 'The white marble stair rises with the confidence of architecture that assumes everyone approaching it will mistake spectacle for consent.',
       gargoyles: 'The gargoyles are nonmagical, though each wears its ridiculous hat with enough dignity to make mockery seem rude and perhaps mildly unsafe.',
       hats: 'Pointed festive hats trimmed in faded gold thread. Someone in this house believes solemnity and comedy should always dine together, preferably while being watched.',
       doors: 'The double doors are polished and imposing. Beyond them lies warmth, light, and likely the first mistake of the evening.',

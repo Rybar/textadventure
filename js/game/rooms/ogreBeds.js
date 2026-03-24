@@ -105,6 +105,15 @@ The kitchen lies back to the south.
     ],
     objects: {
       bunks: 'Canvas bunks sag from wall-hooks like surrendered arguments. Several still hold the shapes of very large sleepers.',
+      blankets: {
+        aliases: ['blanket', 'blankets', 'damp blanket', 'damp blankets'],
+        description: 'The damp blankets smell of broth steam, old sweat, and the exhausted pragmatism of servants who are too tired to dislike their own sleeping quarters properly.',
+      },
+      boots: {
+        name: 'boot piles',
+        aliases: ['boot', 'boots', 'boot piles'],
+        description: 'The boot piles are a geology of labor: cracked soles, grease-dark leather, one repaired strap after another, and the unmistakable proof that everyone here earns their invisibility the hard way.',
+      },
       roster: {
         description({ getFlag }) {
           if (!getFlag('ogreRosterKnown')) {

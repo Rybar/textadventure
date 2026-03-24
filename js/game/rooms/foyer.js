@@ -323,7 +323,7 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
     objects: {
       ogres: {
         name: 'ogre butlers',
-        aliases: ['ogre butlers', 'butlers', 'ogres'],
+        aliases: ['ogre butlers', 'butlers', 'ogres', 'servants'],
         description: 'The ogre butlers bow with alarming grace. One has three arms and the other two heads. Both radiate the polite confidence of men who can remove a guest in pieces.',
         actions: {
           ask: ogresAsk,
@@ -338,6 +338,14 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
             return `The butlers decline the ${item.name} with grave courtesy.`;
           },
         },
+      },
+      carpet: {
+        aliases: ['carpet', 'red carpet'],
+        description: 'The red carpet is thick enough to silence indecision. Up close, the pile shows disciplined wear around the butlers\' post, as though welcome here has been paced, rehearsed, and enforced for years.',
+      },
+      pillars: {
+        aliases: ['pillar', 'pillars', 'white pillar', 'white pillars'],
+        description: 'The white pillars are all polished confidence and theatrical symmetry. They do nothing structural for your nerves, but they hold the room\'s pretensions upright very efficiently.',
       },
       oggaf: {
         aliases: ['butler'],

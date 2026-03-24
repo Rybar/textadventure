@@ -75,6 +75,8 @@ ${bladeLine} West lies the library through a concealed panel.
     ],
     objects: {
       cases: 'The glass cases hold medals, seals, relics, and trophies taken from people whose stories were apparently not permitted to accompany their possessions.',
+      honors: 'The stolen honors lining the walls have been curated into a lecture about conquest as taste. They remain theft dressed up for company.',
+      light: 'The cone of disciplined light over the central stand is almost devotional, as though Oshregaal wanted the blade worshiped without having to call the room a shrine.',
       stand: {
         description({ isItemVisibleHere }) {
           return isItemVisibleHere('grey-grin-blade')

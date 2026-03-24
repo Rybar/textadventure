@@ -1106,6 +1106,7 @@ export class GameSession {
 
     this.worldState.removeItemById(item.id);
     this.worldState.inventory.push(item);
+    this.worldState.syncNaturalPanelUnlocks();
 
     const takeText = item.hasAction('take')
       ? item.performAction('take', this.createActionContext(command, {
@@ -1254,6 +1255,16 @@ export class GameSession {
     return `textadventure:${manifestId}:save:${normalizedSlot}`;
   }
 
+  getPersistentRestartFlagNames() {
+    return [
+      'hasExperiencedGameOver',
+      'routineGameOverSeen',
+      'grandfatherBedGameOverSeen',
+      'correctionGameOverSeen',
+      'blackWindSapGameOverSeen',
+    ];
+  }
+
   captureRestartPersistence({ includeQueuedMetaMessages = false } = {}) {
     return {
       metaState: {
@@ -1270,6 +1281,9 @@ export class GameSession {
           degraded: null,
         }]),
       ),
+      persistentFlags: Object.fromEntries(
+        this.getPersistentRestartFlagNames().map(flagName => [flagName, Boolean(this.worldState.getFlag(flagName))]),
+      ),
       queuedMetaMessages: includeQueuedMetaMessages
         ? this.worldState.consumePendingMetaMessages()
         : [],
@@ -1279,6 +1293,12 @@ export class GameSession {
   applyRestartPersistence(nextWorldState, persistence = {}) {
     nextWorldState.metaState = nextWorldState.normalizeMetaState(persistence.metaState ?? nextWorldState.metaState);
     nextWorldState.panelState = nextWorldState.normalizePanelState(persistence.panelState ?? nextWorldState.panelState);
+
+    Object.entries(persistence.persistentFlags ?? {}).forEach(([flagName, value]) => {
+      if (flagName in nextWorldState.flags) {
+        nextWorldState.flags[flagName] = value;
+      }
+    });
   }
 
   restartAdventure({
@@ -1310,6 +1330,10 @@ export class GameSession {
   }
 
   triggerGameOver(failureText, options = {}) {
+    this.worldState.setFlag('hasExperiencedGameOver', true);
+    (options.persistentFlags ?? []).forEach(flagName => {
+      this.worldState.setFlag(flagName, true);
+    });
     const persistence = this.captureRestartPersistence({ includeQueuedMetaMessages: true });
 
     return this.restartAdventure({

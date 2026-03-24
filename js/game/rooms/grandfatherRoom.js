@@ -13,6 +13,7 @@ export function createGrandfatherRoom() {
       sleep({ session }) {
         return session.triggerGameOver(
           'The velvet accepts you too easily. Perfume, fur, and heavy coverlets close overhead; somewhere in the room a bell-cord answers for you, and by the time you understand that the bed was built to keep as much as to comfort, the house has already learned the shape of your surrender.',
+          { persistentFlags: ['grandfatherBedGameOverSeen'] },
         );
       },
       look() {
@@ -128,6 +129,28 @@ On the north wall stands a black metal door fitted not with a knob but with an a
         },
       },
       vanity: 'The mirrored vanity is crowded with perfumes, rings, powders, and small aids to self-invention.',
+      guestLists: {
+        name: 'guest lists',
+        aliases: ['guest lists', 'lists', 'invitations'],
+        description({ getFlag }) {
+          if (getFlag('plumMaintenanceNotesKnown')) {
+            return 'The guest lists are not invitations so much as seating strategies annotated by vanity. Names are nudged between categories of amusing, useful, and retainable with the cheerful confidence of a host who believes people become furniture when filed correctly.';
+          }
+
+          return 'Several guest lists lie in ordered stacks, each revised often enough to imply that Oshregaal plans company the way generals plan terrain.';
+        },
+      },
+      notes: {
+        name: 'sealed notes',
+        aliases: ['sealed notes', 'notes', 'sealed letters', 'letters'],
+        description({ getFlag }) {
+          if (getFlag('oshregaalNoDepartureKnown')) {
+            return 'The sealed notes are all cheerful tyranny in miniature: reminders about guest retention, corrections to anecdotes, and little administrative cruelties drafted as if they were refinements to hospitality.';
+          }
+
+          return 'The notes are sealed with perfumed wax and revised in a hand that enjoys the performance of authority almost as much as authority itself.';
+        },
+      },
       mirror: {
         description({ getFlag }) {
           if (getFlag('oshregaalNoDepartureKnown')) {
@@ -137,6 +160,7 @@ On the north wall stands a black metal door fitted not with a knob but with an a
           return 'The mirror flatters the room and incriminates it at the same time.';
         },
       },
+      smoke: 'The perfumed smoke drifting through the room smells like roses, narcotics, and the sort of confidence that mistakes heavy fragrance for moral authority.',
       hand: {
         name: 'iron hand',
         aliases: ['metal hand', 'door hand', 'iron hand'],

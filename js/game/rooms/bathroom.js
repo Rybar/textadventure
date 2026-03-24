@@ -116,6 +116,26 @@ West lies the guest room. Somewhere behind the eastern tilework, a sour draft ke
       },
       bath: 'The bath is big enough to suggest that Oshregaal imagines cleanliness as a theatrical event rather than a practical one.',
       cabinet: 'The cabinet shelves are lined with folded towels, scented soaps, and enough powder to make a nervous guest look deliberately calm.',
+      tiles: {
+        name: 'marble tile',
+        aliases: ['tile', 'tiles', 'tilework', 'marble tile', 'eastern tilework'],
+        description({ getFlag }) {
+          if (getFlag('bathroomPanelOpened')) {
+            return 'The marble tile still gleams, but the opened seam in the eastern tilework has ruined its argument. Luxury now has to coexist with a visible access hatch into the house\'s underside.';
+          }
+
+          if (getFlag('bathroomRouteKnown')) {
+            return 'The eastern tilework is almost too precise. Once you have noticed the scrape marks and hidden seam, the marble stops reading as refinement and starts reading as camouflage.';
+          }
+
+          return 'The marble tile gleams with punitive luxury, the sort that makes a guest feel improved and observed at the same time.';
+        },
+      },
+      draft: {
+        aliases: ['draft', 'sour draft'],
+        description: 'The sour draft threading out of the eastern wall smells like wet stone, stale runoff, and the house losing control of its own dignity below the polished surfaces.',
+      },
+      candlelight: 'The flattering candlelight does expensive work on the room, softening every surface just enough to make the plumbing seem cultured instead of sinister.',
       commode: 'The commode is polished to a level of dignity no object in that profession should ever be forced to maintain.',
       towels: 'The towels are folded with priestly care and smell faintly of lavender trying to overpower limestone.',
     },

@@ -10,6 +10,7 @@ export function createSealedRoom() {
 
   const submitToCorrection = ({ session }) => session.triggerGameOver(
     'The chair receives you with practiced efficiency. Straps settle, the speaking tube opens, and the room begins explaining you back to yourself in the flat institutional tone reserved for people already reclassified as manageable. By the time panic finishes arriving, correction has already become procedure.',
+    { persistentFlags: ['correctionGameOverSeen'] },
   );
 
   return new Room({
@@ -126,6 +127,7 @@ Nothing here is theatrical. That is what makes it cruel. South lies the conceale
             : 'The brass speaking tube allowed the house to explain itself without having to share a room with the corrected. The hidden card that once sat behind the grille is already gone.';
         },
       },
+      seam: 'The concealed southern seam is so clean it feels procedural. Even the room\'s exits have been designed to imply that departure is a maintenance task, not a right.',
       slate: {
         description({ isItemVisibleHere }) {
           if (isItemVisibleHere('correction-roster')) {

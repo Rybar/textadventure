@@ -109,6 +109,85 @@ test('panel injection flags queue explicit operator and ilex milestone beats', (
   assert.equal(messages[0].placement, 'side-left');
   assert.equal(messages[1].placement, 'side-right');
   assert.equal(messages[2].placement, 'lower-random');
+  assert.match(messages[0].text, /intruder steering them now/i);
+  assert.match(messages[1].text, /unauthorized agent interference confirmed/i);
+  assert.match(messages[2].text, /they noticed me/i);
+});
+
+test('natural panel unlocks stay blocked until the initial Ilex contact has been shown', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.worldState.inventory.push(
+    { id: 'test-item-1', name: 'test item 1' },
+    { id: 'test-item-2', name: 'test item 2' },
+    { id: 'test-item-3', name: 'test item 3' },
+  );
+  session.worldState.roomVisits = {
+    cavern: 1,
+    grandStairs: 1,
+    foyer: 1,
+    sittingRoom: 1,
+    feastHall: 1,
+    kitchen: 1,
+    ogreBeds: 1,
+  };
+  session.worldState.currentRoomId = 'feastHall';
+
+  session.worldState.syncNaturalPanelUnlocks();
+
+  assert.equal(session.worldState.getFlag('inventoryOverlayInjected'), false);
+  assert.equal(session.worldState.getFlag('mapOverlayInjected'), false);
+  assert.equal(session.worldState.getFlag('memoryBusExposed'), false);
+  assert.deepEqual(session.worldState.consumePendingMetaMessages(), []);
+});
+
+test('natural inventory unlock queues the existing leak milestone after Ilex contact and enough items', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.worldState.metaState.shownHackerIds = ['first-contact'];
+  session.worldState.inventory.push(
+    { id: 'test-item-1', name: 'test item 1' },
+    { id: 'test-item-2', name: 'test item 2' },
+    { id: 'test-item-3', name: 'test item 3' },
+  );
+
+  session.worldState.syncNaturalPanelUnlocks();
+
+  const messages = session.worldState.consumePendingMetaMessages();
+  assert.equal(session.worldState.getFlag('inventoryOverlayInjected'), true);
+  assert.equal(session.worldState.isPanelUnlocked('inventory'), true);
+  assert.equal(messages.length, 3);
+  assert.equal(messages[0].id, 'kellanInventoryLeakE3');
+  assert.equal(messages[1].id, 'maraInventoryLeakE3');
+  assert.equal(messages[2].id, 'ilexInventoryOverlayE4');
+});
+
+test('natural map unlock queues the existing leak milestone only after Ilex contact and enough room exploration', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.worldState.metaState.shownHackerIds = ['first-contact'];
+  session.worldState.roomVisits = {
+    cavern: 1,
+    grandStairs: 1,
+    foyer: 1,
+    sittingRoom: 1,
+    feastHall: 1,
+    kitchen: 1,
+    ogreBeds: 1,
+  };
+
+  session.worldState.syncNaturalPanelUnlocks({ roomId: 'ogreBeds' });
+
+  const messages = session.worldState.consumePendingMetaMessages();
+  assert.equal(session.worldState.getFlag('mapOverlayInjected'), true);
+  assert.equal(session.worldState.isPanelUnlocked('map'), true);
+  assert.equal(messages.length, 3);
+  assert.equal(messages[0].id, 'kellanMapLeakE1');
+  assert.equal(messages[1].id, 'maraMapLeakE1');
+  assert.equal(messages[2].id, 'ilexMapOverlayE2');
 });
 
 test('memory bus exposure triggers its milestone only once', () => {
@@ -122,7 +201,34 @@ test('memory bus exposure triggers its milestone only once', () => {
 
   assert.equal(firstBatch.length, 3);
   assert.equal(firstBatch[2].id, 'ilexMemoryBusE6');
+  assert.equal(session.worldState.isPanelUnlocked('memory'), true);
   assert.deepEqual(secondBatch, []);
+});
+
+test('natural memory unlock waits for a prior game over and a dangerous room', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.worldState.metaState.shownHackerIds = ['first-contact'];
+  session.worldState.currentRoomId = 'foyer';
+  session.worldState.syncNaturalPanelUnlocks();
+  assert.equal(session.worldState.getFlag('memoryBusExposed'), false);
+
+  session.worldState.setFlag('hasExperiencedGameOver', true);
+  session.worldState.currentRoomId = 'foyer';
+  session.worldState.syncNaturalPanelUnlocks();
+  assert.equal(session.worldState.getFlag('memoryBusExposed'), false);
+
+  session.worldState.currentRoomId = 'feastHall';
+  session.worldState.syncNaturalPanelUnlocks();
+
+  const messages = session.worldState.consumePendingMetaMessages();
+  assert.equal(session.worldState.getFlag('memoryBusExposed'), true);
+  assert.equal(session.worldState.isPanelUnlocked('memory'), true);
+  assert.equal(messages.length, 3);
+  assert.equal(messages[0].id, 'kellanMemoryLeakE5');
+  assert.equal(messages[1].id, 'maraMemoryLeakE5');
+  assert.equal(messages[2].id, 'ilexMemoryBusE6');
 });
 
 test('meta debug toggle and nextmeta can preview the next scheduled exchange', () => {
@@ -314,6 +420,71 @@ test('route milestones queue distinct plum, nathema, and archive commentary', ()
   assert.equal(messages[2].id, 'ilexArchiveH6');
 });
 
+test('route-specific game over flags queue outsider commentary about recurrence and contamination', () => {
+  const session = createTestSession();
+
+  session.start();
+
+  session.worldState.setFlag('routineGameOverSeen', true);
+  let messages = session.worldState.consumePendingMetaMessages();
+  assert.equal(messages.length, 3);
+  assert.equal(messages[0].id, 'maraRoutineGameOverJ1');
+  assert.equal(messages[1].id, 'kellanRoutineGameOverJ1');
+  assert.equal(messages[2].id, 'ilexRoutineGameOverJ1');
+
+  session.worldState.setFlag('correctionGameOverSeen', true);
+  messages = session.worldState.consumePendingMetaMessages();
+  assert.equal(messages.length, 3);
+  assert.equal(messages[0].id, 'maraCorrectionGameOverJ3');
+  assert.equal(messages[1].id, 'kellanCorrectionGameOverJ3');
+  assert.equal(messages[2].id, 'ilexCorrectionGameOverJ3');
+});
+
+test('scheduled outsider chatter escalates from panel intrusion to recurrence after death', () => {
+  const intrusionSession = createTestSession();
+
+  intrusionSession.start();
+  intrusionSession.worldState.turns = 24;
+  intrusionSession.worldState.setFlag('mapOverlayInjected', true);
+  intrusionSession.worldState.consumePendingMetaMessages();
+  intrusionSession.worldState.metaState.shownConversationIds = [
+    'baseline-hold',
+    'ambient-compliance',
+    'foyer-screening',
+    'host-contact',
+    'pattern-seams',
+    'route-anomaly',
+    'leverage-reading',
+  ];
+
+  let messages = intrusionSession.worldState.advanceMetaMessages();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].id, 'kellanIntrusionF3');
+  assert.equal(messages[1].id, 'maraIntrusionF3');
+
+  const recurrenceSession = createTestSession();
+
+  recurrenceSession.start();
+  recurrenceSession.worldState.turns = 28;
+  recurrenceSession.worldState.setFlag('hasExperiencedGameOver', true);
+  recurrenceSession.worldState.consumePendingMetaMessages();
+  recurrenceSession.worldState.metaState.shownConversationIds = [
+    'baseline-hold',
+    'ambient-compliance',
+    'foyer-screening',
+    'host-contact',
+    'pattern-seams',
+    'route-anomaly',
+    'leverage-reading',
+    'intrusion-detected',
+  ];
+
+  messages = recurrenceSession.worldState.advanceMetaMessages();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].id, 'maraRecurrenceF4');
+  assert.equal(messages[1].id, 'kellanRecurrenceF4');
+});
+
 test('late phase scheduled exchanges can fire once earlier schedule entries are exhausted', () => {
   const session = createTestSession();
 
@@ -329,6 +500,8 @@ test('late phase scheduled exchanges can fire once earlier schedule entries are 
     'pattern-seams',
     'route-anomaly',
     'leverage-reading',
+    'intrusion-detected',
+    'recurrence-observed',
   ];
 
   const messages = session.worldState.advanceMetaMessages();

@@ -238,12 +238,9 @@ export function createFeastHall() {
       },
       {
         match: ['i will stay', 'i will remain', 'i accept your hospitality', 'i will be a good guest'],
-        effect: ({ setFlag }) => {
-          setFlag('agreedToStay', true);
-          setFlag('absorbedIntoRoutine', true);
-        },
         reply: ({ session }) => session.triggerGameOver(
           'Oshregaal softens with genuine pleasure, which is the worst thing he has yet done to you. One course becomes another, then another. You laugh where the room laughs, drink when the cups return, and begin to understand how repetition can be made to feel like belonging from the inside. By the time you notice the pattern closing, you are already one more moving piece inside it. Failure ending: absorption into Oshregaal\'s routines.',
+          { persistentFlags: ['routineGameOverSeen'] },
         ),
       },
     ],
@@ -599,7 +596,16 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       },
       chain: 'The imp\'s chain is old magic disguised as household hardware. It gives him enough slack to serve and not enough to forget who profits from it.',
       butter: 'The butter dish on the imp\'s hands gleams absurdly under the chandelier, a domestic humiliation polished into ritual.',
+      table: 'The dinner table is so long it almost counts as weather. Silver, plates, and ritual circulate down its length with the confidence of habits too old to remember who consented to them.',
+      servants: 'The servants move with the drilled calm of people who know that in this room delay counts as blasphemy. They pour, scrape, clear, and vanish before the guests have fully decided to notice them.',
+      candles: {
+        name: 'hanging light',
+        aliases: ['candles', 'candle forest', 'hanging light', 'light'],
+        description: 'The hanging light is all clustered candles and flattering gold, bright enough to make appetite look ceremonial and dread look expensive.',
+      },
+      plates: 'The plates are too fine for the food they enable and too often emptied with the obedience of people trying not to become the next course in conversation.',
       curtains: {
+        aliases: ['curtains', 'drapery', 'red drapery', 'drapes'],
         description({ getFlag }) {
           if (getFlag('secretCircleUnlocked')) {
             return 'The red curtains now stand slightly parted. Inside their folds, a hidden brass hand protrudes from the wall beside a newly yielded passage west.';

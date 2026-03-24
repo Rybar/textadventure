@@ -213,6 +213,10 @@ An ornate private door stands to the east.
         },
       },
       knives: 'There are knives everywhere: long, hooked, delicate, ribbed, and unmistakably specialized.',
+      crumbs: 'The crumbs scattered through the room suggest meals eaten while working, arguing, or improving something that should perhaps have been left with fewer opinions.',
+      cups: 'Several cups sit among the clutter, each half-finished with something medicinal, caffeinated, or artistically inadvisable.',
+      clothing: 'The abandoned clothing has the elegant disarray of garments dropped between experiments rather than bedtime.',
+      projects: 'Kelago\'s unfinished projects occupy the room like tasteful threats: half-covered forms, altered textiles, and biomantic apparatus politely refusing to explain itself all at once.',
       tortoises: 'Three headless tortoises shuffle through the clutter with patient, chest-like dignity.',
       workspace: {
         description({ isItemVisibleHere }) {

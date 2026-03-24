@@ -29,6 +29,9 @@ The stair above waits up the wall like the last respectable thought available do
       },
     },
     objects: {
+      ledge: 'The maintenance ledge is barely wider than bad judgment. It exists because the house needs servants more than it respects them.',
+      drop: 'The foul drop below waits with patient administrative malice. Falling here would feel less like an accident than an internal reassignment.',
+      stair: 'From below, the grand stair looks like dignity propped on hidden labor. Up there is ceremony; down here is the structure that keeps ceremony from smelling like itself too quickly.',
       cleft: 'The drainage cleft is low, wet, and entirely free of ceremony. It opens west toward the cavern like the house apologizing badly and too late.',
       opening: 'The eastern service opening leads into a deeper reek and the wet echo of the house digesting itself without bothering to lower its voice.',
       wall: 'The mansion wall here is stripped of performance. It is only stone, stains, and maintenance, which may be the most truthful architecture on the property.',

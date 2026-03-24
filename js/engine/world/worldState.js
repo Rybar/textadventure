@@ -693,6 +693,55 @@ export class WorldState {
     this.triggerMetaMilestonesForFlag(flagName);
   }
 
+  hasSeenHackerScheduleEntry(entryId) {
+    return this.metaState.shownHackerIds.includes(entryId);
+  }
+
+  hasHeardInitialIlexContact() {
+    return this.hasSeenHackerScheduleEntry('first-contact');
+  }
+
+  getVisitedRoomTotal() {
+    return Object.keys(this.roomVisits).length;
+  }
+
+  isDangerousGameOverRoom(roomId = this.currentRoomId) {
+    return ['feastHall', 'grandfatherRoom', 'sealedRoom', 'blackWindTreeChamber'].includes(roomId);
+  }
+
+  shouldUnlockInventoryOverlay() {
+    return this.hasHeardInitialIlexContact()
+      && !this.getFlag('inventoryOverlayInjected')
+      && this.inventory.length >= 4;
+  }
+
+  shouldUnlockMapOverlay() {
+    return this.hasHeardInitialIlexContact()
+      && !this.getFlag('mapOverlayInjected')
+      && this.getVisitedRoomTotal() >= 7;
+  }
+
+  shouldExposeMemoryBus(roomId = this.currentRoomId) {
+    return this.hasHeardInitialIlexContact()
+      && !this.getFlag('memoryBusExposed')
+      && this.getFlag('hasExperiencedGameOver')
+      && this.isDangerousGameOverRoom(roomId);
+  }
+
+  syncNaturalPanelUnlocks({ roomId = this.currentRoomId } = {}) {
+    if (this.shouldUnlockInventoryOverlay()) {
+      this.setFlag('inventoryOverlayInjected', true);
+    }
+
+    if (this.shouldUnlockMapOverlay()) {
+      this.setFlag('mapOverlayInjected', true);
+    }
+
+    if (this.shouldExposeMemoryBus(roomId)) {
+      this.setFlag('memoryBusExposed', true);
+    }
+  }
+
   getPanelState(panelId) {
     return this.panelState[panelId] ?? null;
   }
@@ -1382,6 +1431,7 @@ export class WorldState {
 
     if (destination === 'inventory') {
       this.inventory.push(item);
+      this.syncNaturalPanelUnlocks();
       return item;
     }
 
@@ -1624,6 +1674,7 @@ export class WorldState {
   enterCurrentRoom() {
     const currentRoom = this.getCurrentRoom();
     const visitCount = this.markCurrentRoomVisited();
+    this.syncNaturalPanelUnlocks({ roomId: currentRoom?.id });
     const context = this.createContext({
       currentRoom,
       visitCount,
@@ -2202,6 +2253,14 @@ export class WorldState {
         this.unlockPanel('inventory');
       } else {
         this.lockPanel('inventory');
+      }
+    }
+
+    if (flagName === 'memoryBusExposed') {
+      if (value) {
+        this.unlockPanel('memory');
+      } else {
+        this.lockPanel('memory');
       }
     }
   }

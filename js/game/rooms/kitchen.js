@@ -337,8 +337,12 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
         },
       },
       barrels: 'Half the barrels are wine. The rest are water pretending to be respectable company.',
+      beams: 'The ceiling beams are blackened with smoke, grease, and years of enthusiastic culinary violence. Spice bundles hang from them like fragrant warnings.',
+      fire: 'The fire under the cauldron burns with disciplined heat, fed just hard enough to keep the stew persuasive without letting the room become honesty by smoke alarm.',
       fish: 'Fresh cave fish lie stacked in readiness, all translucent flesh and milky eyes.',
       shelf: 'The shelf bows under jars of candy ooze, each one straining toward the room like a thought trying to become hunger.',
+      jars: 'The glass jars are lined up with suspicious neatness, each containing a candy ooze that shivers against the glass with personal dessert opinions.',
+      cups: 'The silver cups wait near the stove with the innocent gleam of tools that know they will shortly be implicated in ritual.',
       ladle: {
         description({ getFlag }) {
           if (getFlag('kitchenBloodHintKnown')) {

@@ -286,7 +286,12 @@ East, a door stands open into Oshregaal's library.
         },
       },
       desk: 'The desk is a barricade made of paper, discipline, and repeated self-repair.',
+      bed: 'The narrow bed is made with the neatness of a person who expects interruption more often than rest. It offers function, not comfort, and not much of that.',
       shelves: 'The shelves hold copied stories, name lists, and practical notes written as if memory were a resource stored outside the body.',
+      notes: {
+        aliases: ['copied notes', 'shelf notes'],
+        description: 'The copied notes are backups of identity, memory, and practical survival written in a hand that assumes continuity must be manufactured manually or not at all.',
+      },
       lamp: {
         description({ getFlag }) {
           return getFlag('plumLampLit')
@@ -321,6 +326,16 @@ East, a door stands open into Oshregaal's library.
           use(context) {
             return revealPlumBlade(context);
           },
+        },
+      },
+      forearm: {
+        aliases: ['arm', 'forearm', 'tracery', 'luminous tracery'],
+        description({ getFlag }) {
+          if (getFlag('plumBladeRevealed')) {
+            return 'Plum\'s left forearm now shows both the fine luminous tracery beneath the skin and the opened seam where the hidden crystal blade was folded. It looks less like injury than engineering forced to live inside a person.';
+          }
+
+          return 'When the light catches it properly, Plum\'s left forearm shows faint luminous tracery beneath the skin, lines too precise to belong to blood alone and too alive to feel like decoration.';
         },
       },
       blade: {

@@ -792,6 +792,43 @@ test('agreeing to stay with Oshregaal yields absorption into his routines', () =
   assert.equal(session.worldState.currentRoomId, 'cavern');
   assert.equal(session.worldState.getFlag('agreedToStay'), false);
   assert.equal(session.worldState.getFlag('absorbedIntoRoutine'), false);
+  assert.match(session.submitCommand('north'), /white marble stair/i);
+});
+
+test('sleeping in Oshregaal\'s bed restarts the run and leaves the session playable', () => {
+  const session = createTestSession();
+
+  moveToGrandfatherRoom(session);
+  const response = session.submitCommand('sleep bed');
+
+  assert.match(response, /velvet accepts you too easily/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+  assert.match(session.submitCommand('north'), /white marble stair/i);
+});
+
+test('submitting to the correction chair restarts the run and leaves the session playable', () => {
+  const session = createTestSession();
+
+  moveToSealedRoom(session);
+  const response = session.submitCommand('sit chair');
+
+  assert.match(response, /chair receives you with practiced efficiency/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+  assert.match(session.submitCommand('northwest'), /old garden has gone feral/i);
+});
+
+test('drinking black-wind sap restarts the run and leaves the session playable', () => {
+  const session = createTestSession();
+
+  moveToBlackWindTreeChamber(session);
+  const response = session.submitCommand('drink sap');
+
+  assert.match(response, /sap hits your tongue/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+  assert.match(session.submitCommand('north'), /white marble stair/i);
 });
 
 test('the fishing shack extends the approach with servant-route clues and ugly practical loot', () => {
