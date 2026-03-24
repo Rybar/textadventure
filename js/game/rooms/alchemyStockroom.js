@@ -54,10 +54,16 @@ export function createAlchemyStockroom() {
   return new Room({
     id: 'alchemyStockroom',
     title: 'Alchemical Stockroom',
-    description: `
-This narrow hidden stockroom crouches behind the kitchen wall in refrigerated secrecy. Iron racks hold lacquered boxes, sealed fruit jars, wax-stoppered phials, and folded inventories written for people who expect both miracles and deniability.
+    description: ({ isItemVisibleHere }) => {
+      const stockLine = isItemVisibleHere('black-wind-ledger')
+        ? 'Iron racks hold lacquered boxes, sealed fruit jars, wax-stoppered phials, and folded inventories written for people who expect both miracles and deniability.'
+        : 'Iron racks hold lacquered boxes, sealed fruit jars, wax-stoppered phials, and a conspicuous gap where one narrow ledger had been kept nearest the door for fast concealment.';
+
+      return `
+This narrow hidden stockroom crouches behind the kitchen wall in refrigerated secrecy. ${stockLine}
 The air smells of bitter resin, old sugar, and medicinal rot. West lies the kitchen through the disguised pantry door.
-`.trim(),
+`.trim();
+    },
     exits: {
       west: 'kitchen',
       down: 'blackWindTreeChamber',
@@ -72,7 +78,7 @@ The air smells of bitter resin, old sugar, and medicinal rot. West lies the kitc
       },
     },
     verbs: {
-      search({ command, getFlag, setFlag, emitEvent }) {
+      search({ command, getFlag, setFlag, emitEvent, isItemVisibleHere }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('racks') || target.includes('stock')) {
@@ -88,7 +94,11 @@ The air smells of bitter resin, old sugar, and medicinal rot. West lies the kitc
         }
 
         if (target.includes('ledger') || target.includes('records') || target.includes('book')) {
-          return describeLedgerSearch(getFlag);
+          return isItemVisibleHere('black-wind-ledger')
+            ? describeLedgerSearch(getFlag)
+            : getFlag('blackWindEvidenceCollected')
+              ? 'The ledger has already told you enough to ruin several powerful dinners, and it is no longer sitting here waiting to be discovered twice.'
+              : 'The narrow space nearest the door shows where the ledger had been kept for fast access and faster concealment.';
         }
 
         return `You search the ${target} and find only further evidence that corruption here is warehoused, counted, and shipped.`;

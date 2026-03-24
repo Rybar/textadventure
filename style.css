@@ -11,7 +11,7 @@
   --mobile-command-bar-height: 52px;
   --visual-viewport-height: 100dvh;
   --mobile-keyboard-offset: 0px;
-  --status-bar-height: calc((var(--terminal-font-size) * 2.6) + 20px);
+  --meta-ilex-red: #ff5b47;
 }
 
 html,
@@ -65,69 +65,7 @@ body {
 }
 
 #status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 14px;
-  box-sizing: border-box;
-  border: none;
-  background-color: rgba(0, 0, 0, 0.94);
-  color: var(--cga-amber);
-  box-shadow: 0 0 24px rgba(255, 191, 0, 0.08);
-  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
-  font-size: var(--terminal-font-size);
-  line-height: 1;
-  text-transform: uppercase;
-  transition: width 420ms ease, transform 420ms ease;
-  min-width: 0;
-  height: var(--status-bar-height);
-  min-height: var(--status-bar-height);
-  max-height: var(--status-bar-height);
-  overflow: hidden;
-  flex: 0 0 auto;
-}
-
-#terminal-stage[data-layout="transcript-only"] #status-bar {
-  align-self: stretch;
-  width: 100%;
-}
-
-#terminal-stage[data-layout="with-panels"] #status-bar {
-  align-self: flex-start;
-  width: calc(100% - var(--panel-width) - var(--panel-gap));
-}
-
-#status-meta-line {
-  min-height: 1lh;
-  min-width: 0;
-  max-width: 100%;
-  color: #9dff9f;
-  font-size: calc(var(--terminal-font-size) * 0.84);
-  line-height: 1.18;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0.9;
-  text-align: center;
-  align-self: center;
-  display: block;
-  width: 100%;
-  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
-}
-
-#status-meta-line[data-tone="hacker"] {
-  color: #9fd7ff;
-  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
-}
-
-#status-meta-line[data-tone="lackey"] {
-  color: #9dff9f;
-  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
-}
-
-#status-meta-line[data-tone="aware"] {
-  color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.24);
+  display: none;
 }
 
 #terminal-content {
@@ -218,43 +156,6 @@ body {
   display: none;
 }
 
-#mobile-meta-line {
-  min-height: 1lh;
-  min-width: 0;
-  max-width: 100%;
-  color: #9dff9f;
-  font-family: 'Perfect-DOS-VGA-437-Win', monospace;
-  font-size: calc(var(--terminal-font-size) * 0.84);
-  line-height: 1.18;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0;
-  text-align: center;
-  width: 100%;
-  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
-  transition: opacity 160ms ease;
-}
-
-#mobile-meta-line[data-tone="hacker"] {
-  color: #9fd7ff;
-  text-shadow: 0 0 10px rgba(159, 215, 255, 0.16);
-}
-
-#mobile-meta-line[data-tone="lackey"] {
-  color: #9dff9f;
-  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
-}
-
-#mobile-meta-line[data-tone="aware"] {
-  color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.24);
-}
-
-#mobile-meta-overlay[data-visible="true"] #mobile-meta-line {
-  opacity: 0.92;
-}
-
 #terminal-stage[data-layout="with-panels"] #text-grid-container {
   transform: translateX(0);
 }
@@ -287,9 +188,14 @@ body {
   gap: 0.32rem;
 }
 
+.transcript-entry-meta {
+  gap: 0;
+}
+
 .transcript-command,
 .transcript-response,
-.transcript-system {
+.transcript-system,
+.transcript-meta {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -302,6 +208,35 @@ body {
 .transcript-response,
 .transcript-system {
   color: var(--cga-amber);
+}
+
+.transcript-meta {
+  min-height: 1.3lh;
+  color: #9dff9f;
+  opacity: 0.92;
+  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
+}
+
+.transcript-entry-meta[data-tone="hacker"] .transcript-meta,
+.transcript-meta[data-tone="hacker"] {
+  color: var(--meta-ilex-red);
+  text-shadow: 0 0 10px rgba(255, 91, 71, 0.22);
+}
+
+.transcript-entry-meta[data-tone="lackey"] .transcript-meta,
+.transcript-meta[data-tone="lackey"] {
+  color: #9dff9f;
+  text-shadow: 0 0 10px rgba(157, 255, 159, 0.18);
+}
+
+.transcript-entry-meta[data-tone="aware"] .transcript-meta,
+.transcript-meta[data-tone="aware"] {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.24);
+}
+
+.transcript-entry-meta[data-cleared="true"] .transcript-meta {
+  text-shadow: none;
 }
 
 #panel-stack {

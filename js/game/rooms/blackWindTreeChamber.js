@@ -10,11 +10,16 @@ const hasTakenRootSample = worldState => {
 export function createBlackWindTreeChamber() {
   const rootSample = createBlackWindRootSample();
 
+  const drinkSourceSap = ({ session }) => session.triggerGameOver(
+    'The sap hits your tongue like sweet smoke and old metal. For one impossible instant you can feel the chamber from the inside: root pressure, ledger logic, fruit swelling in the dark. Then the sensation keeps widening, and you stop being a witness to the black-wind source long enough to become part of its accounting.',
+  );
+
   return new Room({
     id: 'blackWindTreeChamber',
     title: 'Black Wind Tree Chamber',
     description: `
 This cistern-like chamber sits below the service rooms in cold, punished secrecy. At its center rises the black wind tree: a twisted trunk forcing up through cracked stone, its bark lacquer-dark and wet, its branches burdened with a few light-drinking fruits that seem to ripen by dimming the room around them.
+Where root presses against the buried book beneath it, dark sap beads in slow tarry pulses.
 The roots have broken the floor into ridges and channels that feed an iron drain system leading upward toward the stockroom. Beneath the lowest spread of roots, half-swallowed by stone and soil, a buried book spine still protrudes from the place where the tree first forced itself into the world. A narrow stair climbs back up.
 `.trim(),
     exits: {
@@ -64,6 +69,10 @@ The roots have broken the floor into ridges and channels that feed an iron drain
 
         if (target.includes('fruit') || target.includes('branch')) {
           return 'The hanging fruit looks less cultivated than negotiated: each one a polished darkness waiting to be translated into shipment, elixir, and policy.';
+        }
+
+        if (target.includes('sap') || target.includes('resin') || target.includes('ichor')) {
+          return 'Dark sap beads where root and buried text press hardest together, thick as pitch and much too lively to mistake for ordinary seepage.';
         }
 
         if (target.includes('drain') || target.includes('iron') || target.includes('channel')) {
@@ -176,6 +185,14 @@ The roots have broken the floor into ridges and channels that feed an iron drain
         },
       },
       drain: 'Iron drains and channels carry seepage upward toward the stockroom, reducing miracle into warehousing with unforgivable efficiency.',
+      sap: {
+        name: 'sap',
+        aliases: ['dark sap', 'black sap', 'resin', 'ichor'],
+        description: 'Dark sap beads where the tree has fused itself to the buried text beneath it, collecting in glossy drops that look medicinal only if you are already compromised.',
+        actions: {
+          drink: drinkSourceSap,
+        },
+      },
       stair: 'A narrow maintenance stair climbs back up toward the hidden stockroom and the house that profits from what grows below it.',
       fruit: 'The fruit hanging above the chamber is the same black-wind produce packaged upstairs, only here it still looks like part of a living accusation.',
     },

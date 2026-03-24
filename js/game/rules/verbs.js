@@ -12,7 +12,10 @@ export function createGameVerbs() {
   return Object.fromEntries(
     ITEM_ACTION_VERBS.map(verb => [
       verb,
-      ({ session, command }) => session.handleItemAction(command.directObject, verb),
+      ({ session, command }) => session.handleGenericAction({
+        ...command,
+        verb,
+      }),
     ]),
   );
 }

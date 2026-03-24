@@ -8,6 +8,7 @@ export class Item {
     stateDescription = '',
     aliases = [],
     uses = null,
+    visible = true,
   }) {
     this.id = id ?? name;
     this.name = name;
@@ -17,6 +18,7 @@ export class Item {
     this.stateDescription = stateDescription;
     this.aliases = aliases.map(alias => alias.toLowerCase());
     this.uses = uses;
+    this.visible = visible;
   }
 
   matchesName(name) {
@@ -30,6 +32,18 @@ export class Item {
 
   updateDescription(newDescription) {
     this.description = newDescription;
+  }
+
+  updateVisibility(visible) {
+    this.visible = Boolean(visible);
+  }
+
+  reveal() {
+    this.updateVisibility(true);
+  }
+
+  hide() {
+    this.updateVisibility(false);
   }
 
   hasAction(actionName) {
@@ -68,6 +82,7 @@ export class Item {
       description: this.description,
       stateDescription: this.stateDescription,
       uses: this.uses,
+      visible: this.visible,
     };
   }
 
@@ -82,6 +97,10 @@ export class Item {
 
     if (Object.hasOwn(state, 'uses')) {
       this.uses = state.uses;
+    }
+
+    if (Object.hasOwn(state, 'visible')) {
+      this.visible = state.visible;
     }
   }
 }

@@ -132,30 +132,56 @@ export function createKelagoRoom() {
   return new Room({
     id: 'kelagoRoom',
     title: 'Kelago\'s Room',
-    description: `
+    description: ({ isItemVisibleHere }) => {
+      const workspaceLine = isItemVisibleHere('wizard-ink') || isItemVisibleHere('eye-spellbook')
+        ? 'At the center stands a cleared workspace watched over by a living crab-bed and the calm logic of a woman who has made biomantic furniture into an art.'
+        : 'At the center stands a cleared workspace watched over by a living crab-bed, its most portable tools missing and the whole arrangement looking newly interrupted.';
+
+      return `
 Kelago's workroom-bedroom is crowded with knives, crumbs, cups, clothing, and projects best left undescribed until one has to describe them.
-At the center stands a cleared workspace watched over by a living crab-bed and the calm logic of a woman who has made biomantic furniture into an art.
+${workspaceLine}
 The feast hall waits to the south.
 An ornate private door stands to the east.
-`.trim(),
+`.trim();
+    },
     exits: {
       south: 'feastHall',
       east: 'grandfatherRoom',
     },
     verbs: {
-      search({ command, getFlag, setFlag }) {
+      search({ command, getFlag, setFlag, isItemVisibleHere }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('workspace') || target.includes('table')) {
+          const visibleTools = [isItemVisibleHere('wizard-ink') ? 'wizard ink' : null, isItemVisibleHere('eye-spellbook') ? 'an eye-bound spellbook' : null].filter(Boolean);
+
           if (!getFlag('kelagoPraised')) {
-            return 'The workspace holds knives sorted by impossible specializations, wizard ink, and an eye-bound spellbook left close enough to imply frequent use. Kelago notices your interest with the pleased caution of an artist catching someone almost worthy of a studio tour.';
+            const toolText = visibleTools.length > 0
+              ? `${visibleTools.join(' and ')} left close enough to imply frequent use`
+              : 'gaps where Kelago had been keeping her most portable notes and inks';
+
+            return `The workspace holds knives sorted by impossible specializations, ${toolText}. Kelago notices your interest with the pleased caution of an artist catching someone almost worthy of a studio tour.`;
           }
 
-          return 'With Kelago no longer treating curiosity as an insult, the workspace reads more clearly: biomantic tools, disciplined notes, and a spellbook concerned with edited flesh and controlled threshold etiquette.';
+          return isItemVisibleHere('eye-spellbook') || isItemVisibleHere('wizard-ink')
+            ? 'With Kelago no longer treating curiosity as an insult, the workspace reads more clearly: biomantic tools, disciplined notes, and a spellbook concerned with edited flesh and controlled threshold etiquette.'
+            : 'With Kelago no longer treating curiosity as an insult, the workspace reads more clearly even in partial absence: biomantic tools, disciplined notes, and the interruption where the most portable parts of Kelago\'s practice have been removed.';
         }
 
         if (target.includes('spellbook') || target.includes('book') || target.includes('ink')) {
-          return 'The eye-bound spellbook and wizard ink sit where Kelago can reach them without rising. Between them they suggest a practice that treats living bodies as draftable texts.';
+          if (isItemVisibleHere('eye-spellbook') && isItemVisibleHere('wizard-ink')) {
+            return 'The eye-bound spellbook and wizard ink sit where Kelago can reach them without rising. Between them they suggest a practice that treats living bodies as draftable texts.';
+          }
+
+          if (isItemVisibleHere('eye-spellbook')) {
+            return 'The eye-bound spellbook still lies within Kelago\'s easy reach. The missing ink only makes the rest of her practice look more deliberate.';
+          }
+
+          if (isItemVisibleHere('wizard-ink')) {
+            return 'The wizard ink still sits within Kelago\'s easy reach, while the spellbook it usually accompanies is no longer resting beside it.';
+          }
+
+          return 'Only the cleared marks where Kelago kept her ink and spellbook remain. The workspace looks interrupted rather than emptied.';
         }
 
         if (target.includes('bed') || target.includes('crab')) {
@@ -188,7 +214,15 @@ An ornate private door stands to the east.
       },
       knives: 'There are knives everywhere: long, hooked, delicate, ribbed, and unmistakably specialized.',
       tortoises: 'Three headless tortoises shuffle through the clutter with patient, chest-like dignity.',
-      workspace: 'The central workspace is suspiciously clean, suggesting that whatever was last done here concluded successfully and may already be learning new habits.',
+      workspace: {
+        description({ isItemVisibleHere }) {
+          if (isItemVisibleHere('wizard-ink') || isItemVisibleHere('eye-spellbook')) {
+            return 'The central workspace is suspiciously clean, suggesting that whatever was last done here concluded successfully and may already be learning new habits.';
+          }
+
+          return 'The central workspace is suspiciously clean, with fresh absences where portable tools were close enough for habitual use.';
+        },
+      },
       door: 'An ornate side door leads east into Oshregaal\'s private rooms. Even from here it looks overconfident.',
     },
   });

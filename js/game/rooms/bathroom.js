@@ -29,10 +29,16 @@ export function createBathroomRoom() {
   return new Room({
     id: 'bathroom',
     title: 'Bathroom',
-    description: `
-  The guest bathroom is absurdly luxurious in the punishing way only Oshregaal's house could manage. Marble tile gleams under flattering candlelight. A claw-foot bath, a silver-backed mirror, and a cabinet of soaps and powders all suggest that even hygiene here is a performance.
+    description: ({ isItemVisibleHere }) => {
+      const mirrorLine = isItemVisibleHere('silver-mirror')
+        ? 'A claw-foot bath, a silver-backed mirror, and a cabinet of soaps and powders all suggest that even hygiene here is a performance.'
+        : 'A claw-foot bath, an empty stand where the guest hand mirror had been set, and a cabinet of soaps and powders all suggest that even hygiene here is a performance.';
+
+      return `
+  The guest bathroom is absurdly luxurious in the punishing way only Oshregaal's house could manage. Marble tile gleams under flattering candlelight. ${mirrorLine}
 West lies the guest room. Somewhere behind the eastern tilework, a sour draft keeps ruining the illusion.
-`.trim(),
+`.trim();
+    },
     exits: {
       west: 'guestRoom',
       down: 'cesspool',

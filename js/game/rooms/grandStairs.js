@@ -6,7 +6,7 @@ export function createGrandStairsRoom() {
     id: 'red-cloak',
     name: 'red cloak',
     aliases: ['cloak'],
-    description: 'A richly cut red cloak hung over one gargoyle claw, theatrical enough that it might count as a disguise at a distance.',
+    description: 'A richly cut red cloak, theatrical enough that it might count as a disguise at a distance.',
     actions: {
       wear() {
         return 'You settle the red cloak over your shoulders. It improves your silhouette and worsens your conscience.';
@@ -17,10 +17,16 @@ export function createGrandStairsRoom() {
   return new Room({
     id: 'grandStairs',
     title: 'Grand Stairs',
-    description: `
+    description: ({ isItemVisibleHere }) => {
+      const cloakLine = isItemVisibleHere('red-cloak')
+        ? 'One of them has been draped with a fine red cloak, as though even the statuary must dress for dinner.'
+        : 'One gargoyle still holds one stone claw slightly forward, bereft of the theatrical red cloak it had been made to model.';
+
+      return `
 The white marble stair rises in a broad ceremonial sweep toward the mansion doors. Two stone gargoyles in absurd festive caps stand sentry on either side.
-One of them has been draped with a fine red cloak, as though even the statuary must dress for dinner.
-`.trim(),
+${cloakLine}
+`.trim();
+    },
     exits: {
       south: 'cavern',
       north: 'foyer',

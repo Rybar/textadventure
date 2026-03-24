@@ -10,8 +10,10 @@ export function createGrandfatherRoom() {
     description: 'A mountainous velvet bed draped in lace and fur, built for a man who treats sleep as a throne with blankets.',
     portable: false,
     actions: {
-      sleep() {
-        return 'The thought of sleeping in Oshregaal\'s bed feels less like trespass than like entering his mouth voluntarily.';
+      sleep({ session }) {
+        return session.triggerGameOver(
+          'The velvet accepts you too easily. Perfume, fur, and heavy coverlets close overhead; somewhere in the room a bell-cord answers for you, and by the time you understand that the bed was built to keep as much as to comfort, the house has already learned the shape of your surrender.',
+        );
       },
       look() {
         return 'The bed curtains are embroidered with constellations, tusks, and banquets. Beneath the perfume and medicinal wine is a subtler wrongness: compressed hollows in the coverlet and silk ties at the posts, as though hospitality here occasionally needed help becoming agreement.';
@@ -20,6 +22,7 @@ export function createGrandfatherRoom() {
   });
 
   const waxPlug = createWaxPlug();
+  waxPlug.hide();
 
   return new Room({
     id: 'grandfatherRoom',
@@ -42,7 +45,7 @@ On the north wall stands a black metal door fitted not with a knob but with an a
       },
     },
     verbs: {
-      search({ command, getFlag, setFlag }) {
+      search({ command, currentRoom, getFlag, setFlag }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('chamber') || target.includes('desk')) {
@@ -58,10 +61,13 @@ On the north wall stands a black metal door fitted not with a knob but with an a
         if (target.includes('vanity') || target.includes('mirror') || target.includes('drawer')) {
           if (!getFlag('waxPlugFound')) {
             setFlag('waxPlugFound', true);
+            waxPlug.reveal();
             return 'A quick search of the vanity turns up scented powder, rings, and a wrapped plug of dark ear wax hidden behind a comb. Someone in this house has already learned that certain voices are easier to survive muffled.';
           }
 
-          return 'The vanity drawers still hold powders, seals, and old narcotic perfumes, but the useful discovery remains the missing space where the wax plug had been tucked away.';
+          return currentRoom.findItem('wax plug')
+            ? 'The vanity drawers still hold powders, seals, and old narcotic perfumes, but the useful discovery remains the wrapped wax plug tucked behind the comb.'
+            : 'The vanity drawers still hold powders, seals, and old narcotic perfumes, but the useful discovery remains the missing space where the wax plug had been tucked away.';
         }
 
         if (target.includes('bed') || target.includes('canopy') || target.includes('curtain') || target.includes('post')) {

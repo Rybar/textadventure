@@ -180,6 +180,9 @@ export class WorldState {
       shownConversationIds: [],
       shownHackerIds: [],
       shownReactiveLackeyIds: [],
+      reactiveLackeyCounts: {},
+      shownMilestoneIds: [],
+      shownEndingIds: [],
     };
   }
 
@@ -223,6 +226,9 @@ export class WorldState {
       Array.isArray(metaState.shownConversationIds)
       || Array.isArray(metaState.shownHackerIds)
       || Array.isArray(metaState.shownReactiveLackeyIds)
+      || (metaState.reactiveLackeyCounts && typeof metaState.reactiveLackeyCounts === 'object')
+      || Array.isArray(metaState.shownMilestoneIds)
+      || Array.isArray(metaState.shownEndingIds)
     ) {
       return {
         shownConversationIds: Array.isArray(metaState.shownConversationIds)
@@ -233,6 +239,15 @@ export class WorldState {
           : [],
         shownReactiveLackeyIds: Array.isArray(metaState.shownReactiveLackeyIds)
           ? [...metaState.shownReactiveLackeyIds]
+          : [],
+        reactiveLackeyCounts: metaState.reactiveLackeyCounts && typeof metaState.reactiveLackeyCounts === 'object'
+          ? { ...metaState.reactiveLackeyCounts }
+          : {},
+        shownMilestoneIds: Array.isArray(metaState.shownMilestoneIds)
+          ? [...metaState.shownMilestoneIds]
+          : [],
+        shownEndingIds: Array.isArray(metaState.shownEndingIds)
+          ? [...metaState.shownEndingIds]
           : [],
       };
     }
@@ -250,6 +265,9 @@ export class WorldState {
         .slice(0, shownHackerCount)
         .map((entry, index) => this.getScheduledEntryId(entry, 'hacker-message', index)),
       shownReactiveLackeyIds: [],
+      reactiveLackeyCounts: {},
+      shownMilestoneIds: [],
+      shownEndingIds: [],
     };
   }
 
@@ -310,30 +328,39 @@ export class WorldState {
       return [];
     }
 
-    if (this.metaState.shownReactiveLackeyIds.includes(conversationId)) {
-      return [];
-    }
-
     const conversation = this.metaGame.reactiveLackeyConversations?.[conversationId];
     if (!conversation) {
       return [];
     }
 
-    const leftMessage = this.getMetaMessage(conversation.leftMessageId);
-    const rightMessage = this.getMetaMessage(conversation.rightMessageId);
+    const variants = Array.isArray(conversation.variants) && conversation.variants.length > 0
+      ? conversation.variants
+      : [conversation];
+    const shownCount = this.metaState.reactiveLackeyCounts?.[conversationId] ?? 0;
+    const nextVariant = variants[shownCount % variants.length] ?? null;
+
+    if (!nextVariant) {
+      return [];
+    }
+
+    const leftMessage = this.getMetaMessage(nextVariant.leftMessageId);
+    const rightMessage = this.getMetaMessage(nextVariant.rightMessageId);
     const nextMessages = [
-      leftMessage ? { ...leftMessage, placement: 'side-left', delayMs: 0 } : null,
-      rightMessage ? { ...rightMessage, placement: 'side-right', delayMs: 3600 } : null,
+      leftMessage ? { ...leftMessage, placement: 'side-left', delayMs: 0, priority: 'reactive' } : null,
+      rightMessage ? { ...rightMessage, placement: 'side-right', delayMs: 3600, priority: 'reactive' } : null,
     ].filter(Boolean);
 
     if (nextMessages.length === 0) {
       return [];
     }
 
-    this.metaState.shownReactiveLackeyIds = [
-      ...this.metaState.shownReactiveLackeyIds,
-      conversationId,
-    ];
+    this.metaState.shownReactiveLackeyIds = this.metaState.shownReactiveLackeyIds.includes(conversationId)
+      ? this.metaState.shownReactiveLackeyIds
+      : [...this.metaState.shownReactiveLackeyIds, conversationId];
+    this.metaState.reactiveLackeyCounts = {
+      ...this.metaState.reactiveLackeyCounts,
+      [conversationId]: shownCount + 1,
+    };
 
     this.queueMetaMessages(nextMessages);
     return nextMessages;
@@ -374,6 +401,11 @@ export class WorldState {
       turns: this.turns,
       visitCount,
       isFirstVisit: visitCount <= 1,
+      getItemById: itemId => this.getItemById(itemId),
+      getItemLocation: itemOrId => this.getItemLocation(itemOrId),
+      isItemInInventory: itemOrId => this.isItemInInventory(itemOrId),
+      isItemInRoom: (itemOrId, roomId = currentRoom?.id) => this.isItemInRoom(itemOrId, roomId),
+      isItemVisibleHere: (itemOrId, roomId = currentRoom?.id) => this.isItemVisibleHere(itemOrId, roomId),
       getFlag: flagName => this.getFlag(flagName),
       setFlag: (flagName, value) => this.setFlag(flagName, value),
       movePlayer: roomId => this.movePlayer(roomId),
@@ -637,7 +669,28 @@ export class WorldState {
   }
 
   setFlag(flagName, value) {
+    const previousValue = this.flags[flagName];
     this.flags[flagName] = value;
+    this.applyFlagSideEffects(flagName, value, previousValue);
+  }
+
+  applyFlagSideEffects(flagName, value, previousValue) {
+    this.applyMemoryFlagSideEffects(flagName, value);
+
+    if (previousValue === value || !value) {
+      return;
+    }
+
+    if (this.metaState.shownEndingIds.length > 0) {
+      return;
+    }
+
+    const endingMessages = this.triggerMetaEndingIfNeeded();
+    if (endingMessages.length > 0) {
+      return;
+    }
+
+    this.triggerMetaMilestonesForFlag(flagName);
   }
 
   getPanelState(panelId) {
@@ -722,6 +775,191 @@ export class WorldState {
 
   queueMetaMessages(messages = []) {
     this.pendingMetaMessages.push(...messages.filter(Boolean));
+  }
+
+  buildConfiguredMetaMessages(entries = [], defaultPriority = 'milestone') {
+    return entries.map(entry => {
+      const message = this.getMetaMessage(entry.messageId);
+      if (!message) {
+        return null;
+      }
+
+      return {
+        ...message,
+        placement: entry.placement ?? 'lower-random',
+        delayMs: entry.delayMs ?? 0,
+        priority: entry.priority ?? defaultPriority,
+      };
+    }).filter(Boolean);
+  }
+
+  getMetaPriorityValue(priority = 'scheduled') {
+    switch (priority) {
+      case 'ending':
+        return 4;
+      case 'rupture':
+        return 3;
+      case 'milestone':
+        return 2;
+      case 'reactive':
+        return 1;
+      default:
+        return 0;
+    }
+  }
+
+  hasPendingMetaPriorityAtOrAbove(priority = 'milestone') {
+    const targetPriority = this.getMetaPriorityValue(priority);
+    return this.pendingMetaMessages.some(message => this.getMetaPriorityValue(message?.priority) >= targetPriority);
+  }
+
+  hasMetaEngagement() {
+    return this.getFlag('mapOverlayInjected')
+      || this.getFlag('inventoryOverlayInjected')
+      || this.getFlag('memoryBusExposed')
+      || this.getFlag('shellContactAcknowledged')
+      || this.metaState.shownHackerIds.length > 0
+      || this.metaState.shownMilestoneIds.some(milestoneId => {
+        return [
+          'map-overlay-injected',
+          'inventory-overlay-injected',
+          'memory-bus-exposed',
+          'containment-override',
+          'operator-authority-shifted',
+          'subject-designation-recovered',
+          'exit-permission-granted',
+        ].includes(milestoneId);
+      });
+  }
+
+  hasEscapeLeverage() {
+    return this.getFlag('blackWindEvidenceCollected')
+      || this.getFlag('blackWindTreeSabotaged')
+      || this.getFlag('portalBypassLearned')
+      || this.getFlag('spellbooksSecured')
+      || this.getFlag('containmentProtocolKnown')
+      || this.getFlag('nathemaBlackWindSampleDelivered')
+      || this.getFlag('nathemaRouteKnowledgeShared')
+      || this.getFlag('nathemaTextsShared')
+      || Boolean(this.findInventoryItem('black-wind-ledger'))
+      || Boolean(this.findInventoryItem('black-wind-root-sample'))
+      || Boolean(this.findInventoryItem('black-wind-fruit'))
+      || Boolean(this.findInventoryItem('black-wind-elixir'))
+      || Boolean(this.findInventoryItem('geometry-folio'))
+      || Boolean(this.findInventoryItem('threshold-spellbook'))
+      || Boolean(this.findInventoryItem('grey-grin-blade'));
+  }
+
+  resolveMetaEndingId() {
+    if (this.getFlag('absorbedIntoRoutine')) {
+      return 'absorbed-into-routine';
+    }
+
+    if (!this.getFlag('escapedMansion')) {
+      return null;
+    }
+
+    if (
+      this.getFlag('containmentOverride')
+      || this.getFlag('operatorAuthorityShifted')
+      || this.getFlag('subjectDesignationRecovered')
+      || this.getFlag('exitPermissionGranted')
+    ) {
+      return 'system-breach';
+    }
+
+    if (
+      this.getFlag('nathemaEscapeDealSecured')
+      || this.getFlag('blackWindFruitConsumed')
+      || this.getFlag('blackWindElixirConsumed')
+      || this.getFlag('servantApronWorn')
+    ) {
+      return 'dark-bargain';
+    }
+
+    if (this.getFlag('oshregaalWounded')) {
+      return 'violent-escape';
+    }
+
+    if (this.getFlag('strongerEscapeSecured')) {
+      return 'strong-escape';
+    }
+
+    if (this.getFlag('plumRescued')) {
+      return 'plum-rescue';
+    }
+
+    if (this.hasEscapeLeverage()) {
+      return 'compromised-escape';
+    }
+
+    if (this.hasMetaEngagement()) {
+      return 'aware-escape';
+    }
+
+    return 'clean-escape';
+  }
+
+  buildNextMetaEndingMessages() {
+    const endingId = this.resolveMetaEndingId();
+    if (!endingId || this.metaState.shownEndingIds.includes(endingId)) {
+      return [];
+    }
+
+    const endingDefinition = this.metaGame.endings?.definitions?.[endingId];
+    if (!endingDefinition) {
+      return [];
+    }
+
+    const nextMessages = this.buildConfiguredMetaMessages(endingDefinition.messages ?? [], endingDefinition.priority ?? 'ending');
+    if (nextMessages.length === 0) {
+      return [];
+    }
+
+    this.metaState.shownEndingIds = [
+      ...this.metaState.shownEndingIds,
+      endingId,
+    ];
+
+    return nextMessages;
+  }
+
+  triggerMetaEndingIfNeeded() {
+    const nextMessages = this.buildNextMetaEndingMessages();
+    if (nextMessages.length === 0) {
+      return [];
+    }
+
+    this.queueMetaMessages(nextMessages);
+    return nextMessages;
+  }
+
+  triggerMetaMilestone(milestoneId) {
+    if (!milestoneId || this.metaState.shownMilestoneIds.includes(milestoneId)) {
+      return [];
+    }
+
+    const milestone = this.metaGame.milestones?.definitions?.[milestoneId];
+    if (!milestone) {
+      return [];
+    }
+
+    const nextMessages = this.buildConfiguredMetaMessages(milestone.messages ?? [], milestone.priority ?? 'milestone');
+    if (nextMessages.length === 0) {
+      return [];
+    }
+
+    this.metaState.shownMilestoneIds = [
+      ...this.metaState.shownMilestoneIds,
+      milestoneId,
+    ];
+    this.queueMetaMessages(nextMessages);
+    return nextMessages;
+  }
+
+  triggerMetaMilestonesForFlag(flagName) {
+    const milestoneIds = this.metaGame.milestones?.flagTriggers?.[flagName] ?? [];
+    return milestoneIds.flatMap(milestoneId => this.triggerMetaMilestone(milestoneId));
   }
 
   createScheduledEntry(baseEntry = {}) {
@@ -882,6 +1120,19 @@ export class WorldState {
   }
 
   buildNextMetaMessages({ force = false } = {}) {
+    if (this.metaState.shownEndingIds.length > 0) {
+      return [];
+    }
+
+    if (!force && this.hasPendingMetaPriorityAtOrAbove('milestone')) {
+      return [];
+    }
+
+    const nextEndingMessages = this.buildNextMetaEndingMessages();
+    if (nextEndingMessages.length > 0) {
+      return nextEndingMessages;
+    }
+
     const nextMessages = [];
     const lackeyConversations = this.metaGame.schedule?.lackeyConversations ?? [];
     const nextConversation = this.findNextMetaEntry(
@@ -897,8 +1148,8 @@ export class WorldState {
       const rightMessage = this.getMetaMessage(entry.rightMessageId);
 
       nextMessages.push(
-        leftMessage ? { ...leftMessage, placement: 'side-left', delayMs: 0 } : null,
-        rightMessage ? { ...rightMessage, placement: 'side-right', delayMs: entry.rightDelayMs ?? 4200 } : null,
+        leftMessage ? { ...leftMessage, placement: 'side-left', delayMs: 0, priority: 'scheduled' } : null,
+        rightMessage ? { ...rightMessage, placement: 'side-right', delayMs: entry.rightDelayMs ?? 4200, priority: 'scheduled' } : null,
       );
 
       this.metaState.shownConversationIds = [
@@ -924,6 +1175,7 @@ export class WorldState {
             ...hackerMessage,
             placement: entry.placement ?? 'lower-random',
             delayMs: entry.delayMs ?? 0,
+            priority: 'scheduled',
           });
         }
 
@@ -969,6 +1221,7 @@ export class WorldState {
       ...hackerMessage,
       placement: entry.placement ?? 'lower-random',
       delayMs: entry.delayMs ?? 0,
+      priority: 'scheduled',
     }];
   }
 
@@ -1022,8 +1275,25 @@ export class WorldState {
     return this.itemIndex[itemId] ?? null;
   }
 
+  resolveItemReference(itemOrId) {
+    if (!itemOrId) {
+      return null;
+    }
+
+    if (typeof itemOrId === 'string') {
+      return itemOrId;
+    }
+
+    return itemOrId.id ?? null;
+  }
+
   getItemLocation(itemId) {
-    const inventoryItem = this.inventory.find(item => item.id === itemId);
+    const resolvedItemId = this.resolveItemReference(itemId);
+    if (!resolvedItemId) {
+      return null;
+    }
+
+    const inventoryItem = this.inventory.find(item => item.id === resolvedItemId);
     if (inventoryItem) {
       return {
         type: 'inventory',
@@ -1031,7 +1301,7 @@ export class WorldState {
     }
 
     for (const room of Object.values(this.rooms)) {
-      if (room.items.some(item => item.id === itemId)) {
+      if (room.items.some(item => item.id === resolvedItemId)) {
         return {
           type: 'room',
           roomId: room.id,
@@ -1040,6 +1310,39 @@ export class WorldState {
     }
 
     return null;
+  }
+
+  isItemInInventory(itemOrId) {
+    return this.getItemLocation(itemOrId)?.type === 'inventory';
+  }
+
+  isItemInRoom(itemOrId, roomId = this.currentRoomId) {
+    const location = this.getItemLocation(itemOrId);
+    return location?.type === 'room' && location.roomId === roomId;
+  }
+
+  isItemVisibleHere(itemOrId, roomId = this.currentRoomId) {
+    const resolvedItemId = this.resolveItemReference(itemOrId);
+    if (!resolvedItemId || !roomId || !this.rooms[roomId]) {
+      return false;
+    }
+
+    return this.rooms[roomId].items.some(item => item.id === resolvedItemId && item.visible !== false);
+  }
+
+  describeItem(item, context = {}) {
+    if (!item) {
+      return '';
+    }
+
+    if (typeof item.description === 'function') {
+      return item.description({
+        ...context,
+        item,
+      });
+    }
+
+    return item.description;
   }
 
   removeItemById(itemId) {
@@ -1185,6 +1488,7 @@ export class WorldState {
     }
 
     return room.items
+      .filter(item => item.visible !== false)
       .filter(item => item.matchesName(normalizedName))
       .map(item => ({
         type: 'item',
@@ -1369,6 +1673,7 @@ export class WorldState {
 
   describeCurrentRoom(context = this.createContext()) {
     const currentRoom = context.currentRoom ?? this.getCurrentRoom();
+    const visibleItems = currentRoom.items.filter(item => item.visible !== false);
     let description = currentRoom.describe(context);
 
     const sceneDescription = currentRoom.getSceneDescription(context);
@@ -1381,7 +1686,7 @@ export class WorldState {
       description += `\n${conditionalDescriptions}`;
     }
 
-    const stateDescriptions = currentRoom.items
+    const stateDescriptions = visibleItems
       .map(item => item.stateDescription)
       .filter(Boolean)
       .join(' ');
@@ -1390,8 +1695,8 @@ export class WorldState {
       description += `\n${stateDescriptions}\n`;
     }
 
-    if (currentRoom.items.length > 0) {
-      description += `\nYou can see the following items: ${currentRoom.items.map(item => item.name).join(', ')}.\n`;
+    if (visibleItems.length > 0) {
+      description += `\nYou can see the following items: ${visibleItems.map(item => item.name).join(', ')}.\n`;
     } else {
       description += ' There are no items to see here.\n';
     }
@@ -1423,7 +1728,7 @@ export class WorldState {
       });
     }
 
-    return item.description;
+    return this.describeItem(item, context);
   }
 
   listInventory() {
@@ -1934,7 +2239,6 @@ export class WorldState {
     }
 
     this.setFlag(entry.flagName, nextValue);
-    this.applyMemoryFlagSideEffects(entry.flagName, nextValue);
 
     const updatedEntry = {
       ...entry,

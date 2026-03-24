@@ -58,6 +58,7 @@ export function createSecretCircleRoom() {
       },
     },
   });
+  roadAnnotation.hide();
 
   const teleportScroll = new Item({
     id: 'teleport-scroll',
@@ -176,15 +177,29 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
       ],
     },
     verbs: {
-      search({ command }) {
+      search({ command, isItemVisibleHere }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('chamber')) {
-          return 'A careful search turns up three important facts at once: the bookshelf holds older transit lore than Oshregaal\'s household should possess, the cabinet stores practical escape reagents, and the circle itself has seen far more departures than this room\'s dust would suggest. A clipped road annotation hidden among the books makes it plain that activation and bypass are not the same problem.';
+          if (!roadAnnotation.visible) {
+            roadAnnotation.reveal();
+          }
+
+          const annotationText = isItemVisibleHere('road-annotation')
+            ? 'A clipped road annotation hidden among the books makes it plain that activation and bypass are not the same problem.'
+            : 'The gap among the transit texts still makes it plain that activation and bypass are not the same problem.';
+
+          return `A careful search turns up three important facts at once: the bookshelf holds older transit lore than Oshregaal\'s household should possess, the cabinet stores practical escape reagents, and the circle itself has seen far more departures than this room\'s dust would suggest. ${annotationText}`;
         }
 
         if (target.includes('books') || target.includes('bookshelf') || target.includes('shelf')) {
-          return 'Several books bear shelf marks older than the rest of the manor. One clipped annotation describes the circle as "a borrowed road dressed in newer chalk" and warns that activation only wakes the prepared route, while true bypass requires understanding the host\'s constraints.';
+          if (!roadAnnotation.visible) {
+            roadAnnotation.reveal();
+          }
+
+          return isItemVisibleHere('road-annotation')
+            ? 'Several books bear shelf marks older than the rest of the manor. One clipped annotation describes the circle as "a borrowed road dressed in newer chalk" and warns that activation only wakes the prepared route, while true bypass requires understanding the host\'s constraints.'
+            : 'Several books bear shelf marks older than the rest of the manor. The gap where a clipped annotation had been tucked among them still tells you the room once explained the difference between activation and bypass more plainly than Oshregaal likely intended.';
         }
 
         if (target.includes('cabinet')) {
@@ -217,7 +232,13 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
           tell: skullsTell,
         },
       },
-      bookshelf: 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader. A clipped road annotation sits hidden among the older transit texts.',
+      bookshelf: {
+        description({ isItemVisibleHere }) {
+          return isItemVisibleHere('road-annotation')
+            ? 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader. A clipped road annotation sits hidden among the older transit texts.'
+            : 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader. A narrow gap among the older transit texts marks where a clipped road annotation had been tucked away.';
+        },
+      },
       cabinet: 'The cabinet contains reagents, vials, and the sort of practical magic a man keeps near an emergency exit.',
       runes: 'The runes are for travel, not summoning. They are patient, old, and absolutely real.',
     },

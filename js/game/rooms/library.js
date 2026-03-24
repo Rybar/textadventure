@@ -90,7 +90,13 @@ export function createLibraryRoom() {
     id: 'threshold-spellbook',
     name: 'threshold spellbook',
     aliases: ['spellbook', 'grimoire', 'gate spellbook', 'threshold grimoire'],
-    description: 'A chained spellbook of gate rites, annotated constraints, and failure cases written in Oshregaal\'s impatient hand.',
+    description({ isItemVisibleHere, item }) {
+      if (isItemVisibleHere(item)) {
+        return 'A chained spellbook of gate rites, annotated constraints, and failure cases written in Oshregaal\'s impatient hand.';
+      }
+
+      return 'A threshold spellbook of gate rites, annotated constraints, and failure cases written in Oshregaal\'s impatient hand.';
+    },
     actions: {
       take({ getFlag, setFlag }) {
         if (!getFlag('spellbooksSecured')) {
@@ -144,11 +150,17 @@ export function createLibraryRoom() {
   return new Room({
     id: 'library',
     title: 'Library',
-    description: `
+    description: ({ isItemVisibleHere }) => {
+      const spellbookLine = isItemVisibleHere('threshold-spellbook')
+        ? 'One chained threshold spellbook lies loose enough to steal, as if Oshregaal expected to consult it again before dawn.'
+        : 'A gap at one table marks where a threshold spellbook had been left loose enough to steal, as if Oshregaal expected to consult it again before dawn and failed to account for theft.';
+
+      return `
 Oshregaal's library is less a scholarly refuge than a shrine to his own continued relevance. Shelves climb the walls under ladders on brass tracks, and every table is spread with notes on war, mutation, theology, and the architecture of impossible spaces.
-  One chained threshold spellbook lies loose enough to steal, as if Oshregaal expected to consult it again before dawn.
+${spellbookLine}
 To the north, an unusually narrow opening gives onto a corridor whose angles seem unwilling to stay resolved. West lies Plum's room.
-`.trim(),
+`.trim();
+    },
     scene: {
       getPhase: getLibraryPhase,
       phases: {
@@ -189,16 +201,22 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
       },
     },
     verbs: {
-      search({ command, getFlag, setFlag, emitEvent }) {
+      search({ command, getFlag, setFlag, emitEvent, isItemVisibleHere }) {
         const target = command.directObject;
 
         if (!target || target.includes('library') || target.includes('room') || target.includes('shelves') || target.includes('books')) {
           if (!getFlag('libraryRouteKnown')) {
             setFlag('libraryRouteKnown', true);
-            return 'Among the books you find philosophical boasting, mutation theory, a chained threshold spellbook on gate constraints, and a heavily thumbed folio on "obedient geometry." More important, the northern gap between shelves is not decorative: it leads into the folded corridor Plum warned you about.';
+            const spellbookText = isItemVisibleHere('threshold-spellbook')
+              ? 'a chained threshold spellbook on gate constraints'
+              : 'the conspicuous absence of a threshold spellbook someone had recently removed from its chain';
+
+            return `Among the books you find philosophical boasting, mutation theory, ${spellbookText}, and a heavily thumbed folio on "obedient geometry." More important, the northern gap between shelves is not decorative: it leads into the folded corridor Plum warned you about.`;
           }
 
-          return 'The library remains a monument to Oshregaal\'s mind: books that want readers, notes that want worship, one threshold spellbook worth stealing on principle, and a northern passage that wants more than one understanding at once.';
+          return isItemVisibleHere('threshold-spellbook')
+            ? 'The library remains a monument to Oshregaal\'s mind: books that want readers, notes that want worship, one threshold spellbook worth stealing on principle, and a northern passage that wants more than one understanding at once.'
+            : 'The library remains a monument to Oshregaal\'s mind: books that want readers, notes that want worship, one freshly missing threshold spellbook, and a northern passage that wants more than one understanding at once.';
         }
 
         if (target.includes('table') || target.includes('folio') || target.includes('notes')) {
@@ -210,11 +228,22 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
             setFlag('portalBypassLearned', true);
           }
 
-          return 'The largest folio on the reading table concerns the folded hall beyond the north shelves. Beside it rests a wax practice palm threaded with silver. Oshregaal\'s diagrams show the corridor crossing itself around a black idol whose hands must be answered in pairs. Someone else has underlined the phrase "or by a competent fraud."';
+          const folioText = isItemVisibleHere('geometry-folio')
+            ? 'The largest folio on the reading table concerns the folded hall beyond the north shelves.'
+            : 'The reading table still shows where a large folio on the folded hall had been lying open.';
+          const palmText = isItemVisibleHere('wax-palm')
+            ? 'Beside it rests a wax practice palm threaded with silver.'
+            : 'The wax practice palm that had been resting beside it is no longer on the table.';
+
+          return `${folioText} ${palmText} Oshregaal\'s diagrams show the corridor crossing itself around a black idol whose hands must be answered in pairs. Someone else has underlined the phrase "or by a competent fraud."`;
         }
 
         if (target.includes('spellbook') || target.includes('grimoire') || target.includes('gate')) {
-          return 'The threshold spellbook is chained more from habit than necessity. Its visible pages treat portals as negotiations between ritual etiquette and brute force, with Oshregaal\'s notes favoring whichever option leaves him feeling cleverest.';
+          if (isItemVisibleHere('threshold-spellbook')) {
+            return 'The threshold spellbook is chained more from habit than necessity. Its visible pages treat portals as negotiations between ritual etiquette and brute force, with Oshregaal\'s notes favoring whichever option leaves him feeling cleverest.';
+          }
+
+          return 'The spellbook is no longer on its chain. Only the scuffed table edge and a few resentful links testify that Oshregaal once left it here within reach.';
         }
 
         if (target.includes('ladder') || target.includes('tracks')) {
@@ -248,7 +277,9 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
       },
       {
         when: ({ getFlag }) => getFlag('foldedHallwayUnderstood'),
-        text: 'The open geometry folio on the table gives the room an air of having accidentally explained too much.',
+        text: ({ isItemVisibleHere }) => isItemVisibleHere('geometry-folio')
+          ? 'The open geometry folio on the table gives the room an air of having accidentally explained too much.'
+          : 'The remembered geometry of the missing folio still gives the room an air of having accidentally explained too much.',
       },
       {
         when: ({ getFlag }) => getFlag('spellbooksSecured'),
@@ -262,7 +293,21 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
     objects: {
       shelves: 'The shelves carry wars, diets, cults, heresies, botanical crimes, threshold manuals, and enough self-written marginalia to prove Oshregaal distrusts even printed agreement.',
       cabinet: 'The eastern cabinets are crowded with genealogies, corrected triumphs, and catalogues that feel less archival than possessive.',
-      table: 'The reading table is cluttered with diagrams, charms, wax drips, a wax practice palm, one especially dangerous-looking folio on impossible corridors, and a threshold spellbook left within reach for someone too confident about ownership.',
+      table: {
+        description({ isItemVisibleHere }) {
+          const presentItems = [
+            isItemVisibleHere('wax-palm') ? 'a wax practice palm' : null,
+            isItemVisibleHere('geometry-folio') ? 'one especially dangerous-looking folio on impossible corridors' : null,
+            isItemVisibleHere('threshold-spellbook') ? 'a threshold spellbook left within reach for someone too confident about ownership' : null,
+          ].filter(Boolean);
+
+          if (presentItems.length === 0) {
+            return 'The reading table is still stippled with diagrams, charms, and wax drips, but its most useful portable texts and tools have already been removed.';
+          }
+
+          return `The reading table is cluttered with diagrams, charms, wax drips, and ${presentItems.join(', ').replace(/,([^,]*)$/, ' and$1')}.`;
+        },
+      },
       ladders: 'The brass ladders promise reach without wisdom.',
       passage: 'The northern passage narrows between shelves before becoming something less honest than a hallway.',
     },

@@ -170,13 +170,17 @@ East, a door stands open into Oshregaal's library.
       ],
     },
     verbs: {
-      search({ command, getFlag, setFlag }) {
+      search({ command, getFlag, setFlag, isItemVisibleHere }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('desk') || target.includes('notes')) {
           return getFlag('plumMemoryRead')
-            ? 'The desk remains packed with copies, reminders, and self-addressed instructions. Once you know what the folder contains, every page in the room starts to feel like a backup life.'
-            : 'The desk is arranged for continuity under siege: sorted notes, sharpened pens, dates corrected by hand, and a memory folder kept close enough to be grabbed in panic.';
+            ? isItemVisibleHere('plum-memory-folder')
+              ? 'The desk remains packed with copies, reminders, and self-addressed instructions. Once you know what the folder contains, every page in the room starts to feel like a backup life.'
+              : 'The desk remains packed with copies, reminders, and self-addressed instructions. Once you know what the missing folder contained, every page in the room starts to feel like a backup life.'
+            : isItemVisibleHere('plum-memory-folder')
+              ? 'The desk is arranged for continuity under siege: sorted notes, sharpened pens, dates corrected by hand, and a memory folder kept close enough to be grabbed in panic.'
+              : 'The desk is arranged for continuity under siege: sorted notes, sharpened pens, dates corrected by hand, and a conspicuous gap where a memory folder had been kept close enough to be grabbed in panic.';
         }
 
         if (target.includes('plum') || target.includes('scribe') || target.includes('arm') || target.includes('forearm')) {
@@ -227,7 +231,17 @@ East, a door stands open into Oshregaal's library.
       },
       {
         when: ({ getFlag }) => getFlag('plumMemoryRead'),
-        text: 'The open memory folder gives the whole room the air of a life repeatedly reassembled from fragments.',
+        text: ({ getItemLocation, getFlag, isItemVisibleHere }) => {
+          if (!getFlag('plumMemoryRead')) {
+            return null;
+          }
+
+          return isItemVisibleHere('plum-memory-folder')
+            ? 'The open memory folder gives the whole room the air of a life repeatedly reassembled from fragments.'
+            : getItemLocation('plum-memory-folder')?.type === 'inventory'
+              ? 'The memory folder you took still gives the room the air of a life repeatedly reassembled from fragments.'
+              : 'The room still reads like a life repeatedly reassembled from fragments, even with the memory folder no longer lying open on the desk.';
+        },
       },
     ],
     objects: {

@@ -63,7 +63,11 @@ export class GameSession {
   submitCommand(rawInput) {
     const clarificationExecution = this.tryHandlePendingClarification(rawInput);
     if (clarificationExecution) {
-      if (clarificationExecution.normalizedCommand?.type !== 'empty' && clarificationExecution.consumeTurn) {
+      if (
+        clarificationExecution.normalizedCommand?.type !== 'empty'
+        && clarificationExecution.consumeTurn
+        && !clarificationExecution.skipPostTurnProcessing
+      ) {
         this.worldState.advanceMetaMessages();
         this.appendWorldPendingMetaMessages();
       }
@@ -75,13 +79,18 @@ export class GameSession {
     const parsedCommand = this.commandParser.parse(rawInput);
     const execution = this.execute(parsedCommand);
     const { normalizedCommand, response } = execution;
+    const shouldCollectReactiveMessages = !execution.skipPostTurnProcessing && (
+      execution.consumeTurn
+      || this.playerIssuedDebugCommand(normalizedCommand)
+      || this.playerIssuedMemoryShellCommand(normalizedCommand)
+    );
 
-    if (normalizedCommand.type !== 'empty' && !execution.usedClarification) {
+    if (normalizedCommand.type !== 'empty' && !execution.usedClarification && !execution.skipPostTurnProcessing) {
       if (execution.consumeTurn) {
         this.worldState.advanceMetaMessages();
       }
 
-      if (execution.consumeTurn || this.playerIssuedDebugCommand(normalizedCommand)) {
+      if (shouldCollectReactiveMessages) {
         this.collectReactiveLackeyMessages(rawInput, normalizedCommand);
       }
 
@@ -120,6 +129,15 @@ export class GameSession {
       }
     }
 
+    if (
+      primaryResponse
+      && typeof primaryResponse === 'object'
+      && typeof primaryResponse.response === 'string'
+      && primaryResponse.normalizedCommand
+    ) {
+      return primaryResponse;
+    }
+
     const clarificationPending = Boolean(this.pendingClarification);
     if (clarificationPending && consumeTurn) {
       this.worldState.turns = Math.max(0, this.worldState.turns - 1);
@@ -152,7 +170,7 @@ export class GameSession {
       take: context => this.handleTake(context.command),
       drop: context => this.handleDrop(context.command),
       inventory: () => this.worldState.listInventory(),
-      help: () => 'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD. For shell work, use SCAN, PEEK, or POKE once memory is exposed. For meta previewing, use DEBUGMETA and NEXTMETA. For hacker-only previewing, use DEBUGHACKER and NEXTHACKER. For panel previewing, use DEBUGPANEL MAP, DEBUGPANEL INVENTORY, or DEBUGPANEL MEMORY.',
+      help: () => this.getHelpText(),
       give: context => this.handleGive(context.command, context),
       show: context => this.handleShow(context.command, context),
       ask: context => this.handleAsk(context.command, context),
@@ -177,10 +195,29 @@ export class GameSession {
       nexthacker: () => this.forceNextHackerEvent(),
       save: context => this.saveGame(context.command.directObject),
       load: context => this.loadGame(context.command.directObject),
+      restart: () => this.restartAdventure(),
       map: () => this.worldState.describeMapPanel(),
     });
 
     this.actionRegistry.registerGlobalVerbs(this.manifest.verbs ?? {});
+  }
+
+  getHelpText() {
+    const segments = [
+      'Try commands like LOOK, LOOK AT WINDOW, TAKE BREAD, OPEN CHEST, PULL BELL PULL, USE KEY ON DOOR, SHOW INVITATION TO OGGAF, ASK IMP ABOUT ESCAPE, GO SOUTH, INVENTORY, SAVE, or LOAD.',
+    ];
+
+    if (this.worldState.isPanelUnlocked('map')) {
+      segments.push('MAP will open the spatial overlay.');
+    }
+
+    if (this.worldState.isPanelUnlocked('memory')) {
+      segments.push('The shell is answering maintenance verbs now: SCAN, PEEK, and POKE.');
+    }
+
+    segments.push('RESTART begins a fresh run while preserving unlocked panel and shell progress.');
+
+    return segments.join(' ');
   }
 
   shouldAdvanceCurrentRoomScene(command, initialRoomId) {
@@ -207,7 +244,8 @@ export class GameSession {
       || verb === 'peek'
       || verb === 'poke'
       || verb === 'nextmeta'
-      || verb === 'nexthacker';
+        || verb === 'nexthacker'
+        || verb === 'restart';
   }
 
   ensureMemoryShellAvailable() {
@@ -382,12 +420,38 @@ export class GameSession {
     return shellAddressPatterns.some(pattern => pattern.test(normalizedInput));
   }
 
+  playerAddressedLackeys(rawInput) {
+    const normalizedInput = this.normalizeInputText(rawInput);
+    if (!normalizedInput) {
+      return false;
+    }
+
+    const lackeyAddressPatterns = [
+      /\bmara\b/u,
+      /\bkellan\b/u,
+      /\byou two\b/u,
+      /\bwhich one of you\b/u,
+      /\bare you watching\b/u,
+      /\bwho is talking\b/u,
+    ];
+
+    return lackeyAddressPatterns.some(pattern => pattern.test(normalizedInput));
+  }
+
   playerIssuedDebugCommand(command) {
     if (command?.type !== 'command') {
       return false;
     }
 
     return ['debugmeta', 'debughacker', 'debugpanel'].includes(command.verb);
+  }
+
+  playerIssuedMemoryShellCommand(command) {
+    if (command?.type !== 'command') {
+      return false;
+    }
+
+    return ['scan', 'peek', 'poke'].includes(command.verb);
   }
 
   collectReactiveLackeyMessages(rawInput, normalizedCommand) {
@@ -399,12 +463,20 @@ export class GameSession {
       return this.worldState.triggerReactiveLackeyConversation('echoed-sideband');
     }
 
+    if (this.playerAddressedLackeys(rawInput)) {
+      return this.worldState.triggerReactiveLackeyConversation('outside-scope-input');
+    }
+
     if (normalizedCommand.type === 'command' && this.playerAddressedTheShell(rawInput)) {
       return this.worldState.triggerReactiveLackeyConversation('outside-scope-input');
     }
 
     if (this.playerIssuedDebugCommand(normalizedCommand)) {
       return this.worldState.triggerReactiveLackeyConversation('debug-command-probe');
+    }
+
+    if (this.playerIssuedMemoryShellCommand(normalizedCommand) && this.worldState.isPanelUnlocked('memory')) {
+      return this.worldState.triggerReactiveLackeyConversation('memory-shell-probe');
     }
 
     return [];
@@ -437,6 +509,7 @@ export class GameSession {
       normalizedCommand,
       consumeTurn: options.consumeTurn ?? false,
       usedClarification: options.usedClarification ?? false,
+      skipPostTurnProcessing: options.skipPostTurnProcessing ?? false,
     };
   }
 
@@ -747,7 +820,7 @@ export class GameSession {
       });
     }
 
-    return item.description;
+    return this.worldState.describeItem(item, actionContext);
   }
 
   handleMovement(direction) {
@@ -1181,6 +1254,72 @@ export class GameSession {
     return `textadventure:${manifestId}:save:${normalizedSlot}`;
   }
 
+  captureRestartPersistence({ includeQueuedMetaMessages = false } = {}) {
+    return {
+      metaState: {
+        shownConversationIds: [...(this.worldState.metaState?.shownConversationIds ?? [])],
+        shownHackerIds: [...(this.worldState.metaState?.shownHackerIds ?? [])],
+        shownReactiveLackeyIds: [...(this.worldState.metaState?.shownReactiveLackeyIds ?? [])],
+        reactiveLackeyCounts: { ...(this.worldState.metaState?.reactiveLackeyCounts ?? {}) },
+        shownMilestoneIds: [...(this.worldState.metaState?.shownMilestoneIds ?? [])],
+        shownEndingIds: [...(this.worldState.metaState?.shownEndingIds ?? [])],
+      },
+      panelState: Object.fromEntries(
+        Object.entries(this.worldState.panelState ?? {}).map(([panelId, state]) => [panelId, {
+          unlocked: Boolean(state?.unlocked),
+          degraded: null,
+        }]),
+      ),
+      queuedMetaMessages: includeQueuedMetaMessages
+        ? this.worldState.consumePendingMetaMessages()
+        : [],
+    };
+  }
+
+  applyRestartPersistence(nextWorldState, persistence = {}) {
+    nextWorldState.metaState = nextWorldState.normalizeMetaState(persistence.metaState ?? nextWorldState.metaState);
+    nextWorldState.panelState = nextWorldState.normalizePanelState(persistence.panelState ?? nextWorldState.panelState);
+  }
+
+  restartAdventure({
+    preface = 'You force the house back to its opening lie.',
+    systemNotice = 'Run restarted. Unlocked panel and shell progress persist.',
+    persistence = this.captureRestartPersistence(),
+    skipPostTurnProcessing = true,
+  } = {}) {
+    const nextWorldState = new WorldState(this.createFreshManifest());
+    this.applyRestartPersistence(nextWorldState, persistence);
+    this.worldState = nextWorldState;
+    this.pendingClarification = null;
+    this.pendingMetaMessages = [...(persistence.queuedMetaMessages ?? [])];
+    this.transcript.recordSystem(systemNotice);
+
+    return this.createExecutionResult(
+      [preface, systemNotice, this.worldState.enterCurrentRoom()].filter(Boolean).join('\n\n'),
+      {
+        type: 'command',
+        verb: 'restart',
+        directObject: null,
+        indirectObject: null,
+      },
+      {
+        consumeTurn: false,
+        skipPostTurnProcessing,
+      },
+    );
+  }
+
+  triggerGameOver(failureText, options = {}) {
+    const persistence = this.captureRestartPersistence({ includeQueuedMetaMessages: true });
+
+    return this.restartAdventure({
+      preface: failureText,
+      systemNotice: options.systemNotice ?? 'The run restarts. Unlocked panel and shell progress persist.',
+      persistence,
+      skipPostTurnProcessing: true,
+    }).response;
+  }
+
   createFreshManifest() {
     if (!this.manifestFactory) {
       return this.manifest;
@@ -1217,6 +1356,7 @@ export class GameSession {
       const nextWorldState = new WorldState(this.createFreshManifest());
       nextWorldState.importSaveData(JSON.parse(savedData));
       this.worldState = nextWorldState;
+      this.pendingClarification = null;
       this.pendingMetaMessages = [];
       return `Game loaded from slot "${normalizedSlot}".\n\n${this.worldState.lookAroundCurrentRoom()}`;
     } catch (error) {

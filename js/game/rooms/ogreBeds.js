@@ -3,6 +3,28 @@ import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createOgreBedsRoom() {
+  const rotateBrushOff = ({ getRoomState, setRoomState }, key, replies) => {
+    const roomState = getRoomState();
+    const nextIndex = roomState[key] ?? 0;
+
+    setRoomState({
+      [key]: nextIndex + 1,
+    });
+
+    return replies[nextIndex % replies.length];
+  };
+
+  const askBrushOffs = [
+    'The servants grumble in their sleep and decline to improve your understanding out loud.',
+    'One ogre drags a blanket over his ear and answers you with the kind of silence usually reserved for bad management.',
+    'A sleeper scratches his ribs, mutters something profane about bells, and refuses to promote your question into a conversation.',
+  ];
+  const tellBrushOffs = [
+    'Your confidence receives a drowsy snort, a shifting bunk, and no sign that introductions matter here after curfew.',
+    'One ogre opens a single eye, decides you are not stew, and closes it again.',
+    'The nearest bunk answers your statement with a blanket-haunted grunt that clearly means not now and possibly not ever.',
+  ];
+
   const servantApron = new Item({
     id: 'servant-apron',
     name: 'servant apron',
@@ -37,7 +59,11 @@ export function createOgreBedsRoom() {
         reply: 'A sleepy grunt from the nearest bunk resolves into words: "Wrongus shouts because the stew listens."',
       },
     ],
-    fallback: 'The servants grumble in their sleep and decline to improve your understanding out loud.',
+    fallback: context => rotateBrushOff(context, 'sleepingOgreAskBrushOffIndex', askBrushOffs),
+  });
+
+  const sleepingOgresTell = createTopicResponder({
+    fallback: context => rotateBrushOff(context, 'sleepingOgreTellBrushOffIndex', tellBrushOffs),
   });
 
   return new Room({
@@ -96,6 +122,7 @@ The kitchen lies back to the south.
         description: 'Several off-duty ogres sleep or pretend to. Even at rest they look built for carrying silver, secrets, and bodies.',
         actions: {
           ask: sleepingOgresAsk,
+          tell: sleepingOgresTell,
         },
       },
     },

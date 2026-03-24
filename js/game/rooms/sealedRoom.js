@@ -6,15 +6,26 @@ import { createCorrectionRoster } from '../items/correctionRoster.js';
 export function createSealedRoom() {
   const correctionBellCard = createCorrectionBellCard();
   const correctionRoster = createCorrectionRoster();
+  correctionBellCard.hide();
+
+  const submitToCorrection = ({ session }) => session.triggerGameOver(
+    'The chair receives you with practiced efficiency. Straps settle, the speaking tube opens, and the room begins explaining you back to yourself in the flat institutional tone reserved for people already reclassified as manageable. By the time panic finishes arriving, correction has already become procedure.',
+  );
 
   return new Room({
     id: 'sealedRoom',
     title: 'Sealed Room',
-    description: `
+    description: ({ isItemVisibleHere }) => {
+      const rosterLine = isItemVisibleHere('correction-roster')
+        ? 'Someone has left a clipped correction roster on the basin shelf, either through negligence or because bureaucracy eventually stops seeing its victims as readers.'
+        : 'The basin shelf shows the clipped indentation where a correction roster had been left until someone sensible removed it.';
+
+      return `
 The hidden chamber beyond the spider room is not a dungeon but something worse: a correction room dressed in the language of care. A restraint chair faces a brass speaking tube. A serving hatch sits flush in the wall beside a wash basin and floor drain polished by too much cleaning.
-Someone has left a clipped correction roster on the basin shelf, either through negligence or because bureaucracy eventually stops seeing its victims as readers.
+${rosterLine}
 Nothing here is theatrical. That is what makes it cruel. South lies the concealed seam back to the web-dark chamber.
-`.trim(),
+`.trim();
+    },
     exits: {
       south: 'spiderRoom',
     },
@@ -31,19 +42,39 @@ Nothing here is theatrical. That is what makes it cruel. South lies the conceale
       ],
     },
     verbs: {
-      search({ command, getFlag, setFlag }) {
+      search({ command, getFlag, setFlag, isItemVisibleHere }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('chair') || target.includes('wall')) {
-          return getFlag('correctionBellCodeKnown')
-            ? 'You search the correction room again and find the same bureaucratic horror: restraint, feeding, washing, a clipped correction roster, and the speaking tube through which the house explained itself to people it had temporarily downgraded from guest to problem.'
-            : 'A close search reveals straps on the chair, tally scratches on the wall, a clipped correction roster by the basin, and a folded service card jammed behind the speaking tube where one desperate occupant must have hidden it.';
+          if (!correctionBellCard.visible) {
+            correctionBellCard.reveal();
+          }
+
+          if (getFlag('correctionBellCodeKnown')) {
+            const rosterText = isItemVisibleHere('correction-roster')
+              ? 'a clipped correction roster'
+              : 'the clip where a correction roster had been left';
+            const tubeText = isItemVisibleHere('correction-bell-card')
+              ? 'the folded service card you already pulled free from behind the speaking tube'
+              : 'the speaking tube from behind which a folded service card had already been removed';
+
+            return `You search the correction room again and find the same bureaucratic horror: restraint, feeding, washing, ${rosterText}, and ${tubeText} through which the house explained itself to people it had temporarily downgraded from guest to problem.`;
+          }
+
+          const rosterText = isItemVisibleHere('correction-roster')
+            ? 'a clipped correction roster by the basin'
+            : 'the empty clip where a correction roster had been left by the basin';
+          return `A close search reveals straps on the chair, tally scratches on the wall, ${rosterText}, and a folded service card jammed behind the speaking tube where one desperate occupant must have hidden it.`;
         }
 
         if (target.includes('tube') || target.includes('speaking tube') || target.includes('hatch')) {
-          return getFlag('correctionBellCodeKnown')
-            ? 'The speaking tube and serving hatch now read as parts of the same system: explanation, feeding, waiting, correction.'
-            : 'Behind the speaking tube grille, someone has wedged a folded service card just out of immediate sight, betting that future captivity would reward thoroughness.';
+          if (!getFlag('correctionBellCodeKnown') && !correctionBellCard.visible) {
+            correctionBellCard.reveal();
+          }
+
+          return isItemVisibleHere('correction-bell-card')
+            ? 'Behind the speaking tube grille, someone has wedged a folded service card just out of immediate sight, betting that future captivity would reward thoroughness.'
+            : 'The speaking tube and serving hatch now read as parts of the same system: explanation, feeding, waiting, correction. The hidden card that once sat behind the grille is already gone.';
         }
 
         if (target.includes('roster') || target.includes('log') || target.includes('protocol') || target.includes('slate')) {
@@ -77,10 +108,33 @@ Nothing here is theatrical. That is what makes it cruel. South lies the conceale
       },
     ],
     objects: {
-      chair: 'The restraint chair is upholstered for long use, not brief violence. The distinction is unforgivable.',
+      chair: {
+        name: 'restraint chair',
+        aliases: ['chair', 'restraint', 'straps'],
+        description: 'The restraint chair is upholstered for long use, not brief violence. The distinction is unforgivable.',
+        actions: {
+          sit: submitToCorrection,
+          use: submitToCorrection,
+          sleep: submitToCorrection,
+        },
+      },
       hatch: 'The serving hatch is just large enough for food, medicine, or smaller humiliations.',
-      tube: 'The brass speaking tube allowed the house to explain itself without having to share a room with the corrected.',
-      slate: 'Tally scratches and erased notations on the wall reduce prior resistance to a maintenance category. A clipped correction roster hangs nearby with the same chill professionalism.',
+      tube: {
+        description({ isItemVisibleHere }) {
+          return isItemVisibleHere('correction-bell-card')
+            ? 'The brass speaking tube allowed the house to explain itself without having to share a room with the corrected. Behind the grille, a folded service card is wedged where only a thorough captive would think to hide it.'
+            : 'The brass speaking tube allowed the house to explain itself without having to share a room with the corrected. The hidden card that once sat behind the grille is already gone.';
+        },
+      },
+      slate: {
+        description({ isItemVisibleHere }) {
+          if (isItemVisibleHere('correction-roster')) {
+            return 'Tally scratches and erased notations on the wall reduce prior resistance to a maintenance category. A clipped correction roster hangs nearby with the same chill professionalism.';
+          }
+
+          return 'Tally scratches and erased notations on the wall reduce prior resistance to a maintenance category. The empty clip nearby suggests the correction roster has already been removed.';
+        },
+      },
       basin: 'The wash basin is polished to the point of accusation.',
       drain: 'The floor drain proves the house expected messes and intended to keep making them disappear.',
     },

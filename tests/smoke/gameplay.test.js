@@ -785,9 +785,13 @@ test('agreeing to stay with Oshregaal yields absorption into his routines', () =
   const session = createTestSession();
 
   moveToFeastHall(session);
-  assert.match(session.submitCommand('tell oshregaal i will stay'), /failure ending: absorption into Oshregaal's routines/i);
-  assert.equal(session.worldState.getFlag('agreedToStay'), true);
-  assert.equal(session.worldState.getFlag('absorbedIntoRoutine'), true);
+  const response = session.submitCommand('tell oshregaal i will stay');
+
+  assert.match(response, /failure ending: absorption into Oshregaal's routines/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+  assert.equal(session.worldState.getFlag('agreedToStay'), false);
+  assert.equal(session.worldState.getFlag('absorbedIntoRoutine'), false);
 });
 
 test('the fishing shack extends the approach with servant-route clues and ugly practical loot', () => {
@@ -1128,6 +1132,7 @@ test('the correction bell code can pull the butlers off the foyer long enough to
   const session = createTestSession();
 
   moveToSealedRoom(session);
+  session.submitCommand('search tube');
   session.submitCommand('take correction bell card');
   session.submitCommand('read correction bell card');
   session.submitCommand('south');

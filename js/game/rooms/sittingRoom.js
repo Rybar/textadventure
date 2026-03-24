@@ -133,11 +133,20 @@ export function createSittingRoom() {
   return new Room({
     id: 'sittingRoom',
     title: 'Sitting Room',
-    description: `
+    description: ({ isItemVisibleHere }) => {
+      const folioLine = isItemVisibleHere('skin-folio')
+        ? 'Four couches of mismatched luxury breathe almost imperceptibly around a low table of obscene folios.'
+        : 'Four couches of mismatched luxury breathe almost imperceptibly around a low table now left bare except for the impression that something obscene had been left there for guests.';
+      const cupLine = isItemVisibleHere('glass-cup')
+        ? 'In the corner, a fountain spills bright water into a basin lined with stacked glass cups.'
+        : 'In the corner, a fountain spills bright water into a basin whose neat ring of dust shows where glass cups had been stacked for waiting guests.';
+
+      return `
 This room is arranged for guests who are expected to wait and, while waiting, question their instincts.
-Four couches of mismatched luxury breathe almost imperceptibly around a low table of obscene folios. In the corner, a fountain spills bright water into a basin lined with stacked glass cups.
+${folioLine} ${cupLine}
 The foyer lies back to the east.
-`.trim(),
+`.trim();
+    },
     scene: {
       getPhase: getSittingRoomPhase,
       phases: {
@@ -159,7 +168,7 @@ The foyer lies back to the east.
       east: 'foyer',
     },
     verbs: {
-      search({ command, getFlag, setFlag }) {
+      search({ command, getFlag, setFlag, isItemVisibleHere }) {
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('table') || target.includes('folios')) {
@@ -168,7 +177,9 @@ The foyer lies back to the east.
             return 'You rifle the folios and loose papers until one margin note emerges from the nonsense: "butlers hear the bell before they hear the guest." The rest returns to gibberish as if embarrassed to have been useful.';
           }
 
-          return 'The folios remain obscene, unreadable, and occasionally helpful in spite of themselves. The one useful margin note about the butlers and the guest bell is still there if you pretend not to need it.';
+          return isItemVisibleHere('skin-folio')
+            ? 'The folios remain obscene, unreadable, and occasionally helpful in spite of themselves. The one useful margin note about the butlers and the guest bell is still there if you pretend not to need it.'
+            : 'The table still reads as an argument for nervous waiting. The one useful margin note about the butlers and the guest bell is easy to remember now, whether or not the folio itself remains where guests were meant to find it.';
         }
 
         if (target.includes('couch') || target.includes('couches') || target.includes('sofa')) {
@@ -195,7 +206,15 @@ The foyer lies back to the east.
       },
     ],
     objects: {
-      table: 'The low table is laden with folios chosen to frighten, flatter, or classify a waiting guest.',
+      table: {
+        description({ isItemVisibleHere }) {
+          if (isItemVisibleHere('skin-folio')) {
+            return 'The low table is laden with folios chosen to frighten, flatter, or classify a waiting guest.';
+          }
+
+          return 'The low table still looks staged for guest intimidation, though the folio that did the work most directly is no longer resting on it.';
+        },
+      },
       basin: 'The basin beneath the fountain is too clean for a room this old, as if refreshed between anxieties.',
     },
   });

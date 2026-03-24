@@ -14,7 +14,7 @@ export function createGuestRoom() {
     return 'presented';
   };
 
-  const advanceGuestRoomScene = ({ currentScenePhase, getRoomState, setRoomState }) => {
+  const advanceGuestRoomScene = ({ currentScenePhase, getRoomState, setRoomState, isItemVisibleHere }) => {
     const sceneState = getRoomState();
     const lastPhase = sceneState.lastGuestRoomPhase ?? null;
     const nextPhaseTurns = lastPhase === currentScenePhase
@@ -32,7 +32,9 @@ export function createGuestRoom() {
 
     switch (currentScenePhase) {
       case 'presented':
-        return 'The lamp, the chest, and the bell pull maintain their perfect little arrangement, as if the room were practicing how to seem kind without ever becoming safe.';
+        return isItemVisibleHere('oil-lamp')
+          ? 'The lamp, the chest, and the bell pull maintain their perfect little arrangement, as if the room were practicing how to seem kind without ever becoming safe.'
+          : 'The chest and bell pull maintain their perfect little arrangement around the nightstand now missing its lamp, as if the room were practicing how to seem kind without ever becoming safe.';
       case 'monitored':
         return 'After the bell answer from below, the room feels less empty than staffed at a distance, as if your needs have been entered into a ledger instead of ignored.';
       case 'loosened':
@@ -128,11 +130,17 @@ export function createGuestRoom() {
   return new Room({
     id: 'guestRoom',
     title: 'Guest Room',
-    description: `
-The guest room is almost offensively normal: a neat rococo bed, a nightstand, an empty chest, and an oil lamp waiting to make the shadows feel arranged rather than accidental.
+    description: ({ isItemVisibleHere }) => {
+      const lampLine = isItemVisibleHere('oil-lamp')
+        ? 'The guest room is almost offensively normal: a neat rococo bed, a nightstand, an empty chest, and an oil lamp waiting to make the shadows feel arranged rather than accidental.'
+        : 'The guest room is almost offensively normal: a neat rococo bed, a nightstand, an empty chest, and a vacant patch on the nightstand where an oil lamp had been waiting to make the shadows feel arranged rather than accidental.';
+
+      return `
+${lampLine}
 It is the sort of room designed to calm a person who has not yet understood how carefully they are being kept.
 The stair leads back down to the foyer.
-`.trim(),
+`.trim();
+    },
     scene: {
       getPhase: getGuestRoomPhase,
       phases: {

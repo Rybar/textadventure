@@ -242,7 +242,9 @@ export function createFeastHall() {
           setFlag('agreedToStay', true);
           setFlag('absorbedIntoRoutine', true);
         },
-        reply: 'Oshregaal softens with genuine pleasure, which is the worst thing he has yet done to you. One course becomes another, then another. You laugh where the room laughs, drink when the cups return, and begin to understand how repetition can be made to feel like belonging from the inside. By the time you notice the pattern closing, you are already one more moving piece inside it. This is a failure ending: absorption into Oshregaal\'s routines.',
+        reply: ({ session }) => session.triggerGameOver(
+          'Oshregaal softens with genuine pleasure, which is the worst thing he has yet done to you. One course becomes another, then another. You laugh where the room laughs, drink when the cups return, and begin to understand how repetition can be made to feel like belonging from the inside. By the time you notice the pattern closing, you are already one more moving piece inside it. Failure ending: absorption into Oshregaal\'s routines.',
+        ),
       },
     ],
     fallback: 'Oshregaal receives your words as though deciding whether they are worth keeping.',

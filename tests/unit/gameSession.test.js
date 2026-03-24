@@ -4,9 +4,16 @@ import assert from 'node:assert/strict';
 import {
   createTestSession,
   installMockLocalStorage,
+  moveToBathroom,
+  moveToBlackWindTreeChamber,
   moveToFoyer,
   moveToFeastHall,
   moveToGuestWing,
+  moveToGrandfatherRoom,
+  moveToKitchen,
+  moveToPlumRoom,
+  moveToSealedRoom,
+  moveToTrophyRoom,
 } from '../helpers/testSession.js';
 
 test('foyer blocks feast-hall access until invitation is shown', () => {
@@ -85,6 +92,139 @@ test('save and load restores room and inventory state', () => {
   }
 });
 
+test('grand stairs prose stops placing the red cloak on the gargoyle after it is taken', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.submitCommand('north');
+  const initialLook = session.submitCommand('look');
+  assert.match(initialLook, /draped with a fine red cloak/i);
+  assert.match(initialLook, /You can see the following items: red cloak\./i);
+
+  const takeResponse = session.submitCommand('take cloak');
+  assert.match(takeResponse, /You take the red cloak\./i);
+
+  const followUpLook = session.submitCommand('look');
+  assert.doesNotMatch(followUpLook, /draped with a fine red cloak/i);
+  assert.match(followUpLook, /bereft of the theatrical red cloak/i);
+  assert.doesNotMatch(followUpLook, /You can see the following items: red cloak\./i);
+  assert.match(session.submitCommand('look cloak'), /richly cut red cloak/i);
+  assert.match(session.submitCommand('inventory'), /red cloak/i);
+});
+
+test('hidden wax plug is not visible before discovery and room prose stays consistent after taking it', () => {
+  const session = createTestSession();
+
+  moveToGrandfatherRoom(session);
+
+  const initialLook = session.submitCommand('look');
+  assert.doesNotMatch(initialLook, /wax plug/i);
+  assert.doesNotMatch(initialLook, /You can see the following items: .*wax plug/i);
+  assert.match(session.submitCommand('take wax plug'), /There is no wax plug here to take\./i);
+
+  const searchResponse = session.submitCommand('search vanity');
+  assert.match(searchResponse, /wrapped plug of dark ear wax hidden behind a comb/i);
+
+  const discoveredLook = session.submitCommand('look');
+  assert.match(discoveredLook, /You can see the following items: bed, wax plug\./i);
+
+  const takeResponse = session.submitCommand('take wax plug');
+  assert.match(takeResponse, /You take the wax plug\./i);
+
+  const followUpLook = session.submitCommand('look');
+  assert.doesNotMatch(followUpLook, /You can see the following items: bed, wax plug\./i);
+  assert.match(followUpLook, /disturbed vanity drawer/i);
+  assert.match(session.submitCommand('look wax plug'), /made for listening less/i);
+  assert.match(session.submitCommand('inventory'), /wax plug/i);
+});
+
+test('secret circle annotation stays hidden until searched and bookshelf prose updates after taking it', () => {
+  const session = createTestSession();
+
+  moveToFeastHall(session);
+  session.submitCommand('tell imp help');
+  session.submitCommand('ask imp about curtains');
+  session.submitCommand('shake hand');
+  session.submitCommand('west');
+
+  const initialLook = session.submitCommand('look');
+  assert.doesNotMatch(initialLook, /road annotation/i);
+  assert.doesNotMatch(initialLook, /You can see the following items: .*road annotation/i);
+  assert.match(session.submitCommand('take road annotation'), /There is no road annotation here to take\./i);
+
+  assert.match(session.submitCommand('search bookshelf'), /borrowed road dressed in newer chalk|activation only wakes the prepared route/i);
+  const revealedLook = session.submitCommand('look');
+  assert.match(revealedLook, /You can see the following items: road annotation, teleport scroll, mutation potion, portal ring\./i);
+
+  assert.match(session.submitCommand('take road annotation'), /You take the road annotation\./i);
+  assert.match(session.submitCommand('look bookshelf'), /narrow gap among the older transit texts/i);
+  assert.doesNotMatch(session.submitCommand('look'), /You can see the following items: .*road annotation/i);
+});
+
+test('trophy room prose updates after the Grey Grin Blade is taken', () => {
+  const session = createTestSession();
+
+  moveToTrophyRoom(session);
+
+  const initialLook = session.submitCommand('look');
+  assert.match(initialLook, /rests the Grey Grin Blade/i);
+  assert.match(initialLook, /You can see the following items: Grey Grin Blade\./i);
+
+  assert.match(session.submitCommand('take grey grin blade'), /You take the Grey Grin Blade\./i);
+
+  const followUpLook = session.submitCommand('look');
+  assert.doesNotMatch(followUpLook, /rests the Grey Grin Blade/i);
+  assert.match(followUpLook, /blackwood stand sits empty/i);
+  assert.doesNotMatch(followUpLook, /You can see the following items: Grey Grin Blade\./i);
+  assert.match(session.submitCommand('search stand'), /displays only absence|someone stole it anyway/i);
+});
+
+test('sealed room bell card stays hidden until discovered and room prose updates after removal', () => {
+  const session = createTestSession();
+
+  moveToSealedRoom(session);
+
+  const initialLook = session.submitCommand('look');
+  assert.match(initialLook, /correction roster/i);
+  assert.doesNotMatch(initialLook, /correction bell card/i);
+  assert.doesNotMatch(initialLook, /You can see the following items: .*correction bell card/i);
+  assert.match(session.submitCommand('take correction bell card'), /There is no correction bell card here to take\./i);
+
+  assert.match(session.submitCommand('search tube'), /folded service card just out of immediate sight/i);
+  const revealedLook = session.submitCommand('look');
+  assert.match(revealedLook, /You can see the following items: correction bell card, correction roster\./i);
+
+  assert.match(session.submitCommand('take correction bell card'), /You take the correction bell card\./i);
+  assert.match(session.submitCommand('look tube'), /hidden card that once sat behind the grille is already gone/i);
+  assert.doesNotMatch(session.submitCommand('look'), /You can see the following items: .*correction bell card/i);
+});
+
+test('plum room desk prose reflects when the memory folder has been taken', () => {
+  const session = createTestSession();
+
+  moveToPlumRoom(session);
+
+  assert.match(session.submitCommand('search desk'), /memory folder kept close enough to be grabbed in panic/i);
+  assert.match(session.submitCommand('take memory folder'), /You take the memory folder\./i);
+  assert.match(session.submitCommand('search desk'), /conspicuous gap where a memory folder had been kept/i);
+  assert.match(session.submitCommand('read memory folder'), /Wax in one ear blunts the host-voice/i);
+  assert.match(session.submitCommand('look'), /memory folder you took still gives the room the air/i);
+});
+
+test('bathroom prose stops placing the silver mirror after it is taken', () => {
+  const session = createTestSession();
+
+  moveToBathroom(session);
+
+  const initialLook = session.submitCommand('look');
+  assert.match(initialLook, /silver-backed mirror/i);
+  assert.match(session.submitCommand('take silver mirror'), /You take the silver mirror\./i);
+
+  const followUpLook = session.submitCommand('look');
+  assert.doesNotMatch(followUpLook, /silver-backed mirror/i);
+  assert.match(followUpLook, /empty stand where the guest hand mirror had been set/i);
+});
+
 test('interface model starts with locked panels and debugpanel unlocks without spending a turn', () => {
   const session = createTestSession();
 
@@ -98,6 +238,30 @@ test('interface model starts with locked panels and debugpanel unlocks without s
   assert.match(response, /map panel unlocked/i);
   assert.equal(session.worldState.turns, 0);
   assert.equal(session.getInterfaceModel().panels.find(panel => panel.id === 'map')?.unlocked, true);
+});
+
+test('help hides debug and shell verbs until the shell is actually exposed', () => {
+  const session = createTestSession();
+
+  session.start();
+
+  const response = session.submitCommand('help');
+
+  assert.doesNotMatch(response, /debugmeta|debughacker|debugpanel|nextmeta|nexthacker/i);
+  assert.doesNotMatch(response, /scan|peek|poke/i);
+  assert.doesNotMatch(response, /map will open the spatial overlay/i);
+});
+
+test('help reveals shell verbs once the memory panel is available', () => {
+  const session = createTestSession();
+
+  session.start();
+  session.submitCommand('debugpanel memory');
+
+  const response = session.submitCommand('help');
+
+  assert.match(response, /scan, peek, and poke/i);
+  assert.doesNotMatch(response, /debugmeta|debughacker|debugpanel|nextmeta|nexthacker/i);
 });
 
 test('save and load restores panel unlock state', () => {
@@ -118,6 +282,86 @@ test('save and load restores panel unlock state', () => {
   } finally {
     restoreStorage();
   }
+});
+
+test('restart resets the run while preserving unlocked panels and clearing degradation', () => {
+  const session = createTestSession();
+
+  moveToGrandfatherRoom(session);
+  session.submitCommand('take wax plug');
+  session.submitCommand('debugpanel memory');
+  session.worldState.degradePanel('memory', 'static');
+
+  const response = session.submitCommand('restart');
+
+  assert.match(response, /run restarted|fresh run/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+  assert.equal(session.worldState.turns, 0);
+  assert.equal(session.worldState.findInventoryItem('wax plug'), null);
+  assert.equal(session.worldState.getPanelState('memory')?.unlocked, true);
+  assert.equal(session.worldState.getPanelState('memory')?.degraded, null);
+  assert.match(session.submitCommand('help'), /scan, peek, and poke/i);
+});
+
+test('agreeing to stay with Oshregaal causes a restartable game over', () => {
+  const session = createTestSession();
+
+  moveToFeastHall(session);
+  const response = session.submitCommand('tell oshregaal i will stay');
+
+  assert.match(response, /one course becomes another/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+});
+
+test('sleeping in Oshregaal\'s bed causes a restartable game over', () => {
+  const session = createTestSession();
+
+  moveToGrandfatherRoom(session);
+  const response = session.submitCommand('sleep bed');
+
+  assert.match(response, /velvet accepts you too easily/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+});
+
+test('sitting in the correction chair causes a restartable game over', () => {
+  const session = createTestSession();
+
+  moveToSealedRoom(session);
+  const response = session.submitCommand('sit chair');
+
+  assert.match(response, /chair receives you with practiced efficiency/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+});
+
+test('drinking black-wind sap causes a restartable game over', () => {
+  const session = createTestSession();
+
+  moveToBlackWindTreeChamber(session);
+  const response = session.submitCommand('drink sap');
+
+  assert.match(response, /sap hits your tongue/i);
+  assert.match(response, /run restarts/i);
+  assert.equal(session.worldState.currentRoomId, 'cavern');
+});
+
+test('sleeping ogres rotate their tell brush-offs', () => {
+  const session = createTestSession();
+
+  moveToKitchen(session);
+  session.submitCommand('north');
+
+  const firstResponse = session.submitCommand('tell ogres hello');
+  const secondResponse = session.submitCommand('tell ogres hello');
+  const thirdResponse = session.submitCommand('tell ogres hello');
+
+  assert.notEqual(firstResponse, secondResponse);
+  assert.notEqual(secondResponse, thirdResponse);
+  assert.match(firstResponse, /drowsy snort|single eye|blanket-haunted grunt/i);
+  assert.match(secondResponse, /drowsy snort|single eye|blanket-haunted grunt/i);
+  assert.match(thirdResponse, /drowsy snort|single eye|blanket-haunted grunt/i);
 });
 
 test('map panel renders discovered rooms as connected room boxes with a location label', () => {

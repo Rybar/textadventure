@@ -13,22 +13,17 @@ let activeMobilePanelId = null;
 let nextTranscriptEntryId = 1;
 let activeTypingIntervalId = null;
 let activeTypingEntryId = null;
-let activeStatusMetaTimeoutId = null;
-let activeStatusMetaMessage = null;
-let stopActiveStatusMetaAnimation = null;
+let activeTranscriptMetaTimeoutId = null;
+let activeTranscriptMetaEntryId = null;
+let stopActiveTranscriptMetaAnimation = null;
 let transcriptShouldSnapToBottom = true;
-const queuedStatusMetaMessages = [];
+const queuedTranscriptMetaMessages = [];
 const inputElement = document.getElementById('cli-input');
 const commandBarElement = document.getElementById('command-bar');
 const mobilePanelTabsElement = document.getElementById('mobile-panel-tabs');
 const mobilePanelTabElements = Array.from(document.querySelectorAll('.mobile-panel-tab'));
 const transcriptScrollContainerElement = document.getElementById('text-grid-container');
 const transcriptOutputElement = document.getElementById('transcript-output');
-const statusElements = {
-    metaLine: document.getElementById('status-meta-line'),
-    mobileMetaOverlay: document.getElementById('mobile-meta-overlay'),
-    mobileMetaLine: document.getElementById('mobile-meta-line'),
-};
 const terminalStageElement = document.getElementById('terminal-stage');
 const panelStackElement = document.getElementById('panel-stack');
 const panelElements = {
@@ -72,7 +67,6 @@ function updateViewportMetrics() {
 }
 
 function applyDeviceTheme() {
-    const previousMobileTheme = isMobileThemeActive;
     isMobileThemeActive = shouldUseMobileTheme();
     bodyElement.dataset.deviceTheme = isMobileThemeActive ? 'mobile' : 'desktop';
 
@@ -82,33 +76,6 @@ function applyDeviceTheme() {
     }
 
     updateViewportMetrics();
-
-    if (previousMobileTheme !== isMobileThemeActive) {
-        if (activeStatusMetaMessage?.text) {
-            const interruptedMessage = activeStatusMetaMessage;
-
-            if (activeStatusMetaTimeoutId) {
-                globalThis.clearTimeout(activeStatusMetaTimeoutId);
-                activeStatusMetaTimeoutId = null;
-            }
-
-            if (stopActiveStatusMetaAnimation) {
-                stopActiveStatusMetaAnimation();
-                stopActiveStatusMetaAnimation = null;
-            }
-
-            activeStatusMetaMessage = null;
-            syncStatusMetaContainers();
-            queuedStatusMetaMessages.unshift({
-                ...interruptedMessage,
-                delayMs: 0,
-            });
-            showNextStatusMetaMessage();
-            return;
-        }
-
-        syncStatusMetaContainers();
-    }
 }
 
 function escapeHtml(text) {
@@ -196,10 +163,6 @@ function renderInterfaceChrome() {
     });
 }
 
-function getActiveStatusMetaElement() {
-    return isMobileThemeActive ? statusElements.mobileMetaLine : statusElements.metaLine;
-}
-
 function getMetaMessageTone(message = {}) {
     if (message.source === 'hacker') {
         return 'hacker';
@@ -216,47 +179,6 @@ function getMetaMessageTone(message = {}) {
     return '';
 }
 
-function syncStatusMetaContainers({ text = '', source = '', tone = '', visible = false } = {}) {
-    statusElements.metaLine.textContent = '';
-    statusElements.metaLine.dataset.source = '';
-    statusElements.metaLine.dataset.tone = '';
-
-    statusElements.mobileMetaLine.textContent = '';
-    statusElements.mobileMetaLine.dataset.source = '';
-    statusElements.mobileMetaLine.dataset.tone = '';
-    statusElements.mobileMetaOverlay.dataset.visible = 'false';
-    statusElements.mobileMetaOverlay.setAttribute('aria-hidden', 'true');
-
-    if (!visible || !text) {
-        return;
-    }
-
-    const activeElement = getActiveStatusMetaElement();
-    activeElement.textContent = text;
-    activeElement.dataset.source = source;
-    activeElement.dataset.tone = tone;
-
-    if (isMobileThemeActive) {
-        statusElements.mobileMetaOverlay.dataset.visible = 'true';
-        statusElements.mobileMetaOverlay.setAttribute('aria-hidden', 'false');
-    }
-}
-
-function clearStatusMetaDisplay() {
-    if (activeStatusMetaTimeoutId) {
-        globalThis.clearTimeout(activeStatusMetaTimeoutId);
-        activeStatusMetaTimeoutId = null;
-    }
-
-    if (stopActiveStatusMetaAnimation) {
-        stopActiveStatusMetaAnimation();
-        stopActiveStatusMetaAnimation = null;
-    }
-
-    activeStatusMetaMessage = null;
-    syncStatusMetaContainers();
-}
-
 function getReadableMetaHoldDuration(message) {
     const configuredHoldDuration = message.options?.holdDuration ?? 0;
     const wordCount = String(message.text ?? '')
@@ -268,46 +190,96 @@ function getReadableMetaHoldDuration(message) {
     return Math.max(configuredHoldDuration, readingDuration);
 }
 
-function startStatusMetaMessage(message) {
-    const animationOptions = message.options ? { ...message.options } : {};
+function getTranscriptEntryById(entryId) {
+    return transcriptEntries.find(candidate => candidate.id === entryId) ?? null;
+}
 
-    activeStatusMetaMessage = message;
-    syncStatusMetaContainers({
-        visible: true,
-        source: message.source ?? '',
+function getTranscriptEntryElement(entryId) {
+    return transcriptOutputElement.querySelector(`[data-entry-id="${entryId}"]`);
+}
+
+function createTranscriptMetaEntry(message) {
+    const transcriptEntry = {
+        id: nextTranscriptEntryId,
+        type: 'meta',
+        text: '',
+        renderedText: '',
         tone: getMetaMessageTone(message),
-    });
+        source: message.source ?? '',
+        cleared: false,
+        isAnimating: false,
+    };
 
-    const activeMetaElement = getActiveStatusMetaElement();
-    stopActiveStatusMetaAnimation = animateScrambledText(activeMetaElement, message.text, {
+    nextTranscriptEntryId += 1;
+    transcriptEntries.push(transcriptEntry);
+    return transcriptEntry;
+}
+
+function clearTranscriptMetaAnimation() {
+    if (activeTranscriptMetaTimeoutId) {
+        globalThis.clearTimeout(activeTranscriptMetaTimeoutId);
+        activeTranscriptMetaTimeoutId = null;
+    }
+
+    if (stopActiveTranscriptMetaAnimation) {
+        stopActiveTranscriptMetaAnimation();
+        stopActiveTranscriptMetaAnimation = null;
+    }
+
+    activeTranscriptMetaEntryId = null;
+}
+
+function startTranscriptMetaMessage(message) {
+    const animationOptions = message.options ? { ...message.options } : {};
+    const transcriptEntry = createTranscriptMetaEntry(message);
+
+    transcriptEntry.isAnimating = true;
+    requestTranscriptSnapToBottom();
+    renderScreen();
+
+    const metaElement = getTranscriptEntryElement(transcriptEntry.id)?.querySelector('.transcript-meta');
+    if (!metaElement) {
+        transcriptEntry.isAnimating = false;
+        transcriptEntry.cleared = true;
+        renderScreen();
+        showNextTranscriptMetaMessage();
+        return;
+    }
+
+    activeTranscriptMetaEntryId = transcriptEntry.id;
+    stopActiveTranscriptMetaAnimation = animateScrambledText(metaElement, message.text, {
         ...animationOptions,
         holdDuration: getReadableMetaHoldDuration(message),
         onComplete: () => {
-            activeStatusMetaMessage = null;
-            stopActiveStatusMetaAnimation = null;
-            syncStatusMetaContainers();
-            showNextStatusMetaMessage();
+            transcriptEntry.isAnimating = false;
+            transcriptEntry.cleared = true;
+            transcriptEntry.text = '';
+            transcriptEntry.renderedText = '';
+            metaElement.textContent = '';
+            clearTranscriptMetaAnimation();
+            renderScreen();
+            showNextTranscriptMetaMessage();
         },
     });
 }
 
-function showNextStatusMetaMessage() {
-    if (activeStatusMetaMessage || queuedStatusMetaMessages.length === 0) {
+function showNextTranscriptMetaMessage() {
+    if (activeTranscriptMetaEntryId != null || queuedTranscriptMetaMessages.length === 0) {
         return;
     }
 
-    const message = queuedStatusMetaMessages.shift();
+    const message = queuedTranscriptMetaMessages.shift();
     if (!message?.text) {
-        showNextStatusMetaMessage();
+        showNextTranscriptMetaMessage();
         return;
     }
 
     if ((message.delayMs ?? 0) > 0) {
-        activeStatusMetaMessage = { delayed: true };
-        activeStatusMetaTimeoutId = globalThis.setTimeout(() => {
-            activeStatusMetaMessage = null;
-            activeStatusMetaTimeoutId = null;
-            startStatusMetaMessage({
+        activeTranscriptMetaEntryId = -1;
+        activeTranscriptMetaTimeoutId = globalThis.setTimeout(() => {
+            activeTranscriptMetaEntryId = null;
+            activeTranscriptMetaTimeoutId = null;
+            startTranscriptMetaMessage({
                 ...message,
                 delayMs: 0,
             });
@@ -315,7 +287,7 @@ function showNextStatusMetaMessage() {
         return;
     }
 
-    startStatusMetaMessage(message);
+    startTranscriptMetaMessage(message);
 }
 
 function isTranscriptNearBottom() {
@@ -383,33 +355,68 @@ function scrollTranscriptToBottom() {
 }
 
 function renderTranscriptEntries() {
-    const fragment = document.createDocumentFragment();
+    transcriptEntries.forEach((entry, index) => {
+        let entryElement = transcriptOutputElement.children[index];
 
-    transcriptEntries.forEach(entry => {
-        const entryElement = document.createElement('article');
+        if (!entryElement || entryElement.dataset.entryId !== String(entry.id)) {
+            entryElement = document.createElement('article');
+            transcriptOutputElement.insertBefore(entryElement, transcriptOutputElement.children[index] ?? null);
+        }
+
+        entryElement.dataset.entryId = String(entry.id);
         entryElement.className = `transcript-entry transcript-entry-${entry.type}`;
 
         if (entry.type === 'turn') {
-            const commandElement = document.createElement('div');
-            commandElement.className = 'transcript-command';
+            let commandElement = entryElement.querySelector('.transcript-command');
+            let responseElement = entryElement.querySelector('.transcript-response');
+
+            if (!commandElement || !responseElement || entryElement.childElementCount !== 2) {
+                entryElement.replaceChildren();
+                commandElement = document.createElement('div');
+                commandElement.className = 'transcript-command';
+                responseElement = document.createElement('div');
+                responseElement.className = 'transcript-response';
+                entryElement.append(commandElement, responseElement);
+            }
+
             commandElement.textContent = `> ${entry.command}`;
-            entryElement.appendChild(commandElement);
-
-            const responseElement = document.createElement('div');
-            responseElement.className = 'transcript-response';
             responseElement.textContent = entry.renderedResponse;
-            entryElement.appendChild(responseElement);
-        } else {
-            const systemElement = document.createElement('div');
-            systemElement.className = 'transcript-system';
-            systemElement.textContent = entry.renderedText;
-            entryElement.appendChild(systemElement);
-        }
+        } else if (entry.type === 'meta') {
+            let metaElement = entryElement.querySelector('.transcript-meta');
 
-        fragment.appendChild(entryElement);
+            if (!metaElement || entryElement.childElementCount !== 1) {
+                entryElement.replaceChildren();
+                metaElement = document.createElement('div');
+                metaElement.className = 'transcript-meta';
+                entryElement.appendChild(metaElement);
+            }
+
+            entryElement.dataset.tone = entry.tone ?? '';
+            entryElement.dataset.cleared = entry.cleared ? 'true' : 'false';
+            metaElement.dataset.source = entry.source ?? '';
+            metaElement.dataset.tone = entry.tone ?? '';
+
+            if (!entry.isAnimating) {
+                metaElement.textContent = entry.renderedText;
+            }
+        } else {
+            let systemElement = entryElement.querySelector('.transcript-system');
+
+            if (!systemElement || entryElement.childElementCount !== 1) {
+                entryElement.replaceChildren();
+                systemElement = document.createElement('div');
+                systemElement.className = 'transcript-system';
+                entryElement.appendChild(systemElement);
+            }
+
+            systemElement.textContent = entry.renderedText;
+        }
     });
 
-    transcriptOutputElement.replaceChildren(fragment);
+    while (transcriptOutputElement.children.length > transcriptEntries.length) {
+        transcriptOutputElement.lastElementChild?.remove();
+    }
+
     scrollTranscriptToBottom();
 }
 
@@ -526,14 +533,14 @@ function updateMetaMessages(messages = []) {
             return;
         }
 
-        queuedStatusMetaMessages.push({
+        queuedTranscriptMetaMessages.push({
             ...message,
             delayMs: message.delayMs ?? 0,
         });
     });
 
-    if (!activeStatusMetaMessage) {
-        showNextStatusMetaMessage();
+    if (activeTranscriptMetaEntryId == null) {
+        showNextTranscriptMetaMessage();
     }
 }
 

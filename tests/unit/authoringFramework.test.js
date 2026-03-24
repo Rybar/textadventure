@@ -217,6 +217,39 @@ test('room scenes add phase text, advance on turns, and persist room-local state
   assert.match(session.submitCommand('look'), /Alert scene\./i);
 });
 
+test('room and item descriptions can react to item presence and inventory state', () => {
+  const coin = new Item({
+    id: 'coin',
+    name: 'coin',
+    description({ isItemInInventory, item }) {
+      return isItemInInventory(item)
+        ? 'A warm coin resting in your hand.'
+        : 'A warm coin waiting on the table.';
+    },
+  });
+
+  const session = new GameSession({
+    id: 'presence-aware-description-test',
+    startingRoomId: 'start',
+    rooms: {
+      start: new Room({
+        id: 'start',
+        title: 'Start',
+        description: ({ isItemVisibleHere }) => isItemVisibleHere('coin')
+          ? 'A plain test room with a coin on the table.'
+          : 'A plain test room with a bare table.',
+        items: [coin],
+      }),
+    },
+  });
+
+  assert.match(session.start(), /coin on the table/i);
+  assert.match(session.submitCommand('look coin'), /waiting on the table/i);
+  assert.match(session.submitCommand('take coin'), /You take the coin\./i);
+  assert.match(session.submitCommand('look'), /bare table/i);
+  assert.match(session.submitCommand('look coin'), /resting in your hand/i);
+});
+
 test('generic action resolution supports using an item on a target object', () => {
   const key = new Item({
     id: 'test-key',
