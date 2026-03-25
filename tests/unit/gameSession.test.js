@@ -12,6 +12,7 @@ import {
   moveToGuestWing,
   moveToGrandfatherRoom,
   moveToKitchen,
+  moveToLibrary,
   moveToPlumRoom,
   moveToSealedRoom,
   moveToTrophyRoom,
@@ -101,6 +102,68 @@ test('giving the invitation in the foyer sets admission state', () => {
   assert.match(response, /proceed as a guest/i);
   assert.equal(session.worldState.getFlag('foyerAdmitted'), true);
   assert.match(session.submitCommand('look'), /successfully categorized problem|less like an interruption/i);
+});
+
+test('giving the invitation to a singular ogre alias also admits the player', () => {
+  const session = createTestSession();
+
+  moveToFoyer(session);
+  const response = session.submitCommand('give invitation to ogre');
+
+  assert.match(response, /accepted|proceed as a guest/i);
+  assert.equal(session.worldState.getFlag('foyerAdmitted'), true);
+});
+
+test('giving or showing the invitation to zamzam also admits the player', () => {
+  const giveSession = createTestSession();
+  moveToFoyer(giveSession);
+
+  const giveResponse = giveSession.submitCommand('give invitation to zamzam');
+
+  assert.match(giveResponse, /accepted|formal gesture|professional approval/i);
+  assert.equal(giveSession.worldState.getFlag('foyerAdmitted'), true);
+
+  const showSession = createTestSession();
+  moveToFoyer(showSession);
+
+  const showResponse = showSession.submitCommand('show invitation to zamzam');
+
+  assert.match(showResponse, /accepted|steps aside|professional approval/i);
+  assert.equal(showSession.worldState.getFlag('foyerAdmitted'), true);
+});
+
+test('early authored touch responses override generic fallback text', () => {
+  const cavernSession = createTestSession();
+  cavernSession.start();
+  const puddleResponse = cavernSession.submitCommand('touch puddle');
+  assert.match(puddleResponse, /newly invented|clean in a way the mansion above has absolutely not earned/i);
+  assert.doesNotMatch(puddleResponse, /You can't touch/i);
+
+  const foyerSession = createTestSession();
+  moveToFoyer(foyerSession);
+  const chandelierResponse = foyerSession.submitCommand('push chandelier');
+  assert.match(chandelierResponse, /decorative manslaughter|think better/i);
+  assert.doesNotMatch(chandelierResponse, /You can't push/i);
+});
+
+test('service rooms use bespoke negative prose for common impossible actions', () => {
+  const kitchenSession = createTestSession();
+  moveToKitchen(kitchenSession);
+  const fireResponse = kitchenSession.submitCommand('touch fire');
+  assert.match(fireResponse, /old reliable answer|pain, but preventively/i);
+  assert.doesNotMatch(fireResponse, /You can't touch/i);
+
+  const bathroomSession = createTestSession();
+  moveToBathroom(bathroomSession);
+  const panelResponse = bathroomSession.submitCommand('pull panel');
+  assert.match(panelResponse, /concealed cistern panel swings free|service shaft below/i);
+  assert.equal(bathroomSession.worldState.getFlag('bathroomPanelOpened'), true);
+
+  const librarySession = createTestSession();
+  moveToLibrary(librarySession);
+  const ladderResponse = librarySession.submitCommand('push ladders');
+  assert.match(ladderResponse, /genteel complaint|scholarly credentials/i);
+  assert.doesNotMatch(ladderResponse, /You can't push/i);
 });
 
 test('showing the invitation in the foyer also supports admission flow', () => {

@@ -54,6 +54,9 @@ export function createGuestRoom() {
         this.updateStateDescription('The oil lamp now burns with a small steady flame that makes the room feel inhabited by expectation rather than comfort.');
         return 'You light the oil lamp. The flame sharpens every edge in the room.';
       },
+      touch() {
+        return 'The lamp is cool for now, all brass composure and stored accusation.';
+      },
     },
   });
 
@@ -64,6 +67,9 @@ export function createGuestRoom() {
     actions: {
       sleep() {
         return 'Not yet. The house has only just begun to take an interest in you.';
+      },
+      sit() {
+        return 'You sit on the bed. It is soft in the deeply suspicious way of accommodations designed to make captivity feel like taste.';
       },
     },
     portable: false,
@@ -77,6 +83,9 @@ export function createGuestRoom() {
     actions: {
       open() {
         return 'You lift the lid. The chest is empty except for cedar shavings and a few shallow scratches in the wood, as though prior guests had once reconsidered its intended use from the inside.';
+      },
+      touch() {
+        return 'The cedarwood is smooth and dry under your hand. The lid feels lighter than the mood it suggests.';
       },
     },
     portable: false,
@@ -123,6 +132,9 @@ export function createGuestRoom() {
     actions: {
       read() {
         return 'The card reads: "Ring once for comfort. Ring twice if your memories trouble you. A servant will attend when convenient." The last phrase does not improve on reflection.';
+      },
+      touch() {
+        return 'The card stock is thick enough to imply authority and smooth enough to imply the authority expects obedience.';
       },
     },
   });
@@ -176,7 +188,17 @@ The stair leads back down to the foyer.
     items: [lamp, bed, chest, bellPull, guestCard],
     objects: {
       nightstand: 'The nightstand is polished, ordinary, and therefore one of the more suspicious objects in the house.',
-      sheets: 'The sheets smell faintly of lavender and old dust.',
+      sheets: {
+        description: 'The sheets smell faintly of lavender and old dust.',
+        actions: {
+          smell() {
+            return 'The sheets smell of lavender, starch, and the labor of someone who had to make a guest bed for whatever happens next.';
+          },
+          touch() {
+            return 'The sheets are cool and tightly tucked, all hospitality on the surface and nothing trustworthy underneath it.';
+          },
+        },
+      },
       door: 'A lacquered eastern door leads to a guest bathroom lavish enough to suggest that Oshregaal considers hygiene part of the performance.',
     },
   });

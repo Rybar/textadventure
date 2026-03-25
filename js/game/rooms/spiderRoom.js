@@ -148,6 +148,9 @@ Below the cocooned corpse stands a counting frame of black beads, finger bones, 
         aliases: ['chariadulscha', 'he-who-counts', 'corpse', 'god', 'god-shade'],
         description: 'The thing in the web is mummified, jointed wrong, and edited down to a face that looks more numerical than human. It does not feel asleep so much as budgeted.',
         actions: {
+          touch() {
+            return 'You choose not to touch the hanging god-shade. Some relics are clearly waiting for a hand to become an accounting entry.';
+          },
           ask({ topic, getFlag, setFlag }) {
             setFlag('chariadulschaMet', true);
 
@@ -218,11 +221,49 @@ Below the cocooned corpse stands a counting frame of black beads, finger bones, 
           },
         },
       },
-      corpse: 'The suspended corpse hangs in the web canopy like a captured theorem of divinity gone to dust.',
-      web: 'The web canopy is too symmetrical to be natural. Each strand looks measured, filed, and then spun.',
-      frame: 'The counting frame waits beneath the corpse like a priestly abacus for sins, vows, and confiscated futures.',
-      dish: 'The offering dish contains clipped hair, old blood, and bits of paper where names used to matter.',
-      wall: 'The north wall is wrapped in old silk. Beneath it, the stone seam looks less architectural than punitive.',
+      corpse: {
+        description: 'The suspended corpse hangs in the web canopy like a captured theorem of divinity gone to dust.',
+        actions: {
+          touch() {
+            return 'Even at a cautious distance, touching the corpse seems like volunteering to be noticed by every accounting principle in the room.';
+          },
+        },
+      },
+      web: {
+        description: 'The web canopy is too symmetrical to be natural. Each strand looks measured, filed, and then spun.',
+        actions: {
+          touch() {
+            return 'The silk is stronger than it looks and dry as old parchment, more archive than nest.';
+          },
+        },
+      },
+      frame: {
+        description: 'The counting frame waits beneath the corpse like a priestly abacus for sins, vows, and confiscated futures.',
+        actions: {
+          touch() {
+            return 'The black beads click softly under your fingers with the sound of debts deciding whether they recognize you.';
+          },
+        },
+      },
+      dish: {
+        description: 'The offering dish contains clipped hair, old blood, and bits of paper where names used to matter.',
+        actions: {
+          touch() {
+            return 'You do not disturb the offering dish. Nothing in it looks inactive enough to count as safely abandoned.';
+          },
+          smell() {
+            return 'Old blood, stale silk, and the dry sweet rot of preserved vows rise from the dish together.';
+          },
+        },
+      },
+      wall: {
+        description: 'The north wall is wrapped in old silk. Beneath it, the stone seam looks less architectural than punitive.',
+        actions: {
+          touch() {
+            return 'The silk over the wall is dry and tight, with a seam beneath it that feels less hidden than deliberately resented.';
+          },
+        },
+      },
     },
   });
 }

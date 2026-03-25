@@ -64,6 +64,9 @@ export function createNathemaRoom() {
       wear() {
         return 'You drape the sable veil over yourself. It lends mystery, menace, and a strong chance of being noticed by the wrong sort of professional.';
       },
+      touch() {
+        return 'The veil is soft, cold, and folded with military exactness. Even Nathema\'s spare elegance appears to travel under orders.';
+      },
     },
   });
 
@@ -390,6 +393,9 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
         aliases: ['lady nathema', 'nathema'],
         description: 'Lady Nathema is dressed for diplomacy, extortion, or a funeral depending on how the light catches her. She gives the impression of having arrived with plans and backup plans for everyone else\'s plans.',
         actions: {
+          touch() {
+            return 'Nathema does not move away. She only looks at you until the gesture becomes obviously unsound on a strategic level.';
+          },
           ask: nathemaAsk,
           tell: nathemaTell,
           show({ item, setFlag }) {
@@ -441,9 +447,30 @@ Lady Nathema sits amid the arrangement like a woman already pricing the house. T
           },
         },
       },
-      chest: 'One travel chest is wrapped in diplomatic cloth and bound with a cord too practical for ceremony. It is the room\'s least innocent object.',
-      brazier: 'The brazier burns bitter perfume and a pinch of some darker resin. The smell is meant to announce rank, caution, and selective menace.',
-      silks: 'Folded silks and traveling garments hang in disciplined layers, each expensive enough to suggest that Nathema dresses for negotiations as other people dress for war.',
+      chest: {
+        description: 'One travel chest is wrapped in diplomatic cloth and bound with a cord too practical for ceremony. It is the room\'s least innocent object.',
+        actions: {
+          touch() {
+            return 'The wrapped chest is heavier than ceremony needs and better balanced than innocence permits.';
+          },
+        },
+      },
+      brazier: {
+        description: 'The brazier burns bitter perfume and a pinch of some darker resin. The smell is meant to announce rank, caution, and selective menace.',
+        actions: {
+          smell() {
+            return 'The brazier exhales rank, ash, and controlled hostility. Nathema has scented the room like a warning issued in good taste.';
+          },
+        },
+      },
+      silks: {
+        description: 'Folded silks and traveling garments hang in disciplined layers, each expensive enough to suggest that Nathema dresses for negotiations as other people dress for war.',
+        actions: {
+          touch() {
+            return 'The silks are exquisite and ruthlessly practical in their arrangement, luxury sorted for deployment rather than admiration.';
+          },
+        },
+      },
     },
   });
 }

@@ -54,6 +54,14 @@ export function createKitchenRoom() {
     name: 'spice bundle',
     aliases: ['spices'],
     description: 'A fresh bundle of cavern herbs and impossible spices tied up in kitchen twine.',
+    actions: {
+      smell() {
+        return 'The bundle smells sharp, green, and argumentative, like an herb garden that studied rhetoric.';
+      },
+      touch() {
+        return 'The stems are still damp and springy. Wrongus clearly prefers ingredients that have not yet had time to surrender.';
+      },
+    },
   });
 
   const brandyPudding = new Item({
@@ -64,6 +72,9 @@ export function createKitchenRoom() {
     actions: {
       drink() {
         return 'The brandy pudding hits like a velvet hammer. Wrongus would probably approve. A doctor would not.';
+      },
+      smell() {
+        return 'The brandy pudding smells rich enough to cancel judgment for three full breaths.';
       },
     },
   });
@@ -84,6 +95,17 @@ export function createKitchenRoom() {
       eat() {
         return 'You taste the stew. It is magnificent, which is exactly the sort of problem this house would produce.';
       },
+      smell({ getFlag }) {
+        return getFlag('kitchenBloodHintKnown')
+          ? 'Now that you know what belongs in it, the cauldron smells less like dinner and more like doctrine richly seasoned against inquiry.'
+          : 'The cauldron breathes fish, wine, spice, and something metallic enough to make curiosity briefly self-protective.';
+      },
+      touch() {
+        return 'The iron cauldron is too hot to touch for long. Wrongus has achieved the exact temperature at which curiosity becomes a blister.';
+      },
+      taste() {
+        return 'You steal the smallest possible taste. The result is exquisite and therefore deeply untrustworthy.';
+      },
     },
     portable: false,
   });
@@ -96,6 +118,12 @@ export function createKitchenRoom() {
     actions: {
       eat() {
         return 'You decide against eating a living confection while it is still glaring at you.';
+      },
+      touch() {
+        return 'The glass jumps slightly as the candy ooze presses back against your fingertip from the far side, offended by your confidence.';
+      },
+      smell() {
+        return 'Even through the lid, the jar smells aggressively sweet, like a dessert trying to pass as a threat or vice versa.';
       },
     },
   });
@@ -321,6 +349,9 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
       wrongus: {
         description: 'Wrongus is a mutant ogre cook with a chef\'s hat balanced over the stunted leg growing from the crown of his head. He looks at food the way generals look at maps.',
         actions: {
+          touch() {
+            return 'Wrongus regards the attempt with profound offense and brandishes the ladle just enough to explain the policy without formally stating it.';
+          },
           ask: wrongusAsk,
           tell: wrongusTell,
           give({ item }) {
@@ -337,12 +368,56 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
         },
       },
       barrels: 'Half the barrels are wine. The rest are water pretending to be respectable company.',
-      beams: 'The ceiling beams are blackened with smoke, grease, and years of enthusiastic culinary violence. Spice bundles hang from them like fragrant warnings.',
-      fire: 'The fire under the cauldron burns with disciplined heat, fed just hard enough to keep the stew persuasive without letting the room become honesty by smoke alarm.',
+      beams: {
+        description: 'The ceiling beams are blackened with smoke, grease, and years of enthusiastic culinary violence. Spice bundles hang from them like fragrant warnings.',
+        actions: {
+          touch() {
+            return 'The beam leaves soot on your fingers immediately, as if the kitchen wishes to mark everyone who reaches above their station.';
+          },
+          pull() {
+            return 'You tug at one hanging bundle and think better of discovering how Wrongus responds to culinary tampering in progress.';
+          },
+        },
+      },
+      fire: {
+        description: 'The fire under the cauldron burns with disciplined heat, fed just hard enough to keep the stew persuasive without letting the room become honesty by smoke alarm.',
+        actions: {
+          touch() {
+            return 'You extend a hand toward the fire and receive the old reliable answer: pain, but preventively.';
+          },
+          smell() {
+            return 'The fire smells of oak smoke, rendered fat, and ongoing consequences.';
+          },
+        },
+      },
       fish: 'Fresh cave fish lie stacked in readiness, all translucent flesh and milky eyes.',
-      shelf: 'The shelf bows under jars of candy ooze, each one straining toward the room like a thought trying to become hunger.',
-      jars: 'The glass jars are lined up with suspicious neatness, each containing a candy ooze that shivers against the glass with personal dessert opinions.',
-      cups: 'The silver cups wait near the stove with the innocent gleam of tools that know they will shortly be implicated in ritual.',
+      shelf: {
+        description: 'The shelf bows under jars of candy ooze, each one straining toward the room like a thought trying to become hunger.',
+        actions: {
+          push() {
+            return 'You consider shoving the shelf and decide against starting a confectionery riot in arm\'s reach of Wrongus.';
+          },
+          pull() {
+            return 'The shelf gives only a little under your hand. It is sturdier than the candy oozes deserve.';
+          },
+        },
+      },
+      jars: {
+        description: 'The glass jars are lined up with suspicious neatness, each containing a candy ooze that shivers against the glass with personal dessert opinions.',
+        actions: {
+          touch() {
+            return 'Several jars quiver at once when you brush them, as if gossip has traveled through the sugar.';
+          },
+        },
+      },
+      cups: {
+        description: 'The silver cups wait near the stove with the innocent gleam of tools that know they will shortly be implicated in ritual.',
+        actions: {
+          touch() {
+            return 'The silver is warm, blackened at the lip, and polished everywhere hands expect deniability.';
+          },
+        },
+      },
       ladle: {
         description({ getFlag }) {
           if (getFlag('kitchenBloodHintKnown')) {

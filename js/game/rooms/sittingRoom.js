@@ -80,6 +80,12 @@ export function createSittingRoom() {
         context?.setFlag?.('sittingRoomGossipKnown', true);
         return 'The fountain chatters over itself in a polite little voice, as though rehearsing conversation topics for nervous guests.';
       },
+      touch() {
+        return 'The fountain water beads coolly over your fingers, courteous and faintly smug about how refreshing it knows itself to be.';
+      },
+      smell() {
+        return 'The fountain smells of stone, clean water, and the dangerous possibility that something in this house might actually be pleasant on purpose.';
+      },
     },
     portable: false,
   });
@@ -89,6 +95,11 @@ export function createSittingRoom() {
     name: 'glass cup',
     aliases: ['cup'],
     description: 'A thin glass cup light enough to feel expensive and breakable in equal measure.',
+    actions: {
+      touch() {
+        return 'The glass cup is feather-light and alarmingly delicate, the sort of thing designed to make a guest feel clumsy in advance.';
+      },
+    },
   });
 
   const folio = new Item({
@@ -100,6 +111,9 @@ export function createSittingRoom() {
       read(context) {
         context?.setFlag?.('folioMarginNoted', true);
         return 'The text remains gibberish no matter how carefully you study it. The cats, however, seem annotated with total seriousness.';
+      },
+      touch() {
+        return 'The folio cover feels unpleasantly well-tanned. Whatever animal supplied it was not consulted about the educational value.';
       },
     },
   });
@@ -117,6 +131,15 @@ export function createSittingRoom() {
       sit(context) {
         context?.setFlag?.('sittingRoomGossipKnown', true);
         return 'The couch yields under you like a living thing considering whether to tolerate your presence.';
+      },
+      touch() {
+        return 'The upholstery rises and falls under your hand with domestic, mildly judgmental breath.';
+      },
+      smell() {
+        return 'The couches smell of polish, old perfume, and the private confidence of furniture that has overheard better scandals than yours.';
+      },
+      sleep() {
+        return 'Sleeping here would mean trusting breathing furniture and fountain water at the same time. That seems like laziness with consequences.';
       },
       ask(context) {
         context?.setFlag?.('sittingRoomGossipKnown', true);

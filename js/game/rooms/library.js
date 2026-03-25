@@ -63,6 +63,9 @@ export function createLibraryRoom() {
       look() {
         return 'The wax palm was built to counterfeit living contact at close range. Oshregaal, apparently, preferred his impossible geometry to have teaching aids.';
       },
+      touch() {
+        return 'The wax gives slightly under your fingers, preserving a counterfeit warmth that makes the thing feel more dishonest than dead.';
+      },
     },
   });
 
@@ -82,6 +85,9 @@ export function createLibraryRoom() {
         }
 
         return 'The folio describes a "folded hall" stabilized by a black idol that expects paired living contact. A margin note in another hand adds: "If you only have one body, bring either help or a fraud convincing enough to satisfy geometry."';
+      },
+      touch() {
+        return 'The folio pages rasp under your thumb with the dry confidence of notes written by someone who expected his theories to bully reality into cooperation.';
       },
     },
   });
@@ -107,6 +113,9 @@ export function createLibraryRoom() {
       },
       read() {
         return 'The spellbook concerns threshold rites, portal constraints, and the irritating problem of a gate that insists on multiple living participants unless bullied by better mathematics. Several sections read less like doctrine than field notes for cheating it.';
+      },
+      touch() {
+        return 'The spellbook cover is warm from recent use and faintly tacky with the oils of repeated consultation. Oshregaal has been cheating at metaphysics hands-on.';
       },
     },
   });
@@ -291,7 +300,14 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
       },
     ],
     objects: {
-      shelves: 'The shelves carry wars, diets, cults, heresies, botanical crimes, threshold manuals, and enough self-written marginalia to prove Oshregaal distrusts even printed agreement.',
+      shelves: {
+        description: 'The shelves carry wars, diets, cults, heresies, botanical crimes, threshold manuals, and enough self-written marginalia to prove Oshregaal distrusts even printed agreement.',
+        actions: {
+          touch() {
+            return 'Dust and polished wood meet your fingertips at once. Even the shelves feel curated to imply that knowledge here is a possession before it is a practice.';
+          },
+        },
+      },
       cabinet: 'The eastern cabinets are crowded with genealogies, corrected triumphs, and catalogues that feel less archival than possessive.',
       table: {
         description({ isItemVisibleHere }) {
@@ -308,7 +324,17 @@ To the north, an unusually narrow opening gives onto a corridor whose angles see
           return `The reading table is cluttered with diagrams, charms, wax drips, and ${presentItems.join(', ').replace(/,([^,]*)$/, ' and$1')}.`;
         },
       },
-      ladders: 'The brass ladders promise reach without wisdom.',
+      ladders: {
+        description: 'The brass ladders promise reach without wisdom.',
+        actions: {
+          touch() {
+            return 'The brass is cold and impeccably maintained. The ladder feels less like a convenience than a licensed way to approach forbidden shelves.';
+          },
+          push() {
+            return 'The ladder rolls a little along its track with a genteel complaint, as if offended to be handled without scholarly credentials.';
+          },
+        },
+      },
       passage: 'The northern passage narrows between shelves before becoming something less honest than a hallway.',
     },
   });

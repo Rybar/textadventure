@@ -82,6 +82,12 @@ export function createFeastHall() {
 
         return 'The wine runs hot and medicinal down your throat. For one beat of the heart you feel stronger. For the next, slightly less certain that your body remains entirely committed to its current arrangement.';
       },
+      smell() {
+        return 'The wine smells rich, spiced, and faintly medicinal, like a physician bribed into catering.';
+      },
+      touch() {
+        return 'The goblet is heavy and warm from the room, eager to feel ceremonial in your hand.';
+      },
     },
   });
   const bloodCup = new Item({
@@ -102,6 +108,9 @@ export function createFeastHall() {
           ? 'You add a single bright drop to the cup after all. No one comments on the reversal. Around the table, practiced relief looks much too similar to obedience.'
           : 'You add a single bright drop to the cup. Around the table, no one reacts as though this were unusual, which is worse than surprise.';
       },
+      touch() {
+        return 'The silver cup is warm from circulation and far too light for something carrying this much custom.';
+      },
     },
   });
 
@@ -116,6 +125,12 @@ export function createFeastHall() {
       },
       look() {
         return 'You identify translucent fish stuffed with cheese and rat souls, cave crickets fried crisp, and oozes candied into nervous compliance.';
+      },
+      smell() {
+        return 'The roast smells magnificent, which feels like a personal betrayal on the part of your own nose.';
+      },
+      touch() {
+        return 'The roast glistens under the candlelight, all crisp skin and dangerous hospitality. Prodding it now would feel like heckling the room.';
       },
     },
     portable: false,
@@ -536,6 +551,9 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         aliases: ['grandfather', 'host', 'oshregaal'],
         description: 'Grandfather Oshregaal looks like a collapsed king upholstered in silk and appetite. His eyes, however, are quick, bright, and unforgettably awake.',
         actions: {
+          touch() {
+            return 'You decide, wisely, not to place a hand on Grandfather Oshregaal during dinner. Some intimacies are simply alternate forms of self-harm.';
+          },
           ask: oshregaalAsk,
           tell: oshregaalTell,
           show({ item, setFlag }) {
@@ -573,6 +591,9 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
         aliases: ['pazuzu', 'servant'],
         description: 'The imp is small, furious, and visibly bound to service by old magical spite. He looks like the sort of creature who would offer help only if it could become revenge later.',
         actions: {
+          touch() {
+            return 'The imp snaps at your fingers with delighted malice. He does not quite bite, which is somehow ruder.';
+          },
           ask: impAsk,
           tell: impTell,
           give({ item, setFlag }) {
@@ -587,17 +608,34 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
       },
       guests: {
         name: 'tusk guests',
-        aliases: ['guests', 'tusk guests', 'tuskpeople', 'tusk people'],
+        aliases: ['guest', 'guests', 'tusk guest', 'tusk guests', 'tuskpeople', 'tusk people'],
         description: 'Most of the tusk guests look dazed, overfed, or partially trapped inside commands they are still obeying hours too late.',
         actions: {
+          touch() {
+            return 'You think better of putting a hand on the guests. Everyone here already seems one bad cue away from becoming part of the service.';
+          },
           ask: guestsAsk,
           tell: guestsTell,
         },
       },
       chain: 'The imp\'s chain is old magic disguised as household hardware. It gives him enough slack to serve and not enough to forget who profits from it.',
       butter: 'The butter dish on the imp\'s hands gleams absurdly under the chandelier, a domestic humiliation polished into ritual.',
-      table: 'The dinner table is so long it almost counts as weather. Silver, plates, and ritual circulate down its length with the confidence of habits too old to remember who consented to them.',
-      servants: 'The servants move with the drilled calm of people who know that in this room delay counts as blasphemy. They pour, scrape, clear, and vanish before the guests have fully decided to notice them.',
+      table: {
+        description: 'The dinner table is so long it almost counts as weather. Silver, plates, and ritual circulate down its length with the confidence of habits too old to remember who consented to them.',
+        actions: {
+          touch() {
+            return 'The table edge is polished smooth by generations of elbows, rings, and compromise. It feels less like furniture than a long domestic machine for assigning roles.';
+          },
+        },
+      },
+      servants: {
+        description: 'The servants move with the drilled calm of people who know that in this room delay counts as blasphemy. They pour, scrape, clear, and vanish before the guests have fully decided to notice them.',
+        actions: {
+          touch() {
+            return 'You would have to catch a servant first, and that seems less likely than catching a knife while it is still being sharpened.';
+          },
+        },
+      },
       candles: {
         name: 'hanging light',
         aliases: ['candles', 'candle forest', 'hanging light', 'light'],
@@ -616,6 +654,15 @@ Curtains along one wall conceal a quieter chamber. To the north lies Kelago's do
           }
 
           return 'Heavy red curtains hide a side chamber from casual view. Their folds are unusually thick, as though hiding more hardware than cloth ought to require.';
+        },
+        actions: {
+          touch({ getFlag }) {
+            if (getFlag('secretCircleUnlocked')) {
+              return 'The velvet folds part under your hand with theatrical obedience now that you have already taught the room its own joke.';
+            }
+
+            return 'The velvet is heavy, expensive, and oddly burdened in one section, as if the cloth were trying to keep a mechanical secret from casual fingers.';
+          },
         },
       },
       tuskpeople: {

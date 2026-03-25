@@ -11,6 +11,9 @@ export function createBathroomRoom() {
       smell() {
         return 'The soap smells of lilies, powder, and the expensive fiction that cleanliness proves innocence.';
       },
+      touch() {
+        return 'The soap is smooth, dense, and expensive enough to make grime feel like a personal insult.';
+      },
     },
   });
 
@@ -22,6 +25,9 @@ export function createBathroomRoom() {
     actions: {
       look() {
         return 'The mirror returns your face with insulting clarity. Beneath the candlelight, you look more like a guest than is remotely safe.';
+      },
+      touch() {
+        return 'The silver backing is cool and impeccably polished, like the hand of a servant who has already judged your posture.';
       },
     },
   });
@@ -112,10 +118,36 @@ West lies the guest room. Somewhere behind the eastern tilework, a sour draft ke
             setFlag('bathroomPanelOpened', true);
             return 'You work your fingers into the tile seam and pull. A concealed cistern panel swings free, releasing a rank breath from the service shaft below. So much for luxury remaining a complete argument.';
           },
+          pull({ getFlag, setFlag }) {
+            if (getFlag('bathroomPanelOpened')) {
+              return 'The cistern panel already stands open, exposing the service descent below.';
+            }
+
+            setFlag('bathroomRouteKnown', true);
+            setFlag('bathroomPanelOpened', true);
+            return 'You work your fingers into the tile seam and pull. A concealed cistern panel swings free, releasing a rank breath from the service shaft below. So much for luxury remaining a complete argument.';
+          },
         },
       },
-      bath: 'The bath is big enough to suggest that Oshregaal imagines cleanliness as a theatrical event rather than a practical one.',
-      cabinet: 'The cabinet shelves are lined with folded towels, scented soaps, and enough powder to make a nervous guest look deliberately calm.',
+      bath: {
+        description: 'The bath is big enough to suggest that Oshregaal imagines cleanliness as a theatrical event rather than a practical one.',
+        actions: {
+          touch() {
+            return 'The claw-foot bath is cool and immaculate, waiting for someone else to do the work of making decadence look restful.';
+          },
+          sit() {
+            return 'You consider sitting in the empty bath and decide against performing vulnerability in a room that already feels staffed by plumbing.';
+          },
+        },
+      },
+      cabinet: {
+        description: 'The cabinet shelves are lined with folded towels, scented soaps, and enough powder to make a nervous guest look deliberately calm.',
+        actions: {
+          open() {
+            return 'You open the cabinet. Rows of soaps, powders, and folded towels stare back with the smug orderliness of a room determined to outclass your nerves.';
+          },
+        },
+      },
       tiles: {
         name: 'marble tile',
         aliases: ['tile', 'tiles', 'tilework', 'marble tile', 'eastern tilework'],
@@ -130,14 +162,38 @@ West lies the guest room. Somewhere behind the eastern tilework, a sour draft ke
 
           return 'The marble tile gleams with punitive luxury, the sort that makes a guest feel improved and observed at the same time.';
         },
+        actions: {
+          touch({ getFlag }) {
+            if (getFlag('bathroomPanelOpened')) {
+              return 'The marble remains cool and costly, but now your hand can also find the opened seam that proves refinement here is only a lid over filth.';
+            }
+
+            return 'The marble tile is cold enough to remind you that luxury and warmth are not remotely the same service.';
+          },
+        },
       },
       draft: {
         aliases: ['draft', 'sour draft'],
         description: 'The sour draft threading out of the eastern wall smells like wet stone, stale runoff, and the house losing control of its own dignity below the polished surfaces.',
+        actions: {
+          smell() {
+            return 'You lean into the draft and confirm that the house smells much more honest below the tile than above it.';
+          },
+        },
       },
       candlelight: 'The flattering candlelight does expensive work on the room, softening every surface just enough to make the plumbing seem cultured instead of sinister.',
       commode: 'The commode is polished to a level of dignity no object in that profession should ever be forced to maintain.',
-      towels: 'The towels are folded with priestly care and smell faintly of lavender trying to overpower limestone.',
+      towels: {
+        description: 'The towels are folded with priestly care and smell faintly of lavender trying to overpower limestone.',
+        actions: {
+          touch() {
+            return 'The towels are thick, soft, and folded with such devotion that unfolding one feels almost liturgical.';
+          },
+          smell() {
+            return 'Lavender makes a respectable effort, but limestone and old plumbing still win on points.';
+          },
+        },
+      },
     },
   });
 }

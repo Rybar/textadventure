@@ -95,6 +95,15 @@ export function createCavernRoom() {
       drink() {
         return 'The water tastes of lime, old stone, and the kind of cold that belongs underground.';
       },
+      touch() {
+        return 'You dip your fingers into the puddle. The water is so cold it feels newly invented, clean in a way the mansion above has absolutely not earned.';
+      },
+      smell() {
+        return 'The puddle smells of wet stone, mineral crust, and none of the kitchen perfumes drifting out of the house above.';
+      },
+      taste() {
+        return 'You touch a drop to your tongue. It tastes exactly like the sort of honest water Oshregaal would never serve indoors.';
+      },
     },
     portable: false,
   });

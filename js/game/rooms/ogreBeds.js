@@ -108,11 +108,24 @@ The kitchen lies back to the south.
       blankets: {
         aliases: ['blanket', 'blankets', 'damp blanket', 'damp blankets'],
         description: 'The damp blankets smell of broth steam, old sweat, and the exhausted pragmatism of servants who are too tired to dislike their own sleeping quarters properly.',
+        actions: {
+          touch() {
+            return 'The blanket is damp, coarse, and still warm in spots where labor only recently stopped pretending to be sleep.';
+          },
+          smell() {
+            return 'The blanket smells exactly like a kitchen trying to dream through its shift break.';
+          },
+        },
       },
       boots: {
         name: 'boot piles',
         aliases: ['boot', 'boots', 'boot piles'],
         description: 'The boot piles are a geology of labor: cracked soles, grease-dark leather, one repaired strap after another, and the unmistakable proof that everyone here earns their invisibility the hard way.',
+        actions: {
+          touch() {
+            return 'The leather is stiff with old water, kitchen grease, and enough honest wear to embarrass the rest of the manor.';
+          },
+        },
       },
       roster: {
         description({ getFlag }) {
@@ -127,9 +140,12 @@ The kitchen lies back to the south.
       print: 'The religious print shows a saint blessing a table full of meat. Someone has penciled in a chef hat and an obscenity.',
       ogres: {
         name: 'sleeping ogres',
-        aliases: ['sleepers', 'servants'],
+        aliases: ['ogre', 'ogres', 'sleepers', 'servant', 'servants'],
         description: 'Several off-duty ogres sleep or pretend to. Even at rest they look built for carrying silver, secrets, and bodies.',
         actions: {
+          touch() {
+            return 'You choose not to touch the sleeping ogres. Even asleep, they project the sort of labor grievance that wakes swinging.';
+          },
           ask: sleepingOgresAsk,
           tell: sleepingOgresTell,
         },

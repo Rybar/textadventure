@@ -19,6 +19,9 @@ export function createGrandfatherRoom() {
       look() {
         return 'The bed curtains are embroidered with constellations, tusks, and banquets. Beneath the perfume and medicinal wine is a subtler wrongness: compressed hollows in the coverlet and silk ties at the posts, as though hospitality here occasionally needed help becoming agreement.';
       },
+      touch() {
+        return 'The velvet swallows your hand almost lovingly. The bed has the texture of comfort and the mood of a procedural threat.';
+      },
     },
   });
 
@@ -127,8 +130,20 @@ On the north wall stands a black metal door fitted not with a knob but with an a
 
           return 'The desk is littered with corrected invitations, revised anecdotes, and petty dominion preserved as paperwork.';
         },
+        actions: {
+          touch() {
+            return 'The desk edge is smooth with use. It feels like the kind of furniture that has supported many small tyrannies and one very large ego.';
+          },
+        },
       },
-      vanity: 'The mirrored vanity is crowded with perfumes, rings, powders, and small aids to self-invention.',
+      vanity: {
+        description: 'The mirrored vanity is crowded with perfumes, rings, powders, and small aids to self-invention.',
+        actions: {
+          touch() {
+            return 'Powder dust and perfume residue cling faintly to the vanity top. Even Oshregaal\'s grooming station feels overconfident.';
+          },
+        },
+      },
       guestLists: {
         name: 'guest lists',
         aliases: ['guest lists', 'lists', 'invitations'],
@@ -160,11 +175,23 @@ On the north wall stands a black metal door fitted not with a knob but with an a
           return 'The mirror flatters the room and incriminates it at the same time.';
         },
       },
-      smoke: 'The perfumed smoke drifting through the room smells like roses, narcotics, and the sort of confidence that mistakes heavy fragrance for moral authority.',
+      smoke: {
+        description: 'The perfumed smoke drifting through the room smells like roses, narcotics, and the sort of confidence that mistakes heavy fragrance for moral authority.',
+        actions: {
+          smell() {
+            return 'The smoke lands on the back of your throat like a velvet threat, floral first and medicinal a moment later.';
+          },
+        },
+      },
       hand: {
         name: 'iron hand',
         aliases: ['metal hand', 'door hand', 'iron hand'],
         description: 'The hand is bolted where a knob ought to be, fingers slightly curled, palm open for a greeting no sensible architect would have requested.',
+        actions: {
+          touch() {
+            return 'The iron hand is warmer than it has any right to be, as if the door enjoys rehearsing introductions.';
+          },
+        },
       },
       door: {
         name: 'metal door',

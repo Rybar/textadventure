@@ -56,6 +56,9 @@ export function createSecretCircleRoom() {
 
         return 'The note reads: "The circle is a borrowed road, not a sovereign gate. Activation opens the prepared route only. If the host closes his hand on the road, bypass the etiquette elsewhere: the geometry can still be insulted into compliance by someone who understands the constraint."';
       },
+      touch() {
+        return 'The clipped annotation crackles slightly in your fingers, as if even the paper resents how useful it is.';
+      },
     },
   });
   roadAnnotation.hide();
@@ -81,6 +84,9 @@ export function createSecretCircleRoom() {
       use(context) {
         return this.performAction('read', context);
       },
+      touch() {
+        return 'The scroll feels dry, old, and more obedient than any scrap of paper should be.';
+      },
     },
   });
 
@@ -92,6 +98,9 @@ export function createSecretCircleRoom() {
     actions: {
       drink() {
         return 'You stop the vial just short of your lips. There are braver acts than drinking mystery mutation fluid, but not many stupider ones.';
+      },
+      touch() {
+        return 'The potion shifts color against the glass as you turn it, indecisive in a way no liquid with intentions should be.';
       },
     },
   });
@@ -228,6 +237,9 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
       skulls: {
         description: 'The floating skulls glow with steady obedience. Whatever animates them is not interested in being theatrical twice.',
         actions: {
+          touch() {
+            return 'You make a cautious reach toward the nearest skull. It drifts just out of range with the mild contempt of a thing used to being consulted, not handled.';
+          },
           ask: skullsAsk,
           tell: skullsTell,
         },
@@ -238,9 +250,28 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
             ? 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader. A clipped road annotation sits hidden among the older transit texts.'
             : 'The shelf holds volumes of high sorcery in bindings that look ready to resent a careless reader. A narrow gap among the older transit texts marks where a clipped road annotation had been tucked away.';
         },
+        actions: {
+          touch() {
+            return 'Dust, leather, and old spellwork meet your fingertips in equal measure. The shelf has the air of having survived several owners and trusted none of them.';
+          },
+        },
       },
-      cabinet: 'The cabinet contains reagents, vials, and the sort of practical magic a man keeps near an emergency exit.',
-      runes: 'The runes are for travel, not summoning. They are patient, old, and absolutely real.',
+      cabinet: {
+        description: 'The cabinet contains reagents, vials, and the sort of practical magic a man keeps near an emergency exit.',
+        actions: {
+          touch() {
+            return 'The cabinet wood is cool and dry, built for practical emergencies rather than ceremonial wonder.';
+          },
+        },
+      },
+      runes: {
+        description: 'The runes are for travel, not summoning. They are patient, old, and absolutely real.',
+        actions: {
+          touch() {
+            return 'The etched circle is cold at first touch, then faintly humming, like a road remembering it used to be open.';
+          },
+        },
+      },
     },
   });
 }

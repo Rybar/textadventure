@@ -105,6 +105,9 @@ export function createFoyerRoom() {
       look() {
         return 'From the front it is merely uncanny. From the wrong angle it becomes obvious that something anatomical has been forced into the shape of an instrument.';
       },
+      touch() {
+        return 'The lacquer is warm and faintly quivering, as if the instrument resents being confirmed as tangible.';
+      },
       ask: pianoAsk,
       tell: pianoTell,
     },
@@ -323,9 +326,12 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
     objects: {
       ogres: {
         name: 'ogre butlers',
-        aliases: ['ogre butlers', 'butlers', 'ogres', 'servants'],
+        aliases: ['ogre butlers', 'ogre butler', 'ogre', 'butlers', 'ogres', 'servant', 'servants'],
         description: 'The ogre butlers bow with alarming grace. One has three arms and the other two heads. Both radiate the polite confidence of men who can remove a guest in pieces.',
         actions: {
+          touch() {
+            return 'You test the boundary of foyer etiquette with a cautious touch. One gloved hand intercepts you with immaculate firmness before the gesture can become a problem worth documenting.';
+          },
           ask: ogresAsk,
           tell: ogresTell,
           give({ item, emitEvent }) {
@@ -342,10 +348,26 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
       carpet: {
         aliases: ['carpet', 'red carpet'],
         description: 'The red carpet is thick enough to silence indecision. Up close, the pile shows disciplined wear around the butlers\' post, as though welcome here has been paced, rehearsed, and enforced for years.',
+        actions: {
+          touch() {
+            return 'The carpet yields under your fingers with unnerving luxury. It feels expensive enough to forgive blood and practiced enough not to comment on it.';
+          },
+          smell() {
+            return 'Up close, the carpet smells of dust, polish, and the faint medicinal sweetness of something repeatedly cleaned before it could become evidence.';
+          },
+        },
       },
       pillars: {
         aliases: ['pillar', 'pillars', 'white pillar', 'white pillars'],
         description: 'The white pillars are all polished confidence and theatrical symmetry. They do nothing structural for your nerves, but they hold the room\'s pretensions upright very efficiently.',
+        actions: {
+          touch() {
+            return 'The pillar is cold, smooth, and utterly committed to the fiction that this house stands on taste alone.';
+          },
+          push() {
+            return 'You lean against the pillar. It declines to be moved by guest opinion.';
+          },
+        },
       },
       oggaf: {
         aliases: ['butler'],
@@ -368,9 +390,37 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
         actions: {
           ask: zamzamAsk,
           tell: zamzamTell,
+          show({ item, emitEvent }) {
+            if (item.id === 'invitation') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'One of Zamzam\'s heads inspects the invitation while the other watches you for errors. At last they nod together. "Accepted," they say, and Oggaf steps aside with professional approval.',
+              });
+            }
+
+            return `Zamzam gives the ${item.name} a double look and finds no reason to care.`;
+          },
+          give({ item, emitEvent }) {
+            if (item.id === 'invitation') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'One of Zamzam\'s heads takes the invitation while the other mutters about presentation. After a short inspection, both nod. "Accepted," they say, and Oggaf redirects you inward with a small formal gesture.',
+              });
+            }
+
+            return `Zamzam declines the ${item.name} with synchronized disapproval.`;
+          },
         },
       },
-      chandelier: 'The chandelier is large enough to bankrupt a lesser noble house and bright enough to make every stain elsewhere feel intentional.',
+      chandelier: {
+        description: 'The chandelier is large enough to bankrupt a lesser noble house and bright enough to make every stain elsewhere feel intentional.',
+        actions: {
+          touch() {
+            return 'You do not quite reach the chandelier, which seems wise. Anything that expensive probably falls in a way that gets blamed on the nearest guest.';
+          },
+          push() {
+            return 'You make a speculative gesture toward the chandelier and think better of escalating the evening into decorative manslaughter.';
+          },
+        },
+      },
     },
   });
 }
