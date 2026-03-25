@@ -33,6 +33,8 @@ export class GameSession {
     return [
       'FEAST OF OSHREGAAL',
       'A text adventure based on a Pathfinder campaign of the same name by Grizzelnit.',
+      'Inspired by Goblin Punch\'s original D&D scenario, "The Meal of Oshregaal":',
+      'https://goblinpunch.blogspot.com/2015/05/the-meal-of-oshregaal.html',
     ].join('\n');
   }
 

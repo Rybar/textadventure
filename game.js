@@ -43,6 +43,7 @@ const panelElements = {
 let isMobileThemeActive = false;
 const TYPEWRITER_FRAME_MS = 16;
 const TYPEWRITER_CHARS_PER_FRAME = 4;
+const URL_PATTERN = /https?:\/\/[^\s]+/gu;
 
 function shouldUseMobileTheme() {
     const hasMatchMedia = typeof globalThis.matchMedia === 'function';
@@ -83,6 +84,48 @@ function escapeHtml(text) {
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
+}
+
+function setElementTextWithLinks(element, text, { linkify = true } = {}) {
+    const content = String(text ?? '');
+
+    if (!linkify || !content) {
+        element.textContent = content;
+        return;
+    }
+
+    URL_PATTERN.lastIndex = 0;
+    const fragments = [];
+    let lastIndex = 0;
+
+    for (const match of content.matchAll(URL_PATTERN)) {
+        const [url] = match;
+        const matchIndex = match.index ?? 0;
+
+        if (matchIndex > lastIndex) {
+            fragments.push(document.createTextNode(content.slice(lastIndex, matchIndex)));
+        }
+
+        const linkElement = document.createElement('a');
+        linkElement.className = 'transcript-link';
+        linkElement.href = url;
+        linkElement.target = '_blank';
+        linkElement.rel = 'noopener noreferrer';
+        linkElement.textContent = url;
+        fragments.push(linkElement);
+        lastIndex = matchIndex + url.length;
+    }
+
+    if (fragments.length === 0) {
+        element.textContent = content;
+        return;
+    }
+
+    if (lastIndex < content.length) {
+        fragments.push(document.createTextNode(content.slice(lastIndex)));
+    }
+
+    element.replaceChildren(...fragments);
 }
 
 function renderMapPanelMarkup(panelModel) {
@@ -358,7 +401,7 @@ function renderTranscriptEntries() {
     transcriptEntries.forEach((entry, index) => {
         let entryElement = transcriptOutputElement.children[index];
 
-        if (!entryElement || entryElement.dataset.entryId !== String(entry.id)) {
+        if (entryElement?.dataset.entryId !== String(entry.id)) {
             entryElement = document.createElement('article');
             transcriptOutputElement.insertBefore(entryElement, transcriptOutputElement.children[index] ?? null);
         }
@@ -380,7 +423,9 @@ function renderTranscriptEntries() {
             }
 
             commandElement.textContent = `> ${entry.command}`;
-            responseElement.textContent = entry.renderedResponse;
+            setElementTextWithLinks(responseElement, entry.renderedResponse, {
+                linkify: entry.renderedResponse === entry.response,
+            });
         } else if (entry.type === 'meta') {
             let metaElement = entryElement.querySelector('.transcript-meta');
 
@@ -409,7 +454,9 @@ function renderTranscriptEntries() {
                 entryElement.appendChild(systemElement);
             }
 
-            systemElement.textContent = entry.renderedText;
+            setElementTextWithLinks(systemElement, entry.renderedText, {
+                linkify: entry.renderedText === entry.text,
+            });
         }
     });
 
@@ -525,6 +572,11 @@ function focusCommandInput() {
 
 function isPrintableKey(event) {
     return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+}
+
+function isInteractiveTarget(target) {
+    return target instanceof Element
+        && target.closest('a, button, input, label, select, textarea, summary, [role="button"]') !== null;
 }
 
 function updateMetaMessages(messages = []) {
@@ -691,7 +743,11 @@ globalThis.onload = function() {
     }
 };
 
-globalThis.addEventListener('pointerdown', () => {
+globalThis.addEventListener('pointerdown', event => {
+    if (isInteractiveTarget(event.target)) {
+        return;
+    }
+
     if (!isMobileThemeActive) {
         focusCommandInput();
     }

@@ -210,6 +210,22 @@ body {
   color: var(--cga-amber);
 }
 
+.transcript-link {
+  color: #ffe27a;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.12em;
+}
+
+.transcript-link:visited {
+  color: #f0d15c;
+}
+
+.transcript-link:hover,
+.transcript-link:focus-visible {
+  color: #fff4bf;
+}
+
 .transcript-meta {
   min-height: 1.3lh;
   color: #9dff9f;
