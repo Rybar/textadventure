@@ -128,6 +128,31 @@ export function createKitchenRoom() {
     },
   });
 
+  const bloodHomunculus = new Item({
+    id: 'blood-homunculus',
+    name: 'blood homunculus',
+    aliases: ['homunculus', 'little gentleman'],
+    description: 'A small red figure with a silver-slick grin and the damp courtesy of something that should still be an ingredient rather than a guest.',
+    actions: {
+      look() {
+        return 'The blood homunculus stands in the ladle bowl with horrible self-possession, waving as if presentation might improve ontology.';
+      },
+      eat({ session }) {
+        return session.triggerGameOver(
+          'You swallow the little red gentleman before your judgment can recover. Warmth spreads through you first, then appetite, then the unnatural conviction that you ought to be plated and applauded. By the time the kitchen realizes you have joined the menu from the wrong direction, your body has already started interpreting itself as a course.',
+          { persistentFlags: ['bloodHomunculusGameOverSeen'] },
+        );
+      },
+      drink({ session }) {
+        return session.triggerGameOver(
+          'You tip the blood homunculus into your mouth and immediately regret participating this literally in Oshregaal\'s culinary theology. It uncoils inside you like a standing ovation from the wrong organ system. The last sensation you manage to identify cleanly is being promoted from diner to ritual medium.',
+          { persistentFlags: ['bloodHomunculusGameOverSeen'] },
+        );
+      },
+    },
+  });
+  bloodHomunculus.hide();
+
   const wrongusAsk = createTopicResponder({
     rules: [
       {
@@ -221,8 +246,12 @@ export function createKitchenRoom() {
     }
 
     if (target.includes('cauldron') || target.includes('stew') || target.includes('pot')) {
+      if (getFlag('kitchenBloodHintKnown') && !bloodHomunculus.visible) {
+        bloodHomunculus.reveal();
+      }
+
       return getFlag('kitchenBloodHintKnown')
-        ? 'A darker red film clings higher up the iron than ordinary stew would justify. Wrongus has been reducing more than broth here, and the ladle resting nearby is clean only in the suspicious sense.'
+        ? 'A darker red film clings higher up the iron than ordinary stew would justify. Wrongus has been reducing more than broth here, and the ladle resting nearby now cradles a standing little red gentleman assembled out of blood and kitchen certainty.'
         : 'From this close the cauldron smells of fish, spice, wine, and a richer metallic note you could almost mistake for enthusiasm.';
     }
 
@@ -326,7 +355,7 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
         return `You do not see a workable way to sabotage the ${target} from here.`;
       },
     },
-    items: [spiceBundle, brandyPudding, cauldron, candyOozeJar],
+    items: [spiceBundle, brandyPudding, cauldron, candyOozeJar, bloodHomunculus],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('kitchenBloodHintKnown'),
@@ -335,6 +364,10 @@ The whole room smells of wine, fish, sugar, and expensive wrongdoing. West lies 
       {
         when: ({ getFlag }) => getFlag('kitchenTimingKnown'),
         text: 'The room\'s bustle has resolved into sequence: prep stations laid out by course, not convenience, and Wrongus conducting the feast like a ritual that happens to be edible.',
+      },
+      {
+        when: () => bloodHomunculus.visible,
+        text: 'One silver ladle now holds a tiny blood-made gentleman upright in the kitchen heat, as if the feast had decided to become literal just to punish abstraction.',
       },
       {
         when: ({ getFlag }) => getFlag('kitchenSabotageOpportunityKnown'),

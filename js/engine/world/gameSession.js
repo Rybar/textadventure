@@ -1270,6 +1270,12 @@ export class GameSession {
       'grandfatherBedGameOverSeen',
       'correctionGameOverSeen',
       'blackWindSapGameOverSeen',
+      'peafowlGameOverSeen',
+      'rubyEyesGameOverSeen',
+      'bloodHomunculusGameOverSeen',
+      'coinChestGameOverSeen',
+      'holocaustCandleGameOverSeen',
+      'oozeFormGameOverSeen',
     ];
   }
 

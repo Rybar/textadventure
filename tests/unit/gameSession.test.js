@@ -13,10 +13,17 @@ import {
   moveToGrandfatherRoom,
   moveToKitchen,
   moveToLibrary,
+  moveToFoldedHallway,
   moveToPlumRoom,
   moveToSealedRoom,
+  moveToSpiderRoom,
   moveToTrophyRoom,
 } from '../helpers/testSession.js';
+
+function moveToFernGarden(session) {
+  session.start();
+  session.submitCommand('northwest');
+}
 
 test('game start prints the title and attribution before the opening room description', () => {
   const session = createTestSession();
@@ -166,6 +173,158 @@ test('service rooms use bespoke negative prose for common impossible actions', (
   assert.doesNotMatch(ladderResponse, /You can't push/i);
 });
 
+test('forged signet rings can substitute for an invitation at the foyer', () => {
+  const session = createTestSession();
+
+  moveToGrandfatherRoom(session);
+  assert.match(session.submitCommand('search desk'), /forged signet rings/i);
+  assert.match(session.submitCommand('take forged signet rings'), /You take the forged signet rings\./i);
+  session.submitCommand('west');
+  session.submitCommand('south');
+  session.submitCommand('south');
+
+  const response = session.submitCommand('show forged signet rings to oggaf');
+
+  assert.match(response, /You may proceed|Proceed|threshold/i);
+  assert.equal(session.worldState.getFlag('foyerAdmitted'), true);
+});
+
+test('astral peafowl punish greedy egg theft unless the weighted line is used first', () => {
+  const recklessSession = createTestSession();
+  moveToFernGarden(recklessSession);
+
+  const recklessResponse = recklessSession.submitCommand('take egg');
+
+  assert.match(recklessResponse, /astral peafowl descends|The garden keeps the egg/i);
+  assert.equal(recklessSession.worldState.getFlag('peafowlGameOverSeen'), true);
+  assert.equal(recklessSession.worldState.currentRoomId, 'cavern');
+
+  const carefulSession = createTestSession();
+  moveToFernGarden(carefulSession);
+  carefulSession.submitCommand('west');
+  assert.match(carefulSession.submitCommand('take weighted line'), /You take the weighted line\./i);
+  carefulSession.submitCommand('east');
+  assert.match(carefulSession.submitCommand('use weighted line on egg'), /weighted line|impossible bird/i);
+  assert.match(carefulSession.submitCommand('take egg'), /You take the egg\./i);
+  assert.match(carefulSession.submitCommand('inventory'), /egg|weighted line/i);
+});
+
+test('ruby-eye greed and blood-homunculus indulgence create restartable game overs', () => {
+  const rubySession = createTestSession();
+  moveToFoldedHallway(rubySession);
+  assert.match(rubySession.submitCommand('search idol'), /ruby eyes|optional wealth/i);
+
+  const rubyResponse = rubySession.submitCommand('take ruby eyes');
+
+  assert.match(rubyResponse, /corridor accepts the theft|contradiction/i);
+  assert.equal(rubySession.worldState.getFlag('rubyEyesGameOverSeen'), true);
+  assert.equal(rubySession.worldState.currentRoomId, 'cavern');
+
+  const kitchenSession = createTestSession();
+  moveToKitchen(kitchenSession);
+  kitchenSession.submitCommand('ask wrongus about blood');
+  assert.match(kitchenSession.submitCommand('search cauldron'), /little red gentleman/i);
+
+  const homunculusResponse = kitchenSession.submitCommand('eat blood homunculus');
+
+  assert.match(homunculusResponse, /little red gentleman|ritual medium/i);
+  assert.equal(kitchenSession.worldState.getFlag('bloodHomunculusGameOverSeen'), true);
+  assert.equal(kitchenSession.worldState.currentRoomId, 'cavern');
+});
+
+test('hole and ooze potions add alternate route tech and a new ooze-form failure state', () => {
+  const holeSession = createTestSession();
+  moveToFeastHall(holeSession);
+  holeSession.submitCommand('east');
+  holeSession.submitCommand('ask wrongus about black wind');
+  holeSession.submitCommand('search shelf');
+  holeSession.submitCommand('east');
+  holeSession.submitCommand('take ledger');
+  holeSession.submitCommand('west');
+  holeSession.submitCommand('west');
+  holeSession.submitCommand('south');
+  holeSession.submitCommand('up');
+  holeSession.submitCommand('north');
+  holeSession.submitCommand('show ledger to nathema');
+  holeSession.submitCommand('ask nathema about grey grin');
+  holeSession.submitCommand('south');
+  holeSession.submitCommand('down');
+  holeSession.submitCommand('north');
+  holeSession.submitCommand('tell imp help');
+  holeSession.submitCommand('ask imp about curtains');
+  holeSession.submitCommand('shake hand');
+  holeSession.submitCommand('west');
+  assert.match(holeSession.submitCommand('take potion of hole'), /You take the potion of hole\./i);
+  holeSession.submitCommand('east');
+  holeSession.submitCommand('north');
+  holeSession.submitCommand('east');
+  holeSession.submitCommand('shake hand');
+  holeSession.submitCommand('north');
+  holeSession.submitCommand('east');
+  holeSession.submitCommand('search cabinet');
+  holeSession.submitCommand('east');
+  holeSession.submitCommand('search plaques');
+  holeSession.submitCommand('east');
+
+  const holeResponse = holeSession.submitCommand('use potion of hole on wall');
+
+  assert.match(holeResponse, /forgets a narrow vertical section of itself|sealed correction chamber/i);
+  assert.equal(holeSession.worldState.getFlag('sealedRoomUnlocked'), true);
+
+  const oozeDeathSession = createTestSession();
+  moveToFernGarden(oozeDeathSession);
+  oozeDeathSession.submitCommand('west');
+  assert.match(oozeDeathSession.submitCommand('take potion of ooze form'), /You take the potion of ooze form\./i);
+
+  const oozeDeathResponse = oozeDeathSession.submitCommand('drink potion of ooze form');
+
+  assert.match(oozeDeathResponse, /skeleton|cleaning task/i);
+  assert.equal(oozeDeathSession.worldState.getFlag('oozeFormGameOverSeen'), true);
+  assert.equal(oozeDeathSession.worldState.currentRoomId, 'cavern');
+
+  const oozeRouteSession = createTestSession();
+  moveToFernGarden(oozeRouteSession);
+  oozeRouteSession.submitCommand('west');
+  oozeRouteSession.submitCommand('take potion of ooze form');
+  oozeRouteSession.submitCommand('east');
+  oozeRouteSession.submitCommand('southeast');
+  oozeRouteSession.submitCommand('north');
+  oozeRouteSession.submitCommand('north');
+  oozeRouteSession.submitCommand('give invitation to oggaf');
+  oozeRouteSession.submitCommand('up');
+  oozeRouteSession.submitCommand('east');
+  oozeRouteSession.submitCommand('search tile');
+  oozeRouteSession.submitCommand('open panel');
+  oozeRouteSession.submitCommand('down');
+
+  const oozeRouteResponse = oozeRouteSession.submitCommand('drink potion of ooze form');
+
+  assert.match(oozeRouteResponse, /grudging respect|safe crossing now lies west/i);
+  assert.equal(oozeRouteSession.worldState.getFlag('cesspoolCrossingSafe'), true);
+});
+
+test('trophy-room cursed objects now expose additional lethal temptation', () => {
+  const chestSession = createTestSession();
+  moveToTrophyRoom(chestSession);
+  assert.match(chestSession.submitCommand('search gallery'), /cursed coffer|black candle/i);
+
+  const chestResponse = chestSession.submitCommand('take cursed coin chest');
+
+  assert.match(chestResponse, /warning paper tears|curated your greed/i);
+  assert.equal(chestSession.worldState.getFlag('coinChestGameOverSeen'), true);
+  assert.equal(chestSession.worldState.currentRoomId, 'cavern');
+
+  const candleSession = createTestSession();
+  moveToTrophyRoom(candleSession);
+  candleSession.submitCommand('search gallery');
+
+  const candleResponse = candleSession.submitCommand('light holocaust candle');
+
+  assert.match(candleResponse, /remembered burnings|do not survive/i);
+  assert.equal(candleSession.worldState.getFlag('holocaustCandleGameOverSeen'), true);
+  assert.equal(candleSession.worldState.currentRoomId, 'cavern');
+});
+
 test('showing the invitation in the foyer also supports admission flow', () => {
   const session = createTestSession();
 
@@ -280,7 +439,7 @@ test('secret circle annotation stays hidden until searched and bookshelf prose u
 
   assert.match(session.submitCommand('search bookshelf'), /borrowed road dressed in newer chalk|activation only wakes the prepared route/i);
   const revealedLook = session.submitCommand('look');
-  assert.match(revealedLook, /You can see the following items: road annotation, teleport scroll, mutation potion, portal ring\./i);
+  assert.match(revealedLook, /You can see the following items: road annotation, teleport scroll, mutation potion, potion of hole, portal ring\./i);
 
   assert.match(session.submitCommand('take road annotation'), /You take the road annotation\./i);
   assert.match(session.submitCommand('look bookshelf'), /narrow gap among the older transit texts/i);

@@ -341,7 +341,28 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
               });
             }
 
+            if (item.id === 'forged-signet-rings') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'The butlers study the forged signet rings with the weary professionalism of men who have caught better lies before dinner. At length Oggaf nods. "Administrative enough," he says. Zamzam grimaces but steps aside. The house, apparently, is willing to be fooled if the fraud has proper jewelry.',
+              });
+            }
+
             return `The butlers decline the ${item.name} with grave courtesy.`;
+          },
+          show({ item, emitEvent }) {
+            if (item.id === 'invitation') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'Oggaf takes the invitation delicately, inspects the seal, and returns it with a small bow. "Accepted," he says. Zamzam opens his smile a fraction wider, as if a test has been passed.',
+              });
+            }
+
+            if (item.id === 'forged-signet-rings') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'You display the forged signet rings. Oggaf examines the marks, Zamzam examines you, and together they arrive at the same exhausted conclusion: this is not worth delaying the procession over. "Proceed," they say with joint disapproval.',
+              });
+            }
+
+            return `The butlers regard the ${item.name} with faultless reserve.`;
           },
         },
       },
@@ -381,7 +402,28 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
               });
             }
 
+            if (item.id === 'forged-signet-rings') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'Oggaf turns the forged signet rings once in the light, decides the lie is formal enough for the foyer, and returns them. "You may proceed," he says, sounding unconvinced but procedurally satisfied.',
+              });
+            }
+
             return `Oggaf declines the ${item.name} without breaking posture.`;
+          },
+          show({ item, emitEvent }) {
+            if (item.id === 'invitation') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'Oggaf verifies the invitation with solemn concentration, then hands it back. "You may proceed as a guest," he says.',
+              });
+            }
+
+            if (item.id === 'forged-signet-rings') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'Oggaf inspects the forged rings with a sigh almost too civilized to register. "Adequate for the threshold," he says, and the way north is no longer formally contested.',
+              });
+            }
+
+            return `Oggaf glances at the ${item.name} and finds no procedural use for it.`;
           },
         },
       },
@@ -397,12 +439,24 @@ West lies a sitting room for waiting guests. A stair curves up to the guest room
               });
             }
 
+            if (item.id === 'forged-signet-rings') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'One of Zamzam\'s heads sneers at the forged signet rings while the other grudgingly acknowledges that they are exactly the sort of lie a large house uses on itself daily. "Proceed," they say, making it sound like a clerical insult.',
+              });
+            }
+
             return `Zamzam gives the ${item.name} a double look and finds no reason to care.`;
           },
           give({ item, emitEvent }) {
             if (item.id === 'invitation') {
               return emitEvent('approveFoyerAdmission', {
                 eventText: 'One of Zamzam\'s heads takes the invitation while the other mutters about presentation. After a short inspection, both nod. "Accepted," they say, and Oggaf redirects you inward with a small formal gesture.',
+              });
+            }
+
+            if (item.id === 'forged-signet-rings') {
+              return emitEvent('approveFoyerAdmission', {
+                eventText: 'Zamzam studies the forged signet rings with synchronized contempt, then hands them back as if they have become officially tedious. "Fine," they say. "If fraud must dress for dinner, at least it has made the effort." Oggaf gestures you inward.',
               });
             }
 

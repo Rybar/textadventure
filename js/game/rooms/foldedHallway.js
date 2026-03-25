@@ -1,6 +1,23 @@
+import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 export function createFoldedHallwayRoom() {
+  const rubyEyes = new Item({
+    id: 'ruby-eyes',
+    name: 'ruby eyes',
+    aliases: ['rubies', 'ruby eye', 'eyes'],
+    description: 'Two red stones set into the idol with the sort of deliberate temptation that suggests the architect expected greed to volunteer as a second ritual component.',
+    actions: {
+      take({ session }) {
+        return session.triggerGameOver(
+          'You pry the ruby eyes loose from the idol. The corridor accepts the theft as an answer to a question you did not mean to ask. Sightlines split, footsteps arrive from impossible angles, and the folded hall closes over you like a hand correcting a misbehaving finger. The rubies vanish into contradiction with the rest of you.',
+          { persistentFlags: ['rubyEyesGameOverSeen'] },
+        );
+      },
+    },
+  });
+  rubyEyes.hide();
+
   return new Room({
     id: 'foldedHallway',
     title: 'Folded Hallway',
@@ -39,7 +56,11 @@ South, at least, still behaves honestly enough to return to the library.
             setFlag('idolPairingKnown', true);
           }
 
-          return 'The black idol is shaped like a tall faceless god with two palms turned outward at chest height. Dried smears and chalk marks around the base suggest the hall only unfolds when both hands receive answering living contact at once.';
+          if (!rubyEyes.visible) {
+            rubyEyes.reveal();
+          }
+
+          return 'The black idol is shaped like a tall faceless god with two palms turned outward at chest height. Dried smears and chalk marks around the base suggest the hall only unfolds when both hands receive answering living contact at once. In the face, two ruby eyes glow with the sort of optional wealth designed to punish the professionally curious.';
         }
 
         return `You search the ${target} and discover that impossible architecture becomes no kinder under scrutiny.`;
@@ -73,6 +94,7 @@ South, at least, still behaves honestly enough to return to the library.
         return `The ${target} offers no sound except the hallway reflecting you back at yourself.`;
       },
     },
+    items: [rubyEyes],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('plumFollowing'),

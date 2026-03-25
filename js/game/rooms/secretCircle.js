@@ -105,6 +105,21 @@ export function createSecretCircleRoom() {
     },
   });
 
+  const potionOfHole = new Item({
+    id: 'potion-of-hole',
+    name: 'potion of hole',
+    aliases: ['hole potion', 'vial of hole'],
+    description: 'A black glass vial containing a liquid absence that seems more eager to occupy architecture than a body.',
+    actions: {
+      smell() {
+        return 'The potion smells like plaster dust, cold iron, and a promise made by a locksmith to a nihilist.';
+      },
+      drink() {
+        return 'You decline to internalize distilled absence. Some tools are clearly addressed to walls.';
+      },
+    },
+  });
+
   const portalRing = new Item({
     id: 'portal-ring',
     name: 'portal ring',
@@ -212,7 +227,7 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
         }
 
         if (target.includes('cabinet')) {
-          return 'The cabinet yields salts, chalk, folded linen, and practical exit-work. Someone stocked it for leaving in a hurry, which is more reassuring than the mutation potion and less reassuring than it ought to be.';
+          return 'The cabinet yields salts, chalk, folded linen, a potion of hole, and practical exit-work. Someone stocked it for leaving in a hurry, which is more reassuring than the mutation potion and less reassuring than it ought to be.';
         }
 
         if (target.includes('circle') || target.includes('rune') || target.includes('runes')) {
@@ -222,7 +237,7 @@ Every surface suggests power guarded by inconvenience rather than by secrecy. Th
         return `You search the ${target} and find dust, wax, and the sense that more useful people have already taken what mattered most.`;
       },
     },
-    items: [roadAnnotation, teleportScroll, mutationPotion, portalRing],
+    items: [roadAnnotation, teleportScroll, mutationPotion, potionOfHole, portalRing],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('escapeRouteUnlocked'),

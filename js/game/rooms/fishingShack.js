@@ -38,6 +38,34 @@ export function createFishingShackRoom() {
     },
   });
 
+  const oozeFormPotion = new Item({
+    id: 'ooze-form-potion',
+    name: 'potion of ooze form',
+    aliases: ['ooze potion', 'ooze form potion'],
+    description: 'A glass vial of patient grey fluid that clings to the glass as if rehearsing how to become less committed to bones.',
+    actions: {
+      smell() {
+        return 'The potion smells of brine, cellar mold, and the damp civic ambition of drains.';
+      },
+      drink({ currentRoom, getFlag, setFlag, session, worldState }) {
+        if (currentRoom?.id === 'cesspool') {
+          if (getFlag('cesspoolCrossingSafe')) {
+            return 'The cesspool route is already workable. Becoming more gelatinous would only complicate your dignity.';
+          }
+
+          setFlag('cesspoolCrossingSafe', true);
+          worldState.removeItemById('ooze-form-potion');
+          return 'You drink the potion and feel your edges abandon professional standards at once. For a few appalling breaths you become too yielding for the cesspool to argue with, and even Slorum recoils with grudging respect. A safe crossing now lies west for reasons nobody should feel proud of.';
+        }
+
+        return session.triggerGameOver(
+          'You drink the ooze-form potion away from any place where surrendering your skeleton might count as strategy. Your joints lose their convictions first, then your outline, then the useful distinction between body and spill. By the time the house staff discovers the glistening remainder, you have been reduced to a cautionary cleaning task.',
+          { persistentFlags: ['oozeFormGameOverSeen'] },
+        );
+      },
+    },
+  });
+
   const weightedLine = new Item({
     id: 'weighted-line',
     name: 'weighted line',
@@ -91,7 +119,7 @@ Nets, bait jars, and servant-marked lockers crowd the walls. East, the feral gar
         return `You search the ${target} and come away with splinters, salt, and stronger suspicions about how the house disposes of its practical needs.`;
       },
     },
-    items: [servantRota, sharkVial, weightedLine],
+    items: [servantRota, sharkVial, oozeFormPotion, weightedLine],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('eastRunoffNoted'),

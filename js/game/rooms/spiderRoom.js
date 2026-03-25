@@ -262,6 +262,24 @@ Below the cocooned corpse stands a counting frame of black beads, finger bones, 
           touch() {
             return 'The silk over the wall is dry and tight, with a seam beneath it that feels less hidden than deliberately resented.';
           },
+          use({ item, getFlag, setFlag, worldState }) {
+            if (!item) {
+              return 'The wall wants either patience or a better offense than your hands.';
+            }
+
+            if (item.id !== 'potion-of-hole') {
+              return `The ${item.name} does not meaningfully improve your argument with the north wall.`;
+            }
+
+            if (getFlag('sealedRoomUnlocked')) {
+              return 'The seam is already open. More hole would only make the room feel argumentative.';
+            }
+
+            worldState.removeItemById(item.id);
+            setFlag('sealedRoomLeadKnown', true);
+            setFlag('sealedRoomUnlocked', true);
+            return 'You pour the potion of hole across the silk-wrapped seam. The wall forgets a narrow vertical section of itself at once, opening a black administrative absence straight into the sealed correction chamber beyond. Even this house looks offended by the shortcut.';
+          },
         },
       },
     },

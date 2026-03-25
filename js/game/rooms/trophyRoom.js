@@ -1,9 +1,41 @@
+import { Item } from '../../engine/models/item.js';
 import { Room } from '../../engine/models/room.js';
 
 import { createGreyGrinBlade } from '../items/greyGrinBlade.js';
 
 export function createTrophyRoom() {
   const greyGrinBlade = createGreyGrinBlade();
+  const cursedCoinChest = new Item({
+    id: 'cursed-coin-chest',
+    name: 'cursed coin chest',
+    aliases: ['coin chest', 'coffer'],
+    description: 'A small lacquered coffer wrapped in warning paper too elegant to count as reassurance.',
+    actions: {
+      take({ session }) {
+        return session.triggerGameOver(
+          'You claim the cursed coin chest, and the warning paper tears with a tiny satisfied sigh. Gold begins pouring from the seam in a bright impossible stream, each coin ringing once against wood and then again from somewhere inside your thoughts. By the time you realize the treasure is not accumulating around you but weighting you inward, the gallery has already curated your greed into a cautionary exhibit.',
+          { persistentFlags: ['coinChestGameOverSeen'] },
+        );
+      },
+    },
+  });
+  cursedCoinChest.hide();
+
+  const holocaustCandle = new Item({
+    id: 'holocaust-candle',
+    name: 'holocaust candle',
+    aliases: ['holocaust candle', 'black candle'],
+    description: 'A long black candle banded with old wax drips and a smell so faintly funereal it feels deliberate even unlit.',
+    actions: {
+      light({ session }) {
+        return session.triggerGameOver(
+          'You light the holocaust candle. The flame arrives thin, blue, and immediately too interested in history. The gallery fills not with ordinary fire but with remembered burnings: trophies becoming pyres, lacquer turning confessional, and the air itself deciding to prosecute by heat. You do not survive long enough to learn whose atrocity the candle was built to remember first.',
+          { persistentFlags: ['holocaustCandleGameOverSeen'] },
+        );
+      },
+    },
+  });
+  holocaustCandle.hide();
 
   return new Room({
     id: 'trophyRoom',
@@ -36,9 +68,17 @@ ${bladeLine} West lies the library through a concealed panel.
         const target = command.directObject;
 
         if (!target || target.includes('room') || target.includes('gallery') || target.includes('cases')) {
+          if (!cursedCoinChest.visible) {
+            cursedCoinChest.reveal();
+          }
+
+          if (!holocaustCandle.visible) {
+            holocaustCandle.reveal();
+          }
+
           return isItemVisibleHere('grey-grin-blade')
-            ? 'You search the gallery and find plaques, clan marks, stolen devotional objects, and the sort of curated triumph that makes theft feel less like crime than correction.'
-            : 'You search the gallery and find plaques, clan marks, stolen devotional objects, and an empty central stand that makes the room feel marginally more honest than it did before the blade was taken.';
+            ? 'You search the gallery and find plaques, clan marks, stolen devotional objects, a paper-wrapped cursed coffer, and one long black candle laid out with the smugness of an atrocity preserved for later admiration.'
+            : 'You search the gallery and find plaques, clan marks, stolen devotional objects, a paper-wrapped cursed coffer, one long black candle, and an empty central stand that makes the room feel marginally more honest than it did before the blade was taken.';
         }
 
         if (target.includes('blade') || target.includes('stand') || target.includes('pedestal')) {
@@ -59,7 +99,7 @@ ${bladeLine} West lies the library through a concealed panel.
         return `You search the ${target} and come away with a stronger desire to rob the room on principle.`;
       },
     },
-    items: [greyGrinBlade],
+    items: [greyGrinBlade, cursedCoinChest, holocaustCandle],
     conditionalDescriptions: [
       {
         when: ({ worldState }) => {

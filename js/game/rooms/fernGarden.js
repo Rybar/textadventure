@@ -166,6 +166,34 @@ export function createFernGardenRoom() {
     aliases: ['peafowl egg', 'astral egg'],
     description: 'A pale egg with a shell that seems slightly deeper than its surface should allow.',
     portable: true,
+    actions: {
+      take({ getFlag, session }) {
+        if (getFlag('peafowlEggSnared')) {
+          return 'The weighted line has already done the impolite part. The egg comes away from the nest without provoking the impossible parent overhead.';
+        }
+
+        return session.triggerGameOver(
+          'You lift the egg by hand. For one hopeful instant nothing happens. Then the air above the garden tears sideways into color and talons. The astral peafowl descends in a spray of impossible plumage, pecking straight through depth, distance, and your remaining certainty. The garden keeps the egg. The house gets another lesson about greed.',
+          { persistentFlags: ['peafowlGameOverSeen'] },
+        );
+      },
+      use({ item, getFlag, setFlag }) {
+        if (!item) {
+          return 'The egg would prefer a method, not enthusiasm.';
+        }
+
+        if (item.id !== 'weighted-line') {
+          return `The ${item.name} does not improve your odds with the thing nesting above the garden.`;
+        }
+
+        if (getFlag('peafowlEggSnared')) {
+          return 'The weighted line already loops the egg neatly enough to spare you a hand-to-beak negotiation.';
+        }
+
+        setFlag('peafowlEggSnared', true);
+        return 'You cast the weighted line with more hope than elegance. The hook catches the nest-rim and draws the egg just far enough free that you can claim it later without presenting your fingers as tribute to whatever impossible bird keeps watch overhead.';
+      },
+    },
   });
 
   return new Room({
@@ -190,10 +218,10 @@ The safer path leads back southeast toward the cavern and the stairs.
         if (!target || target.includes('garden') || target.includes('ferns') || target.includes('foliage')) {
           if (!getFlag('fernCulvertNoticed')) {
             setFlag('fernCulvertNoticed', true);
-            return 'You part the cold fronds and discover a low stone culvert hidden behind one of the ecstatic gnome statues. Roots choke most of it, but the tunnel proves the garden was once meant to breathe into the house by some quieter route than ceremony would permit.';
+            return 'You part the cold fronds and discover a low stone culvert hidden behind one of the ecstatic gnome statues. Roots choke most of it, but the tunnel proves the garden was once meant to breathe into the house by some quieter route than ceremony would permit. Higher up, something feathered shifts with expensive disapproval around a pale egg the size of a clenched heart.';
           }
 
-          return 'You search the garden again and find the same hidden culvert behind the statues, still too root-choked for an easy crawl. The discovery continues to matter more as an idea of the house than as a practical hole.';
+          return 'You search the garden again and find the same hidden culvert behind the statues, still too root-choked for an easy crawl. Above it, the impossible parent of the pale egg remains just out of sight, proving the garden grows its own punishments.';
         }
 
         if (target.includes('statue') || target.includes('gnome')) {
@@ -256,7 +284,7 @@ The safer path leads back southeast toward the cavern and the stairs.
         },
       },
       ferns: 'The fronds are slick and cold to the touch. Between them, the darkness looks deeper than the cavern really is, as if the garden has learned to keep secrets by imitation.',
-      peafowl: 'You glimpse a length of impossible plumage and then nothing at all. Whatever nests here is not entirely concerned with remaining in one plane or one mood.',
+      peafowl: 'You glimpse a length of impossible plumage and then nothing at all. Whatever nests here is not entirely concerned with remaining in one plane or one mood, and it clearly disapproves of casual handling near the egg.',
       statues: 'Each gnome is uniquely mutated and improbably serene, as though the sculptor admired both ecstasy and deformity and saw no reason to choose between them.',
       shack: 'A low fishing shack squats west of the garden, kept just far enough from the formal approach to avoid embarrassing the architecture with practicality.',
       culvert: {

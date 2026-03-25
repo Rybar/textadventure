@@ -27,6 +27,18 @@ export function createGrandfatherRoom() {
 
   const waxPlug = createWaxPlug();
   waxPlug.hide();
+  const signetRings = new Item({
+    id: 'forged-signet-rings',
+    name: 'forged signet rings',
+    aliases: ['signet rings', 'forged rings', 'rings', 'signet ring'],
+    description: 'A velvet packet of forged signet rings carrying several lesser house marks good enough to survive a dark hallway, a hurried servant, or a butler who wants an excuse to believe paperwork has already happened elsewhere.',
+    actions: {
+      wear() {
+        return 'You slip on the forged rings. They do not make you important, but they do make your hands look briefly administrative.';
+      },
+    },
+  });
+  signetRings.hide();
 
   return new Room({
     id: 'grandfatherRoom',
@@ -56,7 +68,11 @@ On the north wall stands a black metal door fitted not with a knob but with an a
           if (!getFlag('plumMaintenanceNotesKnown') || !getFlag('oshregaalNoDepartureKnown')) {
             setFlag('plumMaintenanceNotesKnown', true);
             setFlag('oshregaalNoDepartureKnown', true);
-            return 'You sift through guest lists, menu notes, and cruelly edited anecdotes prepared for dinner. Beneath them all is a thinner stack recording "corrections" to the Numerian scribe in the north room: memory lapses, mood compliance, component upkeep, and reminders to keep her grateful, legible, and near at hand. Worse are the guest-retention notes threaded between the menus: repeat the flattering story, refill the cup, reseat anyone who speaks too often of leaving, and if courtesy fails, move them deeper into the house until departure sounds impolite even to themselves.';
+            if (!signetRings.visible) {
+              signetRings.reveal();
+            }
+
+            return 'You sift through guest lists, menu notes, and cruelly edited anecdotes prepared for dinner. Beneath them all is a thinner stack recording "corrections" to the Numerian scribe in the north room: memory lapses, mood compliance, component upkeep, and reminders to keep her grateful, legible, and near at hand. Worse are the guest-retention notes threaded between the menus: repeat the flattering story, refill the cup, reseat anyone who speaks too often of leaving, and if courtesy fails, move them deeper into the house until departure sounds impolite even to themselves. In a shallow drawer beneath the invitations sits a velvet packet of forged signet rings for the sort of administrative lying a house like this apparently considers domestic maintenance.';
           }
 
           return 'The desk still offers the same ugly bookkeeping: Plum reduced to upkeep notes and guests reduced to retention strategy. Oshregaal does not merely host people; he edits them toward staying.';
@@ -102,7 +118,7 @@ On the north wall stands a black metal door fitted not with a knob but with an a
         return `The ${target} does not appear to want your hand.`;
       },
     },
-    items: [velvetBed, waxPlug],
+    items: [velvetBed, waxPlug, signetRings],
     conditionalDescriptions: [
       {
         when: ({ getFlag }) => getFlag('metalHandDoorUnlocked'),
