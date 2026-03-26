@@ -60,7 +60,7 @@ export function createFishingShackRoom() {
 
         return session.triggerGameOver(
           'You drink the ooze-form potion away from any place where surrendering your skeleton might count as strategy. Your joints lose their convictions first, then your outline, then the useful distinction between body and spill. By the time the house staff discovers the glistening remainder, you have been reduced to a cautionary cleaning task.',
-          { persistentFlags: ['oozeFormGameOverSeen'] },
+          { persistentFlags: ['oozeFormGameOverSeen'], branchId: 'ooze-form' },
         );
       },
     },

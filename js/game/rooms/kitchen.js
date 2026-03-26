@@ -140,13 +140,13 @@ export function createKitchenRoom() {
       eat({ session }) {
         return session.triggerGameOver(
           'You swallow the little red gentleman before your judgment can recover. Warmth spreads through you first, then appetite, then the unnatural conviction that you ought to be plated and applauded. By the time the kitchen realizes you have joined the menu from the wrong direction, your body has already started interpreting itself as a course.',
-          { persistentFlags: ['bloodHomunculusGameOverSeen'] },
+          { persistentFlags: ['bloodHomunculusGameOverSeen'], branchId: 'blood-homunculus' },
         );
       },
       drink({ session }) {
         return session.triggerGameOver(
           'You tip the blood homunculus into your mouth and immediately regret participating this literally in Oshregaal\'s culinary theology. It uncoils inside you like a standing ovation from the wrong organ system. The last sensation you manage to identify cleanly is being promoted from diner to ritual medium.',
-          { persistentFlags: ['bloodHomunculusGameOverSeen'] },
+          { persistentFlags: ['bloodHomunculusGameOverSeen'], branchId: 'blood-homunculus' },
         );
       },
     },

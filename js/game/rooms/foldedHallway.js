@@ -11,7 +11,7 @@ export function createFoldedHallwayRoom() {
       take({ session }) {
         return session.triggerGameOver(
           'You pry the ruby eyes loose from the idol. The corridor accepts the theft as an answer to a question you did not mean to ask. Sightlines split, footsteps arrive from impossible angles, and the folded hall closes over you like a hand correcting a misbehaving finger. The rubies vanish into contradiction with the rest of you.',
-          { persistentFlags: ['rubyEyesGameOverSeen'] },
+          { persistentFlags: ['rubyEyesGameOverSeen'], branchId: 'ruby-eyes' },
         );
       },
     },

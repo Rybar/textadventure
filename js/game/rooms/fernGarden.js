@@ -174,7 +174,7 @@ export function createFernGardenRoom() {
 
         return session.triggerGameOver(
           'You lift the egg by hand. For one hopeful instant nothing happens. Then the air above the garden tears sideways into color and talons. The astral peafowl descends in a spray of impossible plumage, pecking straight through depth, distance, and your remaining certainty. The garden keeps the egg. The house gets another lesson about greed.',
-          { persistentFlags: ['peafowlGameOverSeen'] },
+          { persistentFlags: ['peafowlGameOverSeen'], branchId: 'peafowl-egg' },
         );
       },
       use({ item, getFlag, setFlag }) {

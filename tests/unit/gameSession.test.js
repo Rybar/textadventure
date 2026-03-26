@@ -678,13 +678,51 @@ test('agreeing to stay with Oshregaal causes a restartable game over', () => {
   assert.equal(session.worldState.getFlag('routineGameOverSeen'), true);
   assert.equal(interfaceEvents.length, 1);
   assert.equal(interfaceEvents[0].type, 'restart-transition');
-  assert.equal(interfaceEvents[0].delayMs, 3000);
+  assert.equal(interfaceEvents[0].delayMs, 5000);
   assert.match(interfaceEvents[0].openingText, /FEAST OF OSHREGAAL/i);
   assert.match(interfaceEvents[0].openingText, /You stand in a vast natural cavern/i);
   assert.equal(messages.length, 3);
   assert.equal(messages[0].id, 'maraRoutineGameOverJ1');
   assert.equal(messages[1].id, 'kellanRoutineGameOverJ1');
   assert.equal(messages[2].id, 'ilexRoutineGameOverJ1');
+});
+
+test('repeating the same game over records cumulative counts and triggers lackey commentary', () => {
+  const session = createTestSession();
+
+  moveToFeastHall(session);
+  session.submitCommand('tell oshregaal i will stay');
+  session.consumePendingMetaMessages();
+  session.consumePendingInterfaceEvents();
+
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('give invitation to oggaf');
+  session.submitCommand('north');
+
+  session.submitCommand('tell oshregaal i will stay');
+  const repeatMessages = session.consumePendingMetaMessages().filter(message => message.source === 'experiment-lackeys-aware');
+
+  assert.equal(session.worldState.metaState.gameOverCount, 2);
+  assert.equal(session.worldState.metaState.gameOverBranchCounts.routine, 2);
+  assert.equal(session.worldState.metaState.lastGameOverBranchId, 'routine');
+  assert.equal(repeatMessages.length, 2);
+  assert.equal(repeatMessages[0].id, 'lackeyLeftReactive005');
+  assert.equal(repeatMessages[1].id, 'lackeyRightReactive005');
+
+  session.consumePendingInterfaceEvents();
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('give invitation to oggaf');
+  session.submitCommand('north');
+  session.submitCommand('north');
+  session.submitCommand('east');
+  session.submitCommand('sleep bed');
+
+  assert.equal(session.worldState.metaState.gameOverCount, 3);
+  assert.equal(session.worldState.metaState.gameOverBranchCounts.routine, 2);
+  assert.equal(session.worldState.metaState.gameOverBranchCounts['grandfather-bed'], 1);
+  assert.equal(session.worldState.metaState.lastGameOverBranchId, 'grandfather-bed');
 });
 
 test('sleeping in Oshregaal\'s bed causes a restartable game over', () => {

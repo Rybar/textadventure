@@ -14,7 +14,7 @@ export function createTrophyRoom() {
       take({ session }) {
         return session.triggerGameOver(
           'You claim the cursed coin chest, and the warning paper tears with a tiny satisfied sigh. Gold begins pouring from the seam in a bright impossible stream, each coin ringing once against wood and then again from somewhere inside your thoughts. By the time you realize the treasure is not accumulating around you but weighting you inward, the gallery has already curated your greed into a cautionary exhibit.',
-          { persistentFlags: ['coinChestGameOverSeen'] },
+          { persistentFlags: ['coinChestGameOverSeen'], branchId: 'coin-chest' },
         );
       },
     },
@@ -30,7 +30,7 @@ export function createTrophyRoom() {
       light({ session }) {
         return session.triggerGameOver(
           'You light the holocaust candle. The flame arrives thin, blue, and immediately too interested in history. The gallery fills not with ordinary fire but with remembered burnings: trophies becoming pyres, lacquer turning confessional, and the air itself deciding to prosecute by heat. You do not survive long enough to learn whose atrocity the candle was built to remember first.',
-          { persistentFlags: ['holocaustCandleGameOverSeen'] },
+          { persistentFlags: ['holocaustCandleGameOverSeen'], branchId: 'holocaust-candle' },
         );
       },
     },

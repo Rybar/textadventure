@@ -22,6 +22,8 @@ let stopActiveTranscriptClearAnimation = null;
 let pendingRestartTransition = null;
 let isRestartTransitionActive = false;
 let restartTransitionEndsAt = 0;
+let restartCountdownStartsAt = 0;
+let transcriptTransitionScrollTop = null;
 let transcriptShouldSnapToBottom = true;
 const queuedTranscriptMetaMessages = [];
 const inputElement = document.getElementById('cli-input');
@@ -418,6 +420,26 @@ function scrollTranscriptToBottom() {
     container.scrollTop = container.scrollHeight;
 }
 
+function lockTranscriptScrollPosition() {
+    if (!transcriptScrollContainerElement) {
+        return;
+    }
+
+    transcriptTransitionScrollTop = transcriptScrollContainerElement.scrollTop;
+}
+
+function restoreTranscriptScrollPosition() {
+    if (!transcriptScrollContainerElement || transcriptTransitionScrollTop == null) {
+        return;
+    }
+
+    transcriptScrollContainerElement.scrollTop = transcriptTransitionScrollTop;
+}
+
+function unlockTranscriptScrollPosition() {
+    transcriptTransitionScrollTop = null;
+}
+
 function renderTranscriptEntries() {
     transcriptEntries.forEach((entry, index) => {
         let entryElement = transcriptOutputElement.children[index];
@@ -493,6 +515,10 @@ function renderScreen() {
     commandBarElement.dataset.disabled = isRestartTransitionActive ? 'true' : 'false';
     renderInterfaceChrome();
     renderTranscriptEntries();
+
+    if (isRestartTransitionActive) {
+        restoreTranscriptScrollPosition();
+    }
 }
 
 function setRestartCountdownVisibility(isVisible) {
@@ -501,6 +527,12 @@ function setRestartCountdownVisibility(isVisible) {
 }
 
 function renderRestartCountdown(remainingMs = 0) {
+    if (!restartCountdownStartsAt || Date.now() < restartCountdownStartsAt) {
+        restartCountdownElement.textContent = '';
+        setRestartCountdownVisibility(false);
+        return;
+    }
+
     const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
     restartCountdownElement.textContent = remainingSeconds > 0
         ? `Restarting in ${remainingSeconds}...`
@@ -515,6 +547,7 @@ function clearRestartDelayCountdown() {
     }
 
     restartTransitionEndsAt = 0;
+    restartCountdownStartsAt = 0;
     restartCountdownElement.textContent = '';
     setRestartCountdownVisibility(false);
 }
@@ -641,6 +674,7 @@ function completeRestartTransition() {
     transcriptOutputElement.dataset.transitioning = 'false';
     transcriptClearOverlayElement.dataset.visible = 'false';
     transcriptClearOverlayElement.textContent = '';
+    unlockTranscriptScrollPosition();
     clearVisibleTranscriptEntries();
 
     if (openingText) {
@@ -662,13 +696,15 @@ function startRestartTransitionClear() {
         return;
     }
 
+    lockTranscriptScrollPosition();
     transcriptOutputElement.dataset.transitioning = 'true';
     transcriptClearOverlayElement.dataset.visible = 'true';
     transcriptClearOverlayElement.textContent = visibleTranscriptText;
     stopActiveTranscriptClearAnimation = animateTextClear(transcriptClearOverlayElement, visibleTranscriptText, {
-        clearFrameLength: 20,
-        clearFraction: 0.14,
-        minCharactersPerFrame: 24,
+        clearFrameLength: 14,
+        clearFraction: 0.28,
+        minCharactersPerFrame: 64,
+        maxCharactersPerFrame: 220,
         onComplete: () => {
             stopActiveTranscriptClearAnimation = null;
             completeRestartTransition();
@@ -683,13 +719,15 @@ function maybeStartPendingRestartDelay(entryId) {
     }
 
     isRestartTransitionActive = true;
-    restartTransitionEndsAt = Date.now() + (pendingRestartTransition.delayMs ?? 3000);
+    restartTransitionEndsAt = Date.now() + (pendingRestartTransition.delayMs ?? 5000);
+    restartCountdownStartsAt = restartTransitionEndsAt - 3000;
     renderRestartCountdown(restartTransitionEndsAt - Date.now());
     activeRestartCountdownIntervalId = globalThis.setInterval(() => {
         renderRestartCountdown(restartTransitionEndsAt - Date.now());
     }, 100);
+    lockTranscriptScrollPosition();
     renderScreen();
-    activeRestartDelayTimeoutId = globalThis.setTimeout(startRestartTransitionClear, pendingRestartTransition.delayMs ?? 3000);
+    activeRestartDelayTimeoutId = globalThis.setTimeout(startRestartTransitionClear, pendingRestartTransition.delayMs ?? 5000);
 }
 
 function updateInterfaceEvents(events = [], latestTranscriptEntry = null) {

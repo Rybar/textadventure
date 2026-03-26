@@ -183,6 +183,9 @@ export class WorldState {
       reactiveLackeyCounts: {},
       shownMilestoneIds: [],
       shownEndingIds: [],
+      gameOverCount: 0,
+      gameOverBranchCounts: {},
+      lastGameOverBranchId: null,
     };
   }
 
@@ -249,6 +252,15 @@ export class WorldState {
         shownEndingIds: Array.isArray(metaState.shownEndingIds)
           ? [...metaState.shownEndingIds]
           : [],
+        gameOverCount: Number.isFinite(metaState.gameOverCount)
+          ? Math.max(0, Number(metaState.gameOverCount))
+          : 0,
+        gameOverBranchCounts: metaState.gameOverBranchCounts && typeof metaState.gameOverBranchCounts === 'object'
+          ? { ...metaState.gameOverBranchCounts }
+          : {},
+        lastGameOverBranchId: typeof metaState.lastGameOverBranchId === 'string'
+          ? metaState.lastGameOverBranchId
+          : null,
       };
     }
 
@@ -268,6 +280,9 @@ export class WorldState {
       reactiveLackeyCounts: {},
       shownMilestoneIds: [],
       shownEndingIds: [],
+      gameOverCount: 0,
+      gameOverBranchCounts: {},
+      lastGameOverBranchId: null,
     };
   }
 
@@ -324,12 +339,12 @@ export class WorldState {
   }
 
   triggerReactiveLackeyConversation(conversationId) {
-    if (!this.hasSeenLackeyConversation()) {
+    const conversation = this.metaGame.reactiveLackeyConversations?.[conversationId];
+    if (!conversation) {
       return [];
     }
 
-    const conversation = this.metaGame.reactiveLackeyConversations?.[conversationId];
-    if (!conversation) {
+    if ((conversation.requiresConversationSeen ?? true) && !this.hasSeenLackeyConversation()) {
       return [];
     }
 
@@ -364,6 +379,24 @@ export class WorldState {
 
     this.queueMetaMessages(nextMessages);
     return nextMessages;
+  }
+
+  recordGameOver(branchId = 'generic') {
+    const normalizedBranchId = String(branchId || 'generic').trim() || 'generic';
+    const branchCount = Number(this.metaState.gameOverBranchCounts?.[normalizedBranchId] ?? 0) + 1;
+
+    this.metaState.gameOverCount = Number(this.metaState.gameOverCount ?? 0) + 1;
+    this.metaState.gameOverBranchCounts = {
+      ...this.metaState.gameOverBranchCounts,
+      [normalizedBranchId]: branchCount,
+    };
+    this.metaState.lastGameOverBranchId = normalizedBranchId;
+
+    return {
+      branchId: normalizedBranchId,
+      totalCount: this.metaState.gameOverCount,
+      branchCount,
+    };
   }
 
   getCurrentRoom() {

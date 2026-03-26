@@ -1326,6 +1326,11 @@ export class GameSession {
           : {},
         shownMilestoneIds: [...(this.worldState.metaState?.shownMilestoneIds ?? [])],
         shownEndingIds: [...(this.worldState.metaState?.shownEndingIds ?? [])],
+        gameOverCount: Number(this.worldState.metaState?.gameOverCount ?? 0),
+        gameOverBranchCounts: this.worldState.metaState?.gameOverBranchCounts
+          ? { ...this.worldState.metaState.gameOverBranchCounts }
+          : {},
+        lastGameOverBranchId: this.worldState.metaState?.lastGameOverBranchId ?? null,
       },
       panelState: Object.fromEntries(
         Object.entries(this.worldState.panelState ?? {}).map(([panelId, state]) => [panelId, {
@@ -1358,7 +1363,7 @@ export class GameSession {
     persistence = this.captureRestartPersistence(),
     skipPostTurnProcessing = true,
     deferOpeningText = false,
-    restartDelayMs = 3000,
+    restartDelayMs = 5000,
   } = {}) {
     const nextWorldState = new WorldState(this.createFreshManifest());
     this.applyRestartPersistence(nextWorldState, persistence);
@@ -1405,10 +1410,16 @@ export class GameSession {
   }
 
   triggerGameOver(failureText, options = {}) {
+    const gameOverRecord = this.worldState.recordGameOver(options.branchId ?? 'generic');
     this.worldState.setFlag('hasExperiencedGameOver', true);
     (options.persistentFlags ?? []).forEach(flagName => {
       this.worldState.setFlag(flagName, true);
     });
+
+    if (gameOverRecord.branchCount >= 2) {
+      this.worldState.triggerReactiveLackeyConversation('repeat-game-over');
+    }
+
     const persistence = this.captureRestartPersistence({ includeQueuedMetaMessages: true });
 
     return this.restartAdventure({
@@ -1416,7 +1427,7 @@ export class GameSession {
       persistence,
       skipPostTurnProcessing: true,
       deferOpeningText: true,
-      restartDelayMs: options.restartDelayMs ?? 3000,
+      restartDelayMs: options.restartDelayMs ?? 5000,
     }).response;
   }
 

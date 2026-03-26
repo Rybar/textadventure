@@ -10,7 +10,7 @@ export function createSealedRoom() {
 
   const submitToCorrection = ({ session }) => session.triggerGameOver(
     'The chair receives you with practiced efficiency. Straps settle, the speaking tube opens, and the room begins explaining you back to yourself in the flat institutional tone reserved for people already reclassified as manageable. By the time panic finishes arriving, correction has already become procedure.',
-    { persistentFlags: ['correctionGameOverSeen'] },
+    { persistentFlags: ['correctionGameOverSeen'], branchId: 'correction-chair' },
   );
 
   return new Room({

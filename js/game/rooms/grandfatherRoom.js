@@ -13,7 +13,7 @@ export function createGrandfatherRoom() {
       sleep({ session }) {
         return session.triggerGameOver(
           'The velvet accepts you too easily. Perfume, fur, and heavy coverlets close overhead; somewhere in the room a bell-cord answers for you, and by the time you understand that the bed was built to keep as much as to comfort, the house has already learned the shape of your surrender.',
-          { persistentFlags: ['grandfatherBedGameOverSeen'] },
+          { persistentFlags: ['grandfatherBedGameOverSeen'], branchId: 'grandfather-bed' },
         );
       },
       look() {

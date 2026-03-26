@@ -82,6 +82,14 @@ function chooseIndexesToClear(remainingIndexes, charactersToClear) {
     }
   }
 
+  if (clearedIndexes.length < charactersToClear) {
+    const unusedIndexes = remainingIndexes
+      .filter(index => !clearedIndexes.includes(index))
+      .sort(() => Math.random() - 0.5);
+
+    clearedIndexes.push(...unusedIndexes.slice(0, charactersToClear - clearedIndexes.length));
+  }
+
   return clearedIndexes;
 }
 

@@ -379,6 +379,24 @@ const operatorMessagesByPhase = {
     lackeyRightReactive004b: createOperatorMessage('lackeyRightReactive004b', 'mara: yes, they are rehearsing authorship', 'experiment-lackeys-aware', {
       holdDuration: 4600,
     }),
+    lackeyLeftReactive005: createOperatorMessage('lackeyLeftReactive005', 'kellan: they walked into the same fatal branch again. is this research or a hobby now.', 'experiment-lackeys-aware', {
+      holdDuration: 4700,
+    }),
+    lackeyRightReactive005: createOperatorMessage('lackeyRightReactive005', 'mara: if the subject insists on stress-testing one mistake repeatedly, at least record the devotion precisely.', 'experiment-lackeys-aware', {
+      holdDuration: 4800,
+    }),
+    lackeyLeftReactive005b: createOperatorMessage('lackeyLeftReactive005b', 'kellan: i am starting to think they are speedrunning embarrassment on purpose.', 'experiment-lackeys-aware', {
+      holdDuration: 4500,
+    }),
+    lackeyRightReactive005b: createOperatorMessage('lackeyRightReactive005b', 'mara: then their methodology remains terrible but unusually consistent.', 'experiment-lackeys-aware', {
+      holdDuration: 4500,
+    }),
+    lackeyLeftReactive005c: createOperatorMessage('lackeyLeftReactive005c', 'kellan: same branch, same disaster, same refusal to learn normal lessons.', 'experiment-lackeys-aware', {
+      holdDuration: 4600,
+    }),
+    lackeyRightReactive005c: createOperatorMessage('lackeyRightReactive005c', 'mara: do not say refusal. call it iterative self-endangerment so the report sounds professional.', 'experiment-lackeys-aware', {
+      holdDuration: 4700,
+    }),
   },
 };
 
@@ -976,6 +994,24 @@ export function createMetaGameContent() {
           {
             leftMessageId: 'lackeyLeftReactive004b',
             rightMessageId: 'lackeyRightReactive004b',
+          },
+        ],
+      },
+      'repeat-game-over': {
+        id: 'repeat-game-over',
+        requiresConversationSeen: false,
+        variants: [
+          {
+            leftMessageId: 'lackeyLeftReactive005',
+            rightMessageId: 'lackeyRightReactive005',
+          },
+          {
+            leftMessageId: 'lackeyLeftReactive005b',
+            rightMessageId: 'lackeyRightReactive005b',
+          },
+          {
+            leftMessageId: 'lackeyLeftReactive005c',
+            rightMessageId: 'lackeyRightReactive005c',
           },
         ],
       },

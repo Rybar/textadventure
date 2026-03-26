@@ -12,7 +12,7 @@ export function createBlackWindTreeChamber() {
 
   const drinkSourceSap = ({ session }) => session.triggerGameOver(
     'The sap hits your tongue like sweet smoke and old metal. For one impossible instant you can feel the chamber from the inside: root pressure, ledger logic, fruit swelling in the dark. Then the sensation keeps widening, and you stop being a witness to the black-wind source long enough to become part of its accounting.',
-    { persistentFlags: ['blackWindSapGameOverSeen'] },
+    { persistentFlags: ['blackWindSapGameOverSeen'], branchId: 'black-wind-sap' },
   );
 
   return new Room({
