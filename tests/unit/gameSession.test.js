@@ -681,6 +681,7 @@ test('agreeing to stay with Oshregaal causes a restartable game over', () => {
   assert.equal(interfaceEvents[0].delayMs, 5000);
   assert.match(interfaceEvents[0].openingText, /FEAST OF OSHREGAAL/i);
   assert.match(interfaceEvents[0].openingText, /You stand in a vast natural cavern/i);
+  assert.doesNotMatch(interfaceEvents[0].openingText, /Pathfinder campaign|Goblin Punch/i);
   assert.equal(messages.length, 3);
   assert.equal(messages[0].id, 'maraRoutineGameOverJ1');
   assert.equal(messages[1].id, 'kellanRoutineGameOverJ1');

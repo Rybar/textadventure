@@ -23,8 +23,8 @@ export class GameSession {
     this.initializeActionRegistry();
   }
 
-  buildOpeningText() {
-    const openingPreface = this.getOpeningPreface();
+  buildOpeningText(options = {}) {
+    const openingPreface = this.getOpeningPreface(options);
     const openingText = this.worldState.enterCurrentRoom();
     return [openingPreface, openingText].filter(Boolean).join('\n\n');
   }
@@ -38,13 +38,18 @@ export class GameSession {
     return this.transcript.getLatestPrintableEntry();
   }
 
-  getOpeningPreface() {
-    return [
-      'FEAST OF OSHREGAAL',
-      'A text adventure based on a Pathfinder campaign of the same name by Grizzelnit.',
-      'Inspired by Goblin Punch\'s original D&D scenario, "The Meal of Oshregaal":',
-      'https://goblinpunch.blogspot.com/2015/05/the-meal-of-oshregaal.html',
-    ].join('\n');
+  getOpeningPreface(options = {}) {
+    const lines = ['FEAST OF OSHREGAAL'];
+
+    if (options.includeCredits ?? true) {
+      lines.push(
+        'A text adventure based on a Pathfinder campaign of the same name by Grizzelnit.',
+        'Inspired by Goblin Punch\'s original D&D scenario, "The Meal of Oshregaal":',
+        'https://goblinpunch.blogspot.com/2015/05/the-meal-of-oshregaal.html',
+      );
+    }
+
+    return lines.join('\n');
   }
 
   getMetaMessage(messageId) {
@@ -1364,13 +1369,14 @@ export class GameSession {
     skipPostTurnProcessing = true,
     deferOpeningText = false,
     restartDelayMs = 5000,
+    includeCreditsInOpening = true,
   } = {}) {
     const nextWorldState = new WorldState(this.createFreshManifest());
     this.applyRestartPersistence(nextWorldState, persistence);
     this.worldState = nextWorldState;
     this.pendingClarification = null;
     this.pendingMetaMessages = [...(persistence.queuedMetaMessages ?? [])];
-    const openingText = this.buildOpeningText();
+    const openingText = this.buildOpeningText({ includeCredits: includeCreditsInOpening });
 
     if (deferOpeningText) {
       this.queueInterfaceEvent({
@@ -1428,6 +1434,7 @@ export class GameSession {
       skipPostTurnProcessing: true,
       deferOpeningText: true,
       restartDelayMs: options.restartDelayMs ?? 5000,
+      includeCreditsInOpening: false,
     }).response;
   }
 
