@@ -788,7 +788,7 @@ test('agreeing to stay with Oshregaal yields absorption into his routines', () =
   const response = session.submitCommand('tell oshregaal i will stay');
 
   assert.match(response, /failure ending: absorption into Oshregaal's routines/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
   assert.equal(session.worldState.getFlag('agreedToStay'), false);
   assert.equal(session.worldState.getFlag('absorbedIntoRoutine'), false);
@@ -802,7 +802,7 @@ test('sleeping in Oshregaal\'s bed restarts the run and leaves the session playa
   const response = session.submitCommand('sleep bed');
 
   assert.match(response, /velvet accepts you too easily/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
   assert.match(session.submitCommand('north'), /white marble stair/i);
 });
@@ -814,7 +814,7 @@ test('submitting to the correction chair restarts the run and leaves the session
   const response = session.submitCommand('sit chair');
 
   assert.match(response, /chair receives you with practiced efficiency/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
   assert.match(session.submitCommand('northwest'), /old garden has gone feral/i);
 });
@@ -826,7 +826,7 @@ test('drinking black-wind sap restarts the run and leaves the session playable',
   const response = session.submitCommand('drink sap');
 
   assert.match(response, /sap hits your tongue/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
   assert.match(session.submitCommand('north'), /white marble stair/i);
 });

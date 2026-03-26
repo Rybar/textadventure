@@ -153,8 +153,15 @@ function revealScrambledText(element, text, frameLength, revealChance = 0.06) {
   return intervalId;
 }
 
-function clearScrambledText(element, text, frameLength, clearFraction = 0.05, onComplete = null) {
+function clearScrambledText(element, text, options = {}) {
   const targetText = String(text);
+  const frameLength = options.frameLength ?? 40;
+  const clearFraction = options.clearFraction ?? 0.05;
+  const minCharactersPerFrame = Math.max(1, options.minCharactersPerFrame ?? 1);
+  const maxCharactersPerFrame = Number.isFinite(options.maxCharactersPerFrame)
+    ? Math.max(minCharactersPerFrame, options.maxCharactersPerFrame)
+    : null;
+  const onComplete = typeof options.onComplete === 'function' ? options.onComplete : null;
   let clearedMask = targetText
     .split('')
     .map(character => character === '\n' || character === ' ');
@@ -170,14 +177,22 @@ function clearScrambledText(element, text, frameLength, clearFraction = 0.05, on
     if (remainingIndexes.length === 0) {
       globalThis.clearInterval(intervalId);
       element.textContent = '';
-      if (typeof onComplete === 'function') {
+      if (onComplete) {
         onComplete();
       }
       return;
     }
 
-    const charactersToClear = Math.max(1, Math.ceil(remainingIndexes.length * clearFraction));
-    chooseIndexesToClear(remainingIndexes, charactersToClear).forEach(index => {
+    let charactersToClear = Math.max(
+      minCharactersPerFrame,
+      Math.ceil(remainingIndexes.length * clearFraction),
+    );
+
+    if (maxCharactersPerFrame !== null) {
+      charactersToClear = Math.min(charactersToClear, maxCharactersPerFrame);
+    }
+
+    chooseIndexesToClear(remainingIndexes, Math.min(charactersToClear, remainingIndexes.length)).forEach(index => {
       clearedMask[index] = true;
     });
 
@@ -185,6 +200,34 @@ function clearScrambledText(element, text, frameLength, clearFraction = 0.05, on
   }, frameLength);
 
   return intervalId;
+}
+
+export function animateTextClear(element, text, options = {}) {
+  if (!element) {
+    return () => {};
+  }
+
+  const clearFrameLength = options.clearFrameLength ?? 40;
+  const clearFraction = options.clearFraction ?? 0.05;
+  const minCharactersPerFrame = options.minCharactersPerFrame ?? 1;
+  const maxCharactersPerFrame = options.maxCharactersPerFrame;
+  const onComplete = typeof options.onComplete === 'function' ? options.onComplete : null;
+  const targetText = String(text ?? '');
+
+  element.textContent = targetText;
+
+  const intervalId = clearScrambledText(element, targetText, {
+    frameLength: clearFrameLength,
+    clearFraction,
+    minCharactersPerFrame,
+    maxCharactersPerFrame,
+    onComplete,
+  });
+
+  return () => {
+    globalThis.clearInterval(intervalId);
+    element.textContent = '';
+  };
 }
 
 export function animateScrambledText(element, text, options = {}) {
@@ -231,7 +274,11 @@ export function animateScrambledText(element, text, options = {}) {
 
     globalThis.clearInterval(revealCompletionPollId);
     holdTimeoutId = globalThis.setTimeout(() => {
-      clearIntervalId = clearScrambledText(element, targetText, clearFrameLength, clearFraction, finishAnimation);
+      clearIntervalId = clearScrambledText(element, targetText, {
+        frameLength: clearFrameLength,
+        clearFraction,
+        onComplete: finishAnimation,
+      });
     }, holdDuration);
   }, frameLength);
 

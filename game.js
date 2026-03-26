@@ -1,4 +1,4 @@
-import { animateScrambledText } from './js/engine/render/textEffects.js';
+import { animateScrambledText, animateTextClear } from './js/engine/render/textEffects.js';
 import { GameSession } from './js/engine/world/gameSession.js';
 import { createGameManifest } from './js/game/manifest.js';
 
@@ -16,6 +16,12 @@ let activeTypingEntryId = null;
 let activeTranscriptMetaTimeoutId = null;
 let activeTranscriptMetaEntryId = null;
 let stopActiveTranscriptMetaAnimation = null;
+let activeRestartDelayTimeoutId = null;
+let activeRestartCountdownIntervalId = null;
+let stopActiveTranscriptClearAnimation = null;
+let pendingRestartTransition = null;
+let isRestartTransitionActive = false;
+let restartTransitionEndsAt = 0;
 let transcriptShouldSnapToBottom = true;
 const queuedTranscriptMetaMessages = [];
 const inputElement = document.getElementById('cli-input');
@@ -24,6 +30,9 @@ const mobilePanelTabsElement = document.getElementById('mobile-panel-tabs');
 const mobilePanelTabElements = Array.from(document.querySelectorAll('.mobile-panel-tab'));
 const transcriptScrollContainerElement = document.getElementById('text-grid-container');
 const transcriptOutputElement = document.getElementById('transcript-output');
+const transcriptLayerElement = document.createElement('div');
+const transcriptClearOverlayElement = document.createElement('div');
+const restartCountdownElement = document.createElement('div');
 const terminalStageElement = document.getElementById('terminal-stage');
 const panelStackElement = document.getElementById('panel-stack');
 const panelElements = {
@@ -44,6 +53,18 @@ let isMobileThemeActive = false;
 const TYPEWRITER_FRAME_MS = 16;
 const TYPEWRITER_CHARS_PER_FRAME = 4;
 const URL_PATTERN = /https?:\/\/[^\s]+/gu;
+
+transcriptLayerElement.id = 'transcript-layer';
+transcriptClearOverlayElement.id = 'transcript-clear-overlay';
+transcriptClearOverlayElement.setAttribute('aria-hidden', 'true');
+restartCountdownElement.id = 'restart-countdown';
+restartCountdownElement.setAttribute('aria-hidden', 'true');
+
+if (transcriptScrollContainerElement && transcriptOutputElement) {
+    transcriptScrollContainerElement.replaceChildren(transcriptLayerElement);
+    transcriptLayerElement.append(transcriptOutputElement, transcriptClearOverlayElement);
+    transcriptScrollContainerElement.appendChild(restartCountdownElement);
+}
 
 function shouldUseMobileTheme() {
     const hasMatchMedia = typeof globalThis.matchMedia === 'function';
@@ -468,8 +489,34 @@ function renderTranscriptEntries() {
 }
 
 function renderScreen() {
+    inputElement.disabled = isRestartTransitionActive;
+    commandBarElement.dataset.disabled = isRestartTransitionActive ? 'true' : 'false';
     renderInterfaceChrome();
     renderTranscriptEntries();
+}
+
+function setRestartCountdownVisibility(isVisible) {
+    restartCountdownElement.dataset.visible = isVisible ? 'true' : 'false';
+    restartCountdownElement.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+}
+
+function renderRestartCountdown(remainingMs = 0) {
+    const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+    restartCountdownElement.textContent = remainingSeconds > 0
+        ? `Restarting in ${remainingSeconds}...`
+        : '';
+    setRestartCountdownVisibility(remainingSeconds > 0);
+}
+
+function clearRestartDelayCountdown() {
+    if (activeRestartCountdownIntervalId) {
+        globalThis.clearInterval(activeRestartCountdownIntervalId);
+        activeRestartCountdownIntervalId = null;
+    }
+
+    restartTransitionEndsAt = 0;
+    restartCountdownElement.textContent = '';
+    setRestartCountdownVisibility(false);
 }
 
 function finalizeTypingAnimation() {
@@ -491,7 +538,9 @@ function finalizeTypingAnimation() {
         }
     }
 
+    const completedEntryId = activeTypingEntryId;
     activeTypingEntryId = null;
+    maybeStartPendingRestartDelay(completedEntryId);
 }
 
 function startTypingAnimation(entry) {
@@ -524,7 +573,7 @@ function appendTranscriptEntry(entry) {
     finalizeTypingAnimation();
 
     if (!entry) {
-        return;
+        return null;
     }
 
     if (entry.type === 'turn') {
@@ -540,7 +589,7 @@ function appendTranscriptEntry(entry) {
         requestTranscriptSnapToBottom();
         renderScreen();
         startTypingAnimation(transcriptEntry);
-        return;
+        return transcriptEntry;
     }
 
     const transcriptEntry = {
@@ -554,10 +603,107 @@ function appendTranscriptEntry(entry) {
     requestTranscriptSnapToBottom();
     renderScreen();
     startTypingAnimation(transcriptEntry);
+    return transcriptEntry;
 }
 
 function appendLatestTranscriptEntry() {
-    appendTranscriptEntry(gameSession.transcript.entries.at(-1) ?? null);
+    return appendTranscriptEntry(gameSession.transcript.entries.at(-1) ?? null);
+}
+
+function getRestartTransitionText() {
+    return transcriptEntries
+        .filter(entry => entry.type !== 'meta')
+        .map(entry => {
+            if (entry.type === 'turn') {
+                return [`> ${entry.command}`, entry.response].filter(Boolean).join('\n');
+            }
+
+            return entry.text;
+        })
+        .filter(Boolean)
+        .join('\n\n');
+}
+
+function clearVisibleTranscriptEntries() {
+    for (let index = transcriptEntries.length - 1; index >= 0; index -= 1) {
+        if (transcriptEntries[index]?.type !== 'meta') {
+            transcriptEntries.splice(index, 1);
+        }
+    }
+}
+
+function completeRestartTransition() {
+    const openingText = pendingRestartTransition?.openingText ?? '';
+
+    pendingRestartTransition = null;
+    isRestartTransitionActive = false;
+    clearRestartDelayCountdown();
+    transcriptOutputElement.dataset.transitioning = 'false';
+    transcriptClearOverlayElement.dataset.visible = 'false';
+    transcriptClearOverlayElement.textContent = '';
+    clearVisibleTranscriptEntries();
+
+    if (openingText) {
+        gameSession.presentRestartOpening(openingText);
+        appendLatestTranscriptEntry();
+    }
+
+    renderScreen();
+    focusCommandInput();
+}
+
+function startRestartTransitionClear() {
+    activeRestartDelayTimeoutId = null;
+    clearRestartDelayCountdown();
+
+    const visibleTranscriptText = getRestartTransitionText();
+    if (!visibleTranscriptText) {
+        completeRestartTransition();
+        return;
+    }
+
+    transcriptOutputElement.dataset.transitioning = 'true';
+    transcriptClearOverlayElement.dataset.visible = 'true';
+    transcriptClearOverlayElement.textContent = visibleTranscriptText;
+    stopActiveTranscriptClearAnimation = animateTextClear(transcriptClearOverlayElement, visibleTranscriptText, {
+        clearFrameLength: 20,
+        clearFraction: 0.14,
+        minCharactersPerFrame: 24,
+        onComplete: () => {
+            stopActiveTranscriptClearAnimation = null;
+            completeRestartTransition();
+        },
+    });
+    renderScreen();
+}
+
+function maybeStartPendingRestartDelay(entryId) {
+    if (!pendingRestartTransition || pendingRestartTransition.entryId !== entryId || activeRestartDelayTimeoutId) {
+        return;
+    }
+
+    isRestartTransitionActive = true;
+    restartTransitionEndsAt = Date.now() + (pendingRestartTransition.delayMs ?? 3000);
+    renderRestartCountdown(restartTransitionEndsAt - Date.now());
+    activeRestartCountdownIntervalId = globalThis.setInterval(() => {
+        renderRestartCountdown(restartTransitionEndsAt - Date.now());
+    }, 100);
+    renderScreen();
+    activeRestartDelayTimeoutId = globalThis.setTimeout(startRestartTransitionClear, pendingRestartTransition.delayMs ?? 3000);
+}
+
+function updateInterfaceEvents(events = [], latestTranscriptEntry = null) {
+    events.forEach(event => {
+        if (event?.type !== 'restart-transition' || !latestTranscriptEntry) {
+            return;
+        }
+
+        pendingRestartTransition = {
+            ...event,
+            entryId: latestTranscriptEntry.id,
+        };
+        maybeStartPendingRestartDelay(latestTranscriptEntry.id);
+    });
 }
 
 function focusCommandInput() {
@@ -721,8 +867,13 @@ document.addEventListener('keydown', event => {
 });
 
 function handleCommand(command) {
+    if (isRestartTransitionActive) {
+        return;
+    }
+
     gameSession.submitCommand(command);
-    appendLatestTranscriptEntry();
+    const latestTranscriptEntry = appendLatestTranscriptEntry();
+    updateInterfaceEvents(gameSession.consumePendingInterfaceEvents(), latestTranscriptEntry);
     updateMetaMessages(gameSession.consumePendingMetaMessages());
     renderScreen();
 }

@@ -3,6 +3,10 @@ export class Transcript {
     this.entries = [];
   }
 
+  clear() {
+    this.entries = [];
+  }
+
   recordSystem(text) {
     this.entries.push({
       type: 'system',
@@ -19,7 +23,7 @@ export class Transcript {
   }
 
   getLatestPrintableEntry() {
-    const latestEntry = this.entries[this.entries.length - 1];
+    const latestEntry = this.entries.at(-1);
     if (!latestEntry) {
       return '';
     }

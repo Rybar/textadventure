@@ -16,7 +16,6 @@ import {
   moveToFoldedHallway,
   moveToPlumRoom,
   moveToSealedRoom,
-  moveToSpiderRoom,
   moveToTrophyRoom,
 } from '../helpers/testSession.js';
 
@@ -628,7 +627,7 @@ test('memory panel unlocks naturally only after game over and dangerous-room ree
   session.worldState.metaState.shownHackerIds = ['first-contact'];
 
   const gameOverResponse = session.submitCommand('tell oshregaal i will stay');
-  assert.match(gameOverResponse, /run restarts/i);
+  assert.doesNotMatch(gameOverResponse, /run restarts|persist/i);
   assert.equal(session.worldState.getFlag('hasExperiencedGameOver'), true);
   assert.equal(session.worldState.isPanelUnlocked('memory'), false);
 
@@ -655,7 +654,8 @@ test('restart resets the run while preserving unlocked panels and clearing degra
 
   const response = session.submitCommand('restart');
 
-  assert.match(response, /run restarted|fresh run/i);
+  assert.match(response, /You force the house back to its opening lie\./i);
+  assert.match(response, /FEAST OF OSHREGAAL/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
   assert.equal(session.worldState.turns, 0);
   assert.equal(session.worldState.findInventoryItem('wax plug'), null);
@@ -670,11 +670,17 @@ test('agreeing to stay with Oshregaal causes a restartable game over', () => {
   moveToFeastHall(session);
   const response = session.submitCommand('tell oshregaal i will stay');
   const messages = session.consumePendingMetaMessages();
+  const interfaceEvents = session.consumePendingInterfaceEvents();
 
   assert.match(response, /one course becomes another/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
   assert.equal(session.worldState.getFlag('routineGameOverSeen'), true);
+  assert.equal(interfaceEvents.length, 1);
+  assert.equal(interfaceEvents[0].type, 'restart-transition');
+  assert.equal(interfaceEvents[0].delayMs, 3000);
+  assert.match(interfaceEvents[0].openingText, /FEAST OF OSHREGAAL/i);
+  assert.match(interfaceEvents[0].openingText, /You stand in a vast natural cavern/i);
   assert.equal(messages.length, 3);
   assert.equal(messages[0].id, 'maraRoutineGameOverJ1');
   assert.equal(messages[1].id, 'kellanRoutineGameOverJ1');
@@ -688,7 +694,7 @@ test('sleeping in Oshregaal\'s bed causes a restartable game over', () => {
   const response = session.submitCommand('sleep bed');
 
   assert.match(response, /velvet accepts you too easily/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
 });
 
@@ -699,7 +705,7 @@ test('sitting in the correction chair causes a restartable game over', () => {
   const response = session.submitCommand('sit chair');
 
   assert.match(response, /chair receives you with practiced efficiency/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
 });
 
@@ -710,7 +716,7 @@ test('drinking black-wind sap causes a restartable game over', () => {
   const response = session.submitCommand('drink sap');
 
   assert.match(response, /sap hits your tongue/i);
-  assert.match(response, /run restarts/i);
+  assert.doesNotMatch(response, /run restarts|persist/i);
   assert.equal(session.worldState.currentRoomId, 'cavern');
 });
 

@@ -15,6 +15,7 @@ export class GameSession {
     this.actionRegistry = options.actionRegistry ?? new ActionRegistry();
     this.worldState = new WorldState(this.manifest);
     this.pendingMetaMessages = [];
+    this.pendingInterfaceEvents = [];
     this.pendingClarification = null;
     this.debugState = {
       metaDebugEnabled: false,
@@ -22,10 +23,18 @@ export class GameSession {
     this.initializeActionRegistry();
   }
 
-  start() {
+  buildOpeningText() {
     const openingPreface = this.getOpeningPreface();
     const openingText = this.worldState.enterCurrentRoom();
-    this.transcript.recordSystem([openingPreface, openingText].filter(Boolean).join('\n\n'));
+    return [openingPreface, openingText].filter(Boolean).join('\n\n');
+  }
+
+  start(options = {}) {
+    if (options.resetTranscript) {
+      this.transcript.clear();
+    }
+
+    this.transcript.recordSystem(this.buildOpeningText());
     return this.transcript.getLatestPrintableEntry();
   }
 
@@ -54,6 +63,31 @@ export class GameSession {
     const messages = [...this.pendingMetaMessages];
     this.pendingMetaMessages = [];
     return messages;
+  }
+
+  consumePendingInterfaceEvents() {
+    const events = [...this.pendingInterfaceEvents];
+    this.pendingInterfaceEvents = [];
+    return events;
+  }
+
+  queueInterfaceEvent(event) {
+    if (!event || typeof event !== 'object') {
+      return;
+    }
+
+    this.pendingInterfaceEvents.push(event);
+  }
+
+  presentRestartOpening(openingText) {
+    const openingEntryText = String(openingText ?? '').trim();
+    if (!openingEntryText) {
+      return '';
+    }
+
+    this.transcript.clear();
+    this.transcript.recordSystem(openingEntryText);
+    return this.transcript.getLatestPrintableEntry();
   }
 
   appendWorldPendingMetaMessages() {
@@ -1253,7 +1287,7 @@ export class GameSession {
 
   getStorage() {
     try {
-      return globalThis.localStorage ?? null;
+      return globalThis.localStorage || null;
     } catch {
       return null;
     }
@@ -1287,7 +1321,9 @@ export class GameSession {
         shownConversationIds: [...(this.worldState.metaState?.shownConversationIds ?? [])],
         shownHackerIds: [...(this.worldState.metaState?.shownHackerIds ?? [])],
         shownReactiveLackeyIds: [...(this.worldState.metaState?.shownReactiveLackeyIds ?? [])],
-        reactiveLackeyCounts: { ...(this.worldState.metaState?.reactiveLackeyCounts ?? {}) },
+        reactiveLackeyCounts: this.worldState.metaState?.reactiveLackeyCounts
+          ? { ...this.worldState.metaState.reactiveLackeyCounts }
+          : {},
         shownMilestoneIds: [...(this.worldState.metaState?.shownMilestoneIds ?? [])],
         shownEndingIds: [...(this.worldState.metaState?.shownEndingIds ?? [])],
       },
@@ -1319,19 +1355,42 @@ export class GameSession {
 
   restartAdventure({
     preface = 'You force the house back to its opening lie.',
-    systemNotice = 'Run restarted. Unlocked panel and shell progress persist.',
     persistence = this.captureRestartPersistence(),
     skipPostTurnProcessing = true,
+    deferOpeningText = false,
+    restartDelayMs = 3000,
   } = {}) {
     const nextWorldState = new WorldState(this.createFreshManifest());
     this.applyRestartPersistence(nextWorldState, persistence);
     this.worldState = nextWorldState;
     this.pendingClarification = null;
     this.pendingMetaMessages = [...(persistence.queuedMetaMessages ?? [])];
-    this.transcript.recordSystem(systemNotice);
+    const openingText = this.buildOpeningText();
+
+    if (deferOpeningText) {
+      this.queueInterfaceEvent({
+        type: 'restart-transition',
+        delayMs: restartDelayMs,
+        openingText,
+      });
+
+      return this.createExecutionResult(
+        preface,
+        {
+          type: 'command',
+          verb: 'restart',
+          directObject: null,
+          indirectObject: null,
+        },
+        {
+          consumeTurn: false,
+          skipPostTurnProcessing,
+        },
+      );
+    }
 
     return this.createExecutionResult(
-      [preface, systemNotice, this.worldState.enterCurrentRoom()].filter(Boolean).join('\n\n'),
+      [preface, openingText].filter(Boolean).join('\n\n'),
       {
         type: 'command',
         verb: 'restart',
@@ -1354,9 +1413,10 @@ export class GameSession {
 
     return this.restartAdventure({
       preface: failureText,
-      systemNotice: options.systemNotice ?? 'The run restarts. Unlocked panel and shell progress persist.',
       persistence,
       skipPostTurnProcessing: true,
+      deferOpeningText: true,
+      restartDelayMs: options.restartDelayMs ?? 3000,
     }).response;
   }
 
