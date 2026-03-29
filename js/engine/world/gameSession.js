@@ -1382,6 +1382,7 @@ export class GameSession {
       this.queueInterfaceEvent({
         type: 'restart-transition',
         delayMs: restartDelayMs,
+        preface,
         openingText,
       });
 

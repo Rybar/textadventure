@@ -666,7 +666,9 @@ function clearVisibleTranscriptEntries() {
 }
 
 function completeRestartTransition() {
+    const preface = pendingRestartTransition?.preface ?? '';
     const openingText = pendingRestartTransition?.openingText ?? '';
+    const restartText = [preface, openingText].filter(Boolean).join('\n\n');
 
     pendingRestartTransition = null;
     isRestartTransitionActive = false;
@@ -677,8 +679,8 @@ function completeRestartTransition() {
     unlockTranscriptScrollPosition();
     clearVisibleTranscriptEntries();
 
-    if (openingText) {
-        gameSession.presentRestartOpening(openingText);
+    if (restartText) {
+        gameSession.presentRestartOpening(restartText);
         appendLatestTranscriptEntry();
     }
 

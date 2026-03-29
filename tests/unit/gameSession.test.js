@@ -276,10 +276,15 @@ test('hole and ooze potions add alternate route tech and a new ooze-form failure
   assert.match(oozeDeathSession.submitCommand('take potion of ooze form'), /You take the potion of ooze form\./i);
 
   const oozeDeathResponse = oozeDeathSession.submitCommand('drink potion of ooze form');
+  const oozeDeathEvents = oozeDeathSession.consumePendingInterfaceEvents();
 
   assert.match(oozeDeathResponse, /skeleton|cleaning task/i);
   assert.equal(oozeDeathSession.worldState.getFlag('oozeFormGameOverSeen'), true);
   assert.equal(oozeDeathSession.worldState.currentRoomId, 'cavern');
+  assert.equal(oozeDeathEvents.length, 1);
+  assert.equal(oozeDeathEvents[0].type, 'restart-transition');
+  assert.match(oozeDeathEvents[0].preface, /skeleton|cleaning task/i);
+  assert.match(oozeDeathEvents[0].openingText, /FEAST OF OSHREGAAL/i);
 
   const oozeRouteSession = createTestSession();
   moveToFernGarden(oozeRouteSession);
@@ -679,6 +684,7 @@ test('agreeing to stay with Oshregaal causes a restartable game over', () => {
   assert.equal(interfaceEvents.length, 1);
   assert.equal(interfaceEvents[0].type, 'restart-transition');
   assert.equal(interfaceEvents[0].delayMs, 5000);
+  assert.match(interfaceEvents[0].preface, /one course becomes another/i);
   assert.match(interfaceEvents[0].openingText, /FEAST OF OSHREGAAL/i);
   assert.match(interfaceEvents[0].openingText, /You stand in a vast natural cavern/i);
   assert.doesNotMatch(interfaceEvents[0].openingText, /Pathfinder campaign|Goblin Punch/i);
